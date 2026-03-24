@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mannamplace Market — AI 추천 쇼핑</title>
+  <link rel="stylesheet" href="../../shared/css/global.css">
+  <link rel="stylesheet" href="../../shared/css/navbar.css">
+  <link rel="stylesheet" href="../../shared/css/footer.css">
+  <style>
+    :root { --page-color: var(--color-market); }
+
+    .market-hero {
+      padding-top: 100px;
+      padding-bottom: var(--space-16);
+      background: linear-gradient(160deg, rgba(0,168,107,0.06) 0%, transparent 60%);
+    }
+
+    .market-hero__badge {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: rgba(0,168,107,0.1); border: 1px solid rgba(0,168,107,0.2);
+      color: var(--color-market); padding: 4px 12px; border-radius: var(--radius-full);
+      font-size: var(--text-xs); font-weight: 600; letter-spacing: 0.08em;
+      text-transform: uppercase; margin-bottom: var(--space-4);
+    }
+
+    .market-hero h1 {
+      font-size: var(--text-4xl);
+      font-weight: 800;
+      letter-spacing: -0.04em;
+      margin-bottom: var(--space-4);
+    }
+
+    .market-hero h1 em { font-style: normal; color: var(--color-market); }
+
+    /* Category tabs */
+    .category-tabs {
+      display: flex; gap: var(--space-2); flex-wrap: wrap;
+      margin: var(--space-8) 0;
+    }
+
+    .category-tab {
+      padding: 8px 18px; border-radius: var(--radius-full);
+      border: 1.5px solid var(--color-border);
+      font-size: var(--text-sm); font-weight: 500;
+      cursor: pointer; transition: all var(--ease-fast);
+      background: var(--color-white);
+    }
+
+    .category-tab:hover,
+    .category-tab.active {
+      background: var(--color-market);
+      border-color: var(--color-market);
+      color: white;
+    }
+
+    /* Product grid */
+    .product-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: var(--space-4);
+      margin-top: var(--space-8);
+    }
+
+    .product-card {
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      background: var(--color-white);
+      cursor: pointer;
+      transition: all var(--ease-normal);
+    }
+
+    .product-card:hover {
+      box-shadow: var(--shadow-lg);
+      transform: translateY(-4px);
+    }
+
+    .product-card__img {
+      aspect-ratio: 1;
+      background: var(--color-gray-1);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 3rem;
+    }
+
+    .product-card__body { padding: var(--space-4); }
+
+    .product-card__name {
+      font-weight: 600;
+      font-size: var(--text-sm);
+      margin-bottom: var(--space-2);
+    }
+
+    .product-card__price {
+      font-family: var(--font-display);
+      font-size: var(--text-lg);
+      font-weight: 800;
+      color: var(--color-market);
+    }
+
+    .product-card__price-orig {
+      font-size: var(--text-xs);
+      color: var(--color-text-muted);
+      text-decoration: line-through;
+      margin-left: 4px;
+    }
+
+    .product-card__badge-row {
+      display: flex; gap: 4px; margin-top: var(--space-2);
+    }
+
+    .badge {
+      font-size: 10px; font-weight: 600;
+      padding: 2px 6px; border-radius: var(--radius-sm);
+    }
+
+    .badge--sale { background: rgba(230,57,70,0.1); color: var(--color-new); }
+    .badge--free { background: rgba(0,168,107,0.1); color: var(--color-market); }
+
+    @media (max-width: 600px) {
+      .product-grid { grid-template-columns: 1fr 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+  <div data-mnp-nav data-active-tab="market"></div>
+
+  <section class="market-hero">
+    <div class="container">
+      <div data-reveal>
+        <span class="market-hero__badge">✦ Mannamplace Market</span>
+        <h1>쇼핑의 기준이<br><em>바뀝니다</em></h1>
+        <p style="color: var(--color-text-muted); font-size: var(--text-md); max-width: 44ch;">
+          AI가 취향을 분석해 딱 맞는 상품을 추천합니다. 공동구매·라이브커머스·창작자 굿즈까지 한 곳에서.
+        </p>
+      </div>
+
+      <div class="category-tabs" data-reveal data-reveal-delay="1">
+        <span class="category-tab active" onclick="filterCat(this)">전체</span>
+        <span class="category-tab" onclick="filterCat(this)">패션</span>
+        <span class="category-tab" onclick="filterCat(this)">전자기기</span>
+        <span class="category-tab" onclick="filterCat(this)">식품</span>
+        <span class="category-tab" onclick="filterCat(this)">뷰티</span>
+        <span class="category-tab" onclick="filterCat(this)">도서</span>
+        <span class="category-tab" onclick="filterCat(this)">가전</span>
+        <span class="category-tab" onclick="filterCat(this)">스포츠</span>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="container">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: var(--space-4)">
+        <div>
+          <p class="section__label">AI 추천</p>
+          <h2 style="font-size: var(--text-2xl); font-weight: 800; letter-spacing: -0.03em;">당신을 위한 상품</h2>
+        </div>
+        <a href="#" style="font-size: var(--text-sm); color: var(--color-text-muted)">전체 보기 →</a>
+      </div>
+
+      <div class="product-grid">
+        <div class="product-card" data-reveal>
+          <div class="product-card__img">👟</div>
+          <div class="product-card__body">
+            <p class="product-card__name">경량 러닝화 프로 버전</p>
+            <p>
+              <span class="product-card__price">₩89,000</span>
+              <span class="product-card__price-orig">₩130,000</span>
+            </p>
+            <div class="product-card__badge-row">
+              <span class="badge badge--sale">31% OFF</span>
+              <span class="badge badge--free">무료배송</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="product-card" data-reveal data-reveal-delay="1">
+          <div class="product-card__img">🎧</div>
+          <div class="product-card__body">
+            <p class="product-card__name">노이즈캔슬링 무선 이어폰</p>
+            <p>
+              <span class="product-card__price">₩179,000</span>
+            </p>
+            <div class="product-card__badge-row">
+              <span class="badge badge--free">무료배송</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="product-card" data-reveal data-reveal-delay="2">
+          <div class="product-card__img">📚</div>
+          <div class="product-card__body">
+            <p class="product-card__name">베스트셀러 에세이 3권 세트</p>
+            <p>
+              <span class="product-card__price">₩38,000</span>
+              <span class="product-card__price-orig">₩51,000</span>
+            </p>
+            <div class="product-card__badge-row">
+              <span class="badge badge--sale">25% OFF</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="product-card" data-reveal data-reveal-delay="3">
+          <div class="product-card__img">☕</div>
+          <div class="product-card__body">
+            <p class="product-card__name">스페셜티 원두 200g</p>
+            <p>
+              <span class="product-card__price">₩22,000</span>
+            </p>
+            <div class="product-card__badge-row">
+              <span class="badge badge--free">무료배송</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="product-card" data-reveal>
+          <div class="product-card__img">🖼️</div>
+          <div class="product-card__body">
+            <p class="product-card__name">창작자 굿즈 — 아트 포스터</p>
+            <p>
+              <span class="product-card__price">₩15,000</span>
+            </p>
+            <div class="product-card__badge-row">
+              <span class="badge badge--sale">창작자 직판</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="product-card" data-reveal data-reveal-delay="1">
+          <div class="product-card__img">💻</div>
+          <div class="product-card__body">
+            <p class="product-card__name">휴대용 무선 충전 패드</p>
+            <p>
+              <span class="product-card__price">₩32,000</span>
+              <span class="product-card__price-orig">₩45,000</span>
+            </p>
+            <div class="product-card__badge-row">
+              <span class="badge badge--sale">29% OFF</span>
+              <span class="badge badge--free">무료배송</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div data-mnp-footer></div>
+  <script src="../../shared/js/navbar.js"></script>
+  <script src="../../shared/js/footer.js"></script>
+  <script>
+    function filterCat(el) {
+      document.querySelectorAll('.category-tab').forEach(t => t.classList.remove('active'));
+      el.classList.add('active');
+    }
+  </script>
+</body>
+</html>
