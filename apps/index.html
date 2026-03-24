@@ -1,0 +1,1320 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mannamplace 커뮤니티</title>
+<meta property="og:title" content="Mannamplace 커뮤니티">
+<meta property="og:description" content="전 세계가 모이는 다언어 커뮤니티">
+<meta property="og:url" content="https://community.mannamplace.com">
+<link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Noto+Sans+KR:wght@300;400;500;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --org:#B84A00;--org2:#D45500;--org3:#FF6B1A;--org-dark:#8C3700;--org-deeper:#3D1A00;
+  --bg:#0F0A06;--bg2:#1A1008;--bg3:#241508;--bg4:#0A0603;
+  --card:#160C04;--border:#3A1E08;--border2:#5C3010;
+  --text:#F5E6D8;--text2:#C4956A;--text3:#7A4A28;--white:#FFF8F2;
+  --blue:#4A9EFF;--green:#2ECC71;--red:#FF4444;--purple:#BB86FC;--yellow:#FFD166;
+  --boost:#2ECC71;--fade:#FF4444;
+}
+html{font-size:14px}
+body{background:var(--bg);color:var(--text);font-family:'Noto Sans KR',sans-serif;min-height:100vh;overflow-x:hidden}
+body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(184,74,0,0.02) 1px,transparent 1px),linear-gradient(90deg,rgba(184,74,0,0.02) 1px,transparent 1px);background-size:32px 32px;pointer-events:none;z-index:0}
+
+/* TOPBAR */
+.topbar{background:rgba(15,10,6,0.95);backdrop-filter:blur(16px);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:200;padding:0 16px;height:52px;display:flex;align-items:center;gap:12px}
+.logo{font-family:'Black Han Sans',sans-serif;font-size:16px;color:var(--white);cursor:pointer;text-decoration:none;white-space:nowrap}
+.logo em{color:var(--org3);font-style:normal}
+.logo-sub{font-size:9px;color:var(--text3);font-family:'JetBrains Mono',monospace;margin-left:6px;letter-spacing:2px}
+.search-wrap{flex:1;max-width:440px;position:relative}
+.search-inp{width:100%;background:var(--bg3);border:1px solid var(--border2);border-radius:4px;padding:7px 12px 7px 34px;color:var(--text);font-size:13px;font-family:'Noto Sans KR',sans-serif;outline:none;transition:.2s}
+.search-inp:focus{border-color:var(--org)}
+.search-inp::placeholder{color:var(--text3)}
+.search-ico{position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--text3);font-size:13px;cursor:pointer}
+.topbar-right{margin-left:auto;display:flex;align-items:center;gap:8px}
+.top-btn{background:none;border:1px solid var(--border2);border-radius:3px;padding:5px 12px;color:var(--text2);font-size:12px;cursor:pointer;font-family:'Noto Sans KR',sans-serif;transition:.15s}
+.top-btn:hover{border-color:var(--org);color:var(--org3)}
+.top-btn.primary{background:var(--org);border-color:var(--org);color:#fff;font-weight:700}
+.profile-btn{width:30px;height:30px;border-radius:50%;background:var(--org-dark);border:2px solid var(--org);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:12px;font-weight:700;color:var(--white)}
+.pd-wrap{position:relative}
+.pd-dropdown{position:absolute;top:36px;right:0;background:var(--bg2);border:1px solid var(--border2);border-radius:6px;width:220px;z-index:300;display:none;overflow:hidden}
+.pd-dropdown.open{display:block}
+.pd-head{padding:12px 14px;border-bottom:1px solid var(--border);background:var(--bg3)}
+.pd-id{font-size:11px;color:var(--org3);font-family:'JetBrains Mono',monospace}
+.pd-name{font-size:14px;font-weight:700;color:var(--white);margin-top:2px}
+.pd-badge{display:inline-block;font-size:9px;background:rgba(184,74,0,0.2);border:1px solid var(--org);color:var(--org3);padding:1px 6px;border-radius:2px;margin-top:3px}
+.pd-menu{padding:6px 0}
+.pd-menu-item{display:block;padding:7px 14px;font-size:12px;color:var(--text2);cursor:pointer;transition:.1s;text-decoration:none}
+.pd-menu-item:hover{background:var(--bg3);color:var(--text)}
+.pd-menu-item.danger{color:var(--red)}
+.notif-btn{position:relative;cursor:pointer;font-size:18px;line-height:1}
+.notif-badge{position:absolute;top:-4px;right:-4px;background:var(--red);color:#fff;font-size:8px;border-radius:50%;width:14px;height:14px;display:flex;align-items:center;justify-content:center;font-family:'JetBrains Mono',monospace;display:none}
+.notif-badge.show{display:flex}
+
+/* LAYOUT */
+.wrap{display:grid;grid-template-columns:220px 1fr 200px;min-height:calc(100vh - 52px);position:relative;z-index:1}
+
+/* LEFT SIDEBAR */
+.lsidebar{border-right:1px solid var(--border);padding:10px 0;position:sticky;top:52px;height:calc(100vh - 52px);overflow-y:auto}
+.lsidebar::-webkit-scrollbar{width:2px}
+.lsidebar::-webkit-scrollbar-thumb{background:var(--border2)}
+.ls-label{font-size:9px;letter-spacing:2px;color:var(--text3);padding:8px 14px 3px;font-family:'JetBrains Mono',monospace;text-transform:uppercase}
+.ls-item{display:flex;align-items:center;gap:8px;padding:7px 14px;color:var(--text2);font-size:12px;cursor:pointer;transition:.1s;border-left:2px solid transparent;text-decoration:none}
+.ls-item:hover{background:var(--bg2);color:var(--text);border-left-color:var(--border2)}
+.ls-item.on{background:rgba(184,74,0,0.1);color:var(--org3);border-left-color:var(--org)}
+.ls-ico{font-size:14px;width:18px;text-align:center}
+.ls-badge{margin-left:auto;background:var(--org);color:#fff;font-size:9px;border-radius:8px;padding:1px 5px;font-family:'JetBrains Mono',monospace}
+.ls-divider{height:1px;background:var(--border);margin:5px 14px}
+.ls-write-btn{margin:10px 14px;background:var(--org);border:none;border-radius:4px;padding:8px;width:calc(100% - 28px);color:#fff;font-size:12px;font-weight:700;cursor:pointer;font-family:'Noto Sans KR',sans-serif;transition:.15s}
+.ls-write-btn:hover{background:var(--org2)}
+.place-item{display:flex;align-items:center;gap:7px;padding:5px 14px;cursor:pointer;transition:.1s}
+.place-item:hover{background:var(--bg2)}
+.place-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+.place-name{font-size:11px;color:var(--text2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1}
+.place-cnt{font-size:9px;color:var(--text3);font-family:'JetBrains Mono',monospace}
+
+/* CENTER */
+.center{padding:10px;background:var(--bg)}
+
+/* FEED TABS */
+.feed-tabs{display:flex;background:var(--bg4);border:1px solid var(--border);border-radius:6px;padding:3px;margin-bottom:10px}
+.ftab{flex:1;background:none;border:none;border-radius:4px;padding:6px;color:var(--text3);font-size:12px;cursor:pointer;font-family:'Noto Sans KR',sans-serif;transition:.15s}
+.ftab:hover{color:var(--text2)}
+.ftab.on{background:var(--org);color:#fff;font-weight:700}
+
+/* WRITE BOX */
+.write-box{background:var(--card);border:1px solid var(--border);border-radius:6px;padding:10px 12px;margin-bottom:10px;display:flex;align-items:center;gap:10px;cursor:pointer;transition:.15s}
+.write-box:hover{border-color:var(--border2)}
+.write-avatar{width:28px;height:28px;border-radius:50%;background:var(--org-dark);border:1px solid var(--org);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--white);flex-shrink:0}
+.write-placeholder{flex:1;font-size:12px;color:var(--text3)}
+.write-actions{display:flex;gap:6px}
+.write-act{background:none;border:1px solid var(--border2);border-radius:3px;padding:4px 8px;color:var(--text3);font-size:10px;cursor:pointer;transition:.1s}
+.write-act:hover{border-color:var(--org);color:var(--org3)}
+
+/* POST CARD */
+.post-card{background:var(--card);border:1px solid var(--border);border-radius:6px;margin-bottom:8px;overflow:hidden;transition:.15s}
+.post-card:hover{border-color:var(--border2)}
+.post-reddit{display:flex}
+.post-vote{display:flex;flex-direction:column;align-items:center;padding:10px 8px;background:var(--bg4);min-width:44px;gap:2px}
+.vote-btn{background:none;border:none;color:var(--text3);cursor:pointer;font-size:16px;transition:.1s;line-height:1}
+.vote-btn:hover{color:var(--boost)}
+.vote-btn.dn:hover{color:var(--fade)}
+.vote-btn.on{color:var(--boost)}
+.vote-btn.dn.on{color:var(--fade)}
+.vote-score{font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:700;color:var(--text2)}
+.vote-score.pos{color:var(--boost)}
+.vote-score.neg{color:var(--fade)}
+.post-body{flex:1;padding:10px 12px;min-width:0}
+.post-meta{display:flex;align-items:center;gap:6px;margin-bottom:5px;flex-wrap:wrap}
+.post-place{font-size:10px;color:var(--org3);font-family:'JetBrains Mono',monospace;cursor:pointer}
+.post-place:hover{text-decoration:underline}
+.post-author{font-size:10px;color:var(--text3)}
+.post-time{font-size:10px;color:var(--text3)}
+.post-tag{font-size:9px;padding:1px 6px;border-radius:2px;font-family:'JetBrains Mono',monospace}
+.tag-hot{background:rgba(255,68,68,0.12);color:var(--red);border:1px solid rgba(255,68,68,0.25)}
+.tag-new{background:rgba(46,204,113,0.12);color:var(--green);border:1px solid rgba(46,204,113,0.25)}
+.post-title{font-size:13px;font-weight:500;color:var(--text);line-height:1.5;margin-bottom:5px;cursor:pointer}
+.post-title:hover{color:var(--org3)}
+.post-preview{font-size:11px;color:var(--text2);line-height:1.5;margin-bottom:6px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.post-img{width:80px;height:60px;object-fit:cover;border-radius:4px;border:1px solid var(--border);flex-shrink:0;margin:0 12px 0 0;cursor:pointer}
+.post-foot{display:flex;align-items:center;gap:12px}
+.pf-act{background:none;border:none;color:var(--text3);font-size:10px;cursor:pointer;font-family:'Noto Sans KR',sans-serif;display:flex;align-items:center;gap:3px;transition:.1s;padding:3px 0}
+.pf-act:hover{color:var(--org3)}
+
+/* GALLERY */
+.gallery-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:8px}
+.gallery-card{background:var(--card);border:1px solid var(--border);border-radius:6px;overflow:hidden;cursor:pointer;transition:.15s}
+.gallery-card:hover{border-color:var(--border2);transform:translateY(-1px)}
+.gallery-thumb{height:90px;display:flex;align-items:center;justify-content:center;font-size:28px;position:relative;background:rgba(184,74,0,0.08)}
+.gallery-thumb img{width:100%;height:100%;object-fit:cover;position:absolute;inset:0}
+.gallery-place{position:absolute;top:5px;left:5px;font-size:9px;font-family:'JetBrains Mono',monospace;background:rgba(0,0,0,0.6);color:var(--org3);padding:1px 5px;border-radius:2px;z-index:1}
+.gallery-info{padding:6px 8px}
+.gallery-title{font-size:11px;color:var(--text);line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.gallery-foot{display:flex;gap:8px;margin-top:4px}
+.gf{font-size:9px;color:var(--text3);font-family:'JetBrains Mono',monospace}
+.gf.up{color:var(--boost)}
+
+/* SHORT POST */
+.short-post{background:var(--card);border:1px solid var(--border);border-radius:6px;padding:10px 12px;margin-bottom:6px;transition:.15s}
+.short-post:hover{border-color:var(--border2)}
+.sp-header{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.sp-avatar{width:24px;height:24px;border-radius:50%;background:var(--org-dark);display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:var(--white);flex-shrink:0}
+.sp-name{font-size:12px;font-weight:500;color:var(--text)}
+.sp-place{font-size:10px;color:var(--org3);font-family:'JetBrains Mono',monospace}
+.sp-time{font-size:10px;color:var(--text3);margin-left:auto}
+.sp-text{font-size:12px;color:var(--text);line-height:1.6;margin-bottom:7px}
+.sp-foot{display:flex;gap:14px}
+.sp-act{background:none;border:none;color:var(--text3);font-size:10px;cursor:pointer;display:flex;align-items:center;gap:3px;transition:.1s;font-family:'Noto Sans KR',sans-serif}
+.sp-act:hover{color:var(--org3)}
+
+/* SEC HEADER */
+.sec-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;margin-top:12px}
+.sec-title{font-size:11px;font-weight:700;color:var(--org3);display:flex;align-items:center;gap:5px}
+.sec-title::before{content:'';display:inline-block;width:3px;height:12px;background:var(--org);border-radius:1px}
+.sec-more{font-size:10px;color:var(--text3);cursor:pointer;text-decoration:none}
+
+/* COMMENTS */
+.comment-area{padding:10px 12px;border-top:1px solid var(--border);background:var(--bg2)}
+.comment-inp-wrap{display:flex;gap:8px;margin-bottom:8px}
+.comment-inp{flex:1;background:var(--bg3);border:1px solid var(--border2);border-radius:4px;padding:7px 10px;color:var(--text);font-size:12px;font-family:'Noto Sans KR',sans-serif;outline:none;resize:none}
+.comment-inp:focus{border-color:var(--org)}
+.comment-submit{background:var(--org);border:none;border-radius:4px;padding:7px 12px;color:#fff;font-size:11px;font-weight:700;cursor:pointer;font-family:'Noto Sans KR',sans-serif;white-space:nowrap}
+.comment-item{display:flex;gap:8px;padding:6px 0;border-bottom:1px solid var(--border)}
+.comment-item:last-child{border-bottom:none}
+.comment-avatar{width:20px;height:20px;border-radius:50%;background:var(--org-dark);display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:700;color:var(--white);flex-shrink:0;margin-top:1px}
+.comment-body{flex:1}
+.comment-author{font-size:10px;color:var(--org3);font-family:'JetBrains Mono',monospace;margin-bottom:2px}
+.comment-text{font-size:12px;color:var(--text);line-height:1.5}
+.comment-time{font-size:9px;color:var(--text3);margin-top:2px}
+.comment-toggle{font-size:10px;color:var(--text3);cursor:pointer;margin-left:auto;padding:2px 6px;background:none;border:none}
+.comment-toggle:hover{color:var(--org3)}
+
+/* RIGHT PANEL */
+.rpanel{border-left:1px solid var(--border);padding:10px;position:sticky;top:52px;height:calc(100vh - 52px);overflow-y:auto}
+.rpanel::-webkit-scrollbar{width:2px}
+.rpanel::-webkit-scrollbar-thumb{background:var(--border2)}
+.rt{font-size:10px;font-weight:700;color:var(--org3);margin-bottom:6px;display:flex;align-items:center;gap:4px}
+.rt::before{content:'';display:inline-block;width:2px;height:10px;background:var(--org);border-radius:1px}
+.hp-item{display:flex;align-items:center;gap:7px;padding:5px 0;border-bottom:1px solid var(--border);cursor:pointer}
+.hp-item:last-child{border-bottom:none}
+.hp-num{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--text3);min-width:14px}
+.hp-num.t3{color:var(--org3);font-weight:700}
+.hp-dot{width:5px;height:5px;border-radius:50%;flex-shrink:0}
+.hp-name{font-size:11px;color:var(--text);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;transition:.1s}
+.hp-item:hover .hp-name{color:var(--org3)}
+.hp-cnt{font-size:9px;color:var(--text3);font-family:'JetBrains Mono',monospace}
+.tr-item{display:flex;align-items:center;gap:6px;padding:5px 0;border-bottom:1px solid var(--border);cursor:pointer}
+.tr-item:last-child{border-bottom:none}
+.tr-num{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--text3);min-width:14px}
+.tr-num.t3{color:var(--org3);font-weight:700}
+.tr-kw{font-size:11px;color:var(--text);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tr-up{font-size:9px;color:var(--boost)}
+.tr-dn{font-size:9px;color:var(--fade)}
+
+/* MODAL */
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,0.88);z-index:500;display:none;align-items:center;justify-content:center;padding:20px}
+.modal-bg.open{display:flex}
+.modal{background:var(--bg2);border:1px solid var(--border2);border-radius:8px;width:100%;max-width:560px;overflow:hidden;max-height:92vh;display:flex;flex-direction:column}
+.modal-head{padding:14px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:var(--bg3);flex-shrink:0}
+.modal-title{font-family:'Black Han Sans',sans-serif;font-size:15px;color:var(--white)}
+.modal-close{background:none;border:none;color:var(--text3);font-size:18px;cursor:pointer;line-height:1}
+.modal-body{padding:16px;overflow-y:auto;flex:1}
+.form-group{margin-bottom:12px}
+.form-label{font-size:11px;color:var(--text2);margin-bottom:4px;display:block}
+.form-inp{width:100%;background:var(--bg3);border:1px solid var(--border2);border-radius:4px;padding:8px 12px;color:var(--text);font-size:13px;font-family:'Noto Sans KR',sans-serif;outline:none;transition:.2s}
+.form-inp:focus{border-color:var(--org)}
+.form-inp::placeholder{color:var(--text3)}
+.form-textarea{width:100%;background:var(--bg3);border:1px solid var(--border2);border-radius:4px;padding:8px 12px;color:var(--text);font-size:13px;font-family:'Noto Sans KR',sans-serif;outline:none;resize:vertical;min-height:120px;transition:.2s;line-height:1.6}
+.form-textarea:focus{border-color:var(--org)}
+.form-select{width:100%;background:var(--bg3);border:1px solid var(--border2);border-radius:4px;padding:8px 12px;color:var(--text);font-size:13px;font-family:'Noto Sans KR',sans-serif;outline:none}
+.form-submit{width:100%;background:var(--org);border:none;border-radius:4px;padding:10px;color:#fff;font-size:13px;font-weight:700;cursor:pointer;font-family:'Noto Sans KR',sans-serif;transition:.15s}
+.form-submit:hover{background:var(--org2)}
+.form-submit:disabled{background:var(--text3);cursor:not-allowed}
+.form-row{display:flex;gap:8px}
+.form-row .form-group{flex:1}
+.err-msg{display:none;background:rgba(255,68,68,0.1);border:1px solid rgba(255,68,68,0.3);border-radius:4px;padding:7px 10px;font-size:11px;color:var(--red);margin-bottom:10px}
+.mtab-row{display:flex;gap:0;margin-bottom:14px;background:var(--bg4);border-radius:4px;padding:3px}
+.mtab{flex:1;background:none;border:none;border-radius:3px;padding:7px;color:var(--text3);font-size:12px;cursor:pointer;font-family:'Noto Sans KR',sans-serif;transition:.15s}
+.mtab.on{background:var(--org);color:#fff;font-weight:700}
+
+/* IMAGE PREVIEW */
+.img-preview-wrap{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.img-preview{width:64px;height:64px;object-fit:cover;border-radius:4px;border:1px solid var(--border2);position:relative;cursor:pointer}
+.img-preview-rm{position:absolute;top:-4px;right:-4px;background:var(--red);color:#fff;border:none;border-radius:50%;width:14px;height:14px;font-size:9px;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1}
+
+/* VOTE MODAL */
+.vote-option{background:var(--bg3);border:1px solid var(--border2);border-radius:4px;padding:10px 12px;margin-bottom:6px;display:flex;align-items:center;gap:10px;cursor:pointer;transition:.15s}
+.vote-option:hover{border-color:var(--org)}
+.vote-option.voted{border-color:var(--boost);background:rgba(46,204,113,0.06)}
+.vote-bar{height:4px;background:var(--border2);border-radius:2px;flex:1}
+.vote-fill{height:4px;background:var(--org3);border-radius:2px;transition:.5s}
+.vote-pct{font-size:10px;color:var(--text3);font-family:'JetBrains Mono',monospace;min-width:30px;text-align:right}
+
+/* LOADING */
+.loading{text-align:center;padding:24px;color:var(--text3);font-size:12px}
+.loading::after{content:'';display:inline-block;width:16px;height:16px;border:2px solid var(--border2);border-top-color:var(--org);border-radius:50%;animation:spin .8s linear infinite;margin-left:8px;vertical-align:middle}
+@keyframes spin{to{transform:rotate(360deg)}}
+.empty-feed{text-align:center;padding:32px;color:var(--text3);font-size:12px;line-height:1.8}
+
+/* NOTIF PANEL */
+.notif-panel{position:absolute;top:36px;right:0;background:var(--bg2);border:1px solid var(--border2);border-radius:6px;width:280px;z-index:300;display:none;overflow:hidden;box-shadow:0 8px 24px rgba(0,0,0,0.6)}
+.notif-panel.open{display:block}
+.notif-head{padding:10px 14px;border-bottom:1px solid var(--border);background:var(--bg3);font-size:12px;font-weight:700;color:var(--text)}
+.notif-item{padding:10px 14px;border-bottom:1px solid var(--border);cursor:pointer;transition:.1s}
+.notif-item:hover{background:var(--bg3)}
+.notif-item:last-child{border-bottom:none}
+.notif-text{font-size:11px;color:var(--text);line-height:1.5}
+.notif-time{font-size:9px;color:var(--text3);margin-top:2px;font-family:'JetBrains Mono',monospace}
+.notif-dot{width:6px;height:6px;border-radius:50%;background:var(--org);flex-shrink:0;margin-top:3px}
+
+/* BOT NAV */
+.bot-nav{display:none}
+@media(max-width:900px){
+  .wrap{grid-template-columns:1fr}
+  .lsidebar,.rpanel{display:none}
+  .bot-nav{display:flex;position:fixed;bottom:0;left:0;right:0;background:rgba(10,6,3,.97);border-top:2px solid var(--org);padding:6px 0;z-index:200}
+  .bn-item{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;cursor:pointer}
+  .bn-ico{font-size:18px}
+  .bn-lbl{font-size:9px;color:var(--text3)}
+  .bn-item.on .bn-lbl{color:var(--org3)}
+  .gallery-grid{grid-template-columns:1fr 1fr}
+}
+@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+</style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<header class="topbar">
+  <a class="logo" href="https://mannamplace.com">Mannam<em>place</em></a>
+  <span class="logo-sub">COMMUNITY</span>
+  <div class="search-wrap">
+    <span class="search-ico" onclick="doSearch()">⌕</span>
+    <input class="search-inp" id="search-inp" type="text" placeholder="place, 게시글, 유저 검색" onkeydown="if(event.key==='Enter')doSearch()">
+  </div>
+  <div class="topbar-right" id="auth-area">
+    <button class="top-btn" onclick="openAuthModal('login')">로그인</button>
+    <button class="top-btn primary" onclick="openAuthModal('join')">가입하기</button>
+  </div>
+  <div class="topbar-right" id="user-area" style="display:none">
+    <div style="position:relative">
+      <div class="notif-btn" id="notif-btn" onclick="toggleNotif()">🔔<div class="notif-badge" id="notif-badge">0</div></div>
+      <div class="notif-panel" id="notif-panel">
+        <div class="notif-head">알림</div>
+        <div id="notif-list"><div class="loading">불러오는 중</div></div>
+      </div>
+    </div>
+    <div class="pd-wrap">
+      <div class="profile-btn" id="profile-btn" onclick="togglePD()">?</div>
+      <div class="pd-dropdown" id="pd-dropdown">
+        <div class="pd-head">
+          <div class="pd-id" id="pd-id">@-</div>
+          <div class="pd-name" id="pd-name">-</div>
+          <div class="pd-badge" id="pd-badge">일반회원</div>
+        </div>
+        <div class="pd-menu">
+          <a class="pd-menu-item" href="#" onclick="showMyPosts();return false">내 게시글</a>
+          <a class="pd-menu-item" href="#" onclick="showFollowing();return false">팔로우 피드</a>
+          <a class="pd-menu-item" href="https://mannamplace.com">포털로 이동</a>
+          <a class="pd-menu-item danger" href="#" onclick="doLogout();return false">로그아웃</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <!-- LEFT SIDEBAR -->
+  <nav class="lsidebar">
+    <button class="ls-write-btn" onclick="openWriteModal()">✏️ 글 작성하기</button>
+    <div class="ls-label">피드</div>
+    <div class="ls-item on" onclick="setFeedMode(this,'home')"><span class="ls-ico">🏠</span>홈피드</div>
+    <div class="ls-item" onclick="setFeedMode(this,'hot')"><span class="ls-ico">🔥</span>Hot피드</div>
+    <div class="ls-item" onclick="setFeedMode(this,'global')"><span class="ls-ico">🌏</span>글로벌</div>
+    <div class="ls-item" onclick="setFeedMode(this,'following')"><span class="ls-ico">👤</span>팔로우</div>
+    <div class="ls-divider"></div>
+    <div class="ls-label">공식 cplace</div>
+    <div id="cplace-list">
+      <div class="place-item" onclick="filterByPlace('c/글로벌-자유')"><div class="place-dot" style="background:var(--org3)"></div><span class="place-name">c/글로벌-자유</span></div>
+      <div class="place-item" onclick="filterByPlace('c/뉴스-토론')"><div class="place-dot" style="background:var(--org3)"></div><span class="place-name">c/뉴스-토론</span></div>
+      <div class="place-item" onclick="filterByPlace('c/기술-테크')"><div class="place-dot" style="background:var(--org3)"></div><span class="place-name">c/기술-테크</span></div>
+      <div class="place-item" onclick="filterByPlace('c/문화-엔터')"><div class="place-dot" style="background:var(--org3)"></div><span class="place-name">c/문화-엔터</span></div>
+      <div class="place-item" onclick="filterByPlace('c/경제-금융')"><div class="place-dot" style="background:var(--org3)"></div><span class="place-name">c/경제-금융</span></div>
+    </div>
+    <div class="ls-divider"></div>
+    <div class="ls-label">유저 mplace</div>
+    <div id="mplace-list"><div style="padding:5px 14px;font-size:10px;color:var(--text3)">불러오는 중...</div></div>
+    <div class="place-item" onclick="openCreatePlaceModal()"><span style="font-size:10px;color:var(--org3);padding:0">+ mplace 만들기</span></div>
+    <div class="ls-divider"></div>
+    <div class="ls-label">내 Club</div>
+    <div id="my-clubs"><div style="padding:5px 14px;font-size:10px;color:var(--text3)">로그인 후 표시</div></div>
+    <div class="place-item" onclick="openCreateClubModal()"><span style="font-size:10px;color:var(--blue);padding:0">+ Club 만들기</span></div>
+  </nav>
+
+  <!-- CENTER -->
+  <main class="center">
+
+    <!-- FEED TABS -->
+    <div class="feed-tabs">
+      <button class="ftab on" onclick="switchFeedTab(this,'reddit')">📋 전체</button>
+      <button class="ftab" onclick="switchFeedTab(this,'gallery')">🖼️ 갤러리</button>
+      <button class="ftab" onclick="switchFeedTab(this,'short')">⚡ 짧은글</button>
+      <button class="ftab" onclick="switchFeedTab(this,'club')">🏢 Club</button>
+    </div>
+
+    <!-- WRITE BOX -->
+    <div class="write-box" onclick="openWriteModal()">
+      <div class="write-avatar" id="write-avatar">?</div>
+      <div class="write-placeholder">무슨 생각을 하고 계세요? · What's on your mind?</div>
+      <div class="write-actions">
+        <button class="write-act" onclick="event.stopPropagation();openWriteModal('image')">📷 사진</button>
+        <button class="write-act" onclick="event.stopPropagation();openWriteModal('vote')">🗳️ 투표</button>
+        <button class="write-act" onclick="event.stopPropagation();openWriteModal('short')">⚡ 짧은글</button>
+      </div>
+    </div>
+
+    <!-- FEED AREA -->
+    <div id="feed-reddit"><div class="loading">게시글 불러오는 중</div></div>
+    <div id="feed-gallery" style="display:none"><div class="loading">갤러리 불러오는 중</div></div>
+    <div id="feed-short" style="display:none"><div class="loading">짧은글 불러오는 중</div></div>
+    <div id="feed-club" style="display:none"><div class="loading">Club 피드 불러오는 중</div></div>
+
+    <!-- 더보기 -->
+    <div style="text-align:center;padding:10px">
+      <button id="load-more-btn" style="background:none;border:1px solid var(--border2);border-radius:4px;padding:8px 24px;color:var(--text3);font-size:12px;cursor:pointer;font-family:'Noto Sans KR',sans-serif;transition:.15s" onclick="loadMorePosts()" onmouseover="this.style.borderColor='var(--org)'" onmouseout="this.style.borderColor='var(--border2)'">더보기</button>
+    </div>
+  </main>
+
+  <!-- RIGHT PANEL -->
+  <aside class="rpanel">
+    <div class="rt" style="margin-bottom:8px">인기 place</div>
+    <div id="hot-places" style="margin-bottom:14px">
+      <div style="font-size:10px;color:var(--text3)">불러오는 중...</div>
+    </div>
+    <div class="rt" style="margin-bottom:8px">실시간 트렌딩</div>
+    <div id="trending" style="margin-bottom:14px">
+      <div class="tr-item"><span class="tr-num t3">1</span><span class="tr-kw">#Mannamplace코인</span><span class="tr-up">↑</span></div>
+      <div class="tr-item"><span class="tr-num t3">2</span><span class="tr-kw">#동남아출시</span><span class="tr-up">↑</span></div>
+      <div class="tr-item"><span class="tr-num t3">3</span><span class="tr-kw">#AI번역v3</span><span class="tr-up">↑</span></div>
+      <div class="tr-item"><span class="tr-num">4</span><span class="tr-kw">#Cistan팬덤</span><span class="tr-up">↑</span></div>
+      <div class="tr-item"><span class="tr-num">5</span><span class="tr-kw">#동네밈맵</span><span class="tr-dn">↓</span></div>
+    </div>
+    <div style="margin-top:10px;padding:10px;background:rgba(184,74,0,0.06);border:1px solid rgba(184,74,0,0.15);border-radius:4px;text-align:center">
+      <div style="font-size:10px;color:var(--org3);font-weight:700;margin-bottom:4px">내 place 만들기</div>
+      <div style="font-size:10px;color:var(--text3);margin-bottom:8px;line-height:1.5">관심사 기반 커뮤니티를<br>직접 운영하세요</div>
+      <button style="width:100%;background:var(--org);border:none;border-radius:3px;padding:6px;color:#fff;font-size:11px;font-weight:700;cursor:pointer;font-family:'Noto Sans KR',sans-serif" onclick="openCreatePlaceModal()">mplace 개설 →</button>
+    </div>
+  </aside>
+</div>
+
+<nav class="bot-nav">
+  <div class="bn-item on"><div class="bn-ico">🏠</div><div class="bn-lbl">홈</div></div>
+  <div class="bn-item" onclick="openWriteModal()"><div class="bn-ico">✏️</div><div class="bn-lbl">작성</div></div>
+  <div class="bn-item"><div class="bn-ico">🔥</div><div class="bn-lbl">Hot</div></div>
+  <div class="bn-item"><div class="bn-ico">🏢</div><div class="bn-lbl">Club</div></div>
+  <div class="bn-item"><div class="bn-ico">👤</div><div class="bn-lbl">MY</div></div>
+</nav>
+
+<!-- ══ 글 작성 모달 ══ -->
+<div class="modal-bg" id="write-modal">
+  <div class="modal" style="max-width:600px">
+    <div class="modal-head">
+      <div class="modal-title">✏️ 글 작성</div>
+      <button class="modal-close" onclick="closeModal('write-modal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="mtab-row">
+        <button class="mtab on" onclick="setWriteType(this,'post')">📋 일반글</button>
+        <button class="mtab" onclick="setWriteType(this,'short')">⚡ 짧은글</button>
+        <button class="mtab" onclick="setWriteType(this,'vote')">🗳️ 투표</button>
+        <button class="mtab" onclick="setWriteType(this,'image')">📷 이미지</button>
+      </div>
+      <div id="err-write" class="err-msg"></div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">place 선택</label>
+          <select class="form-select" id="w-place">
+            <option value="c/글로벌-자유">c/글로벌-자유</option>
+            <option value="c/뉴스-토론">c/뉴스-토론</option>
+            <option value="c/기술-테크">c/기술-테크</option>
+            <option value="c/문화-엔터">c/문화-엔터</option>
+            <option value="c/경제-금융">c/경제-금융</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">언어</label>
+          <select class="form-select" id="w-lang">
+            <option value="ko">한국어</option>
+            <option value="en">English</option>
+            <option value="ja">日本語</option>
+            <option value="zh">中文</option>
+            <option value="es">Español</option>
+          </select>
+        </div>
+      </div>
+      <!-- 일반글/이미지 -->
+      <div id="w-section-post">
+        <div class="form-group">
+          <label class="form-label">제목</label>
+          <input class="form-inp" id="w-title" type="text" placeholder="제목을 입력하세요">
+        </div>
+        <div class="form-group">
+          <label class="form-label">내용</label>
+          <textarea class="form-textarea" id="w-content" placeholder="내용을 입력하세요..."></textarea>
+        </div>
+        <div class="form-group" id="w-img-group">
+          <label class="form-label">이미지 첨부 <span style="color:var(--text3);font-size:10px">(최대 4장)</span></label>
+          <input type="file" id="w-img-input" accept="image/*" multiple style="display:none" onchange="previewImages(this)">
+          <button class="write-act" style="width:100%;padding:8px;justify-content:center;display:flex" onclick="document.getElementById('w-img-input').click()">📷 이미지 선택</button>
+          <div class="img-preview-wrap" id="img-preview-wrap"></div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">파일 첨부</label>
+          <input type="file" id="w-file-input" multiple style="display:none" onchange="previewFiles(this)">
+          <button class="write-act" style="width:100%;padding:8px;justify-content:center;display:flex" onclick="document.getElementById('w-file-input').click()">📎 파일 선택</button>
+          <div id="file-preview" style="margin-top:6px;font-size:10px;color:var(--text2)"></div>
+        </div>
+      </div>
+      <!-- 짧은글 -->
+      <div id="w-section-short" style="display:none">
+        <div class="form-group">
+          <label class="form-label">짧은글 <span style="color:var(--text3);font-size:10px">(최대 280자)</span></label>
+          <textarea class="form-textarea" id="w-short" placeholder="지금 무슨 생각을 하고 있나요?" style="min-height:80px" maxlength="280" oninput="document.getElementById('short-cnt').textContent=this.value.length"></textarea>
+          <div style="text-align:right;font-size:10px;color:var(--text3);margin-top:3px"><span id="short-cnt">0</span>/280</div>
+        </div>
+      </div>
+      <!-- 투표 -->
+      <div id="w-section-vote" style="display:none">
+        <div class="form-group">
+          <label class="form-label">투표 제목</label>
+          <input class="form-inp" id="w-vote-title" type="text" placeholder="투표 질문을 입력하세요">
+        </div>
+        <div id="vote-options">
+          <div class="form-group"><label class="form-label">선택지 1</label><input class="form-inp vote-opt" type="text" placeholder="선택지 입력"></div>
+          <div class="form-group"><label class="form-label">선택지 2</label><input class="form-inp vote-opt" type="text" placeholder="선택지 입력"></div>
+        </div>
+        <button class="write-act" style="width:100%;padding:6px;justify-content:center;display:flex;margin-bottom:10px" onclick="addVoteOption()">+ 선택지 추가 (최대 5개)</button>
+        <div class="form-group">
+          <label class="form-label">투표 기간</label>
+          <select class="form-select" id="w-vote-duration">
+            <option value="1">1일</option>
+            <option value="3">3일</option>
+            <option value="7" selected>7일</option>
+            <option value="30">30일</option>
+          </select>
+        </div>
+      </div>
+      <button class="form-submit" id="btn-write" onclick="submitPost()">게시하기</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 로그인/가입 모달 ══ -->
+<div class="modal-bg" id="auth-modal">
+  <div class="modal" style="max-width:420px">
+    <div class="modal-head">
+      <div class="modal-title">Mannamplace 계정</div>
+      <button class="modal-close" onclick="closeModal('auth-modal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="mtab-row">
+        <button class="mtab on" onclick="switchAuthTab(this,'login')">로그인</button>
+        <button class="mtab" onclick="switchAuthTab(this,'join')">회원가입</button>
+      </div>
+      <div id="tab-login">
+        <div id="err-login" class="err-msg"></div>
+        <div class="form-group"><label class="form-label">이메일 또는 아이디</label><input class="form-inp" id="li-id" type="text" placeholder="이메일 또는 Mannamplace ID" onkeydown="if(event.key==='Enter')doLogin()"></div>
+        <div class="form-group"><label class="form-label">비밀번호</label><input class="form-inp" id="li-pw" type="password" placeholder="비밀번호" onkeydown="if(event.key==='Enter')doLogin()"></div>
+        <button class="form-submit" id="btn-login" onclick="doLogin()">로그인</button>
+        <div style="text-align:center;font-size:11px;color:var(--text3);margin:10px 0">또는 소셜 로그인</div>
+        <button onclick="doGoogleLogin()" style="width:100%;background:var(--bg3);border:1px solid var(--border2);border-radius:4px;padding:9px;color:var(--text2);font-size:12px;cursor:pointer;font-family:'Noto Sans KR',sans-serif;margin-bottom:6px;display:flex;align-items:center;justify-content:center;gap:8px">🟦 Google로 계속하기</button>
+      </div>
+      <div id="tab-join" style="display:none">
+        <div id="err-join" class="err-msg"></div>
+        <div class="form-group"><label class="form-label">이메일</label><input class="form-inp" id="su-email" type="email" placeholder="example@email.com"></div>
+        <div class="form-group"><label class="form-label">Mannamplace ID</label><input class="form-inp" id="su-mpid" type="text" placeholder="영문·숫자·언더바"></div>
+        <div class="form-group"><label class="form-label">비밀번호</label><input class="form-inp" id="su-pw" type="password" placeholder="8자 이상"></div>
+        <div class="form-group"><label class="form-label">커뮤니티 닉네임</label><input class="form-inp" id="su-nick" type="text" placeholder="닉네임"></div>
+        <div class="form-group"><label class="form-label">주요 언어</label><select class="form-select" id="su-lang"><option value="ko">한국어</option><option value="en">English</option><option value="ja">日本語</option><option value="zh">中文</option><option value="es">Español</option></select></div>
+        <button class="form-submit" id="btn-join" onclick="doJoin()">가입하기</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 게시글 상세 모달 ══ -->
+<div class="modal-bg" id="post-modal">
+  <div class="modal" style="max-width:640px">
+    <div class="modal-head">
+      <div class="modal-title" id="pm-title">게시글</div>
+      <button class="modal-close" onclick="closeModal('post-modal')">✕</button>
+    </div>
+    <div class="modal-body" id="pm-body">
+      <div class="loading">불러오는 중</div>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js";
+import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword,
+         signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut }
+  from "https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js";
+import { getFirestore, doc, setDoc, getDoc, getDocs, addDoc, updateDoc, deleteDoc,
+         collection, query, orderBy, limit, where, startAfter,
+         arrayUnion, arrayRemove, increment, serverTimestamp, onSnapshot }
+  from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
+import { getStorage, ref, uploadBytes, getDownloadURL }
+  from "https://www.gstatic.com/firebasejs/11.0.2/firebase-storage.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBBH5u-gGHmNK_SDjfSXI2mX-vYt8OJAtg",
+  authDomain: "mannamplaceofficial.firebaseapp.com",
+  projectId: "mannamplaceofficial",
+  storageBucket: "mannamplaceofficial.firebasestorage.app",
+  messagingSenderId: "877722323071",
+  appId: "1:877722323071:web:fc82c7a5144a92e8e8574a"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+const storage = getStorage(app);
+const googleProvider = new GoogleAuthProvider();
+
+// ── 상태 ──
+let currentUser = null;
+let currentProfile = null;
+let currentFeedMode = 'home';
+let currentFeedTab = 'reddit';
+let currentPlace = null;
+let lastDoc = null;
+let uploadedImgUrls = [];
+let uploadedFiles = [];
+let writeType = 'post';
+let voteOptCount = 2;
+
+// 쿠키
+function setAuthCookie(token) {
+  const exp = new Date(Date.now() + 7*24*60*60*1000).toUTCString();
+  document.cookie = `mp_token=${token}; domain=.mannamplace.com; path=/; secure; expires=${exp}`;
+}
+function clearAuthCookie() {
+  document.cookie = 'mp_token=; domain=.mannamplace.com; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC';
+}
+
+// 아이디→이메일
+async function findEmailByMpId(mpId) {
+  try {
+    const q = query(collection(db,"users"), where("mpId","==",mpId), limit(1));
+    const snap = await getDocs(q);
+    if(!snap.empty) return snap.docs[0].data().email;
+  } catch(e){}
+  return null;
+}
+
+// 시간 표시
+function timeAgo(ts) {
+  if(!ts) return '';
+  const d = ts.toDate ? ts.toDate() : new Date(ts);
+  const diff = (Date.now() - d.getTime()) / 1000;
+  if(diff < 60) return '방금 전';
+  if(diff < 3600) return Math.floor(diff/60) + '분 전';
+  if(diff < 86400) return Math.floor(diff/3600) + '시간 전';
+  return Math.floor(diff/86400) + '일 전';
+}
+
+// ── Auth ──
+onAuthStateChanged(auth, async (fbUser) => {
+  if(fbUser) {
+    const token = await fbUser.getIdToken();
+    setAuthCookie(token);
+    const snap = await getDoc(doc(db,"users",fbUser.uid));
+    currentProfile = snap.exists() ? snap.data() : {};
+    currentUser = fbUser;
+    updateAuthUI();
+    loadPosts(true);
+    loadMplaces();
+    loadMyClubs();
+    loadNotifs();
+  } else {
+    clearAuthCookie();
+    currentUser = null; currentProfile = null;
+    document.getElementById('auth-area').style.display = 'flex';
+    document.getElementById('user-area').style.display = 'none';
+    loadPosts(true);
+    loadMplaces();
+  }
+});
+
+function updateAuthUI() {
+  const nick = currentProfile?.profiles?.community?.nick || currentUser.email?.split('@')[0] || 'user';
+  const rank = currentProfile?.profiles?.news?.rank || '일반회원';
+  const mpId = currentProfile?.mpId || currentUser.uid.substring(0,8);
+  document.getElementById('auth-area').style.display = 'none';
+  document.getElementById('user-area').style.display = 'flex';
+  document.getElementById('profile-btn').textContent = nick.charAt(0).toUpperCase();
+  document.getElementById('write-avatar').textContent = nick.charAt(0).toUpperCase();
+  document.getElementById('pd-id').textContent = '@' + mpId;
+  document.getElementById('pd-name').textContent = nick;
+  document.getElementById('pd-badge').textContent = rank;
+  // place 선택에 내 mplace 추가
+  loadMyPlacesForWrite();
+}
+
+// ── 게시글 로드 ──
+async function loadPosts(reset=false) {
+  if(reset) { lastDoc = null; }
+  const feedEl = document.getElementById('feed-' + currentFeedTab);
+  if(reset) feedEl.innerHTML = '<div class="loading">게시글 불러오는 중</div>';
+
+  try {
+    let q;
+    const baseRef = collection(db, "posts");
+
+    if(currentPlace) {
+      q = query(baseRef, where("place","==",currentPlace), orderBy("timestamp","desc"), limit(10));
+    } else if(currentFeedMode === 'hot') {
+      q = query(baseRef, orderBy("boost","desc"), limit(10));
+    } else if(currentFeedMode === 'following' && currentUser) {
+      const following = currentProfile?.following || [];
+      if(!following.length) {
+        feedEl.innerHTML = '<div class="empty-feed">팔로우한 place가 없습니다.<br>관심 place를 팔로우해보세요!</div>';
+        return;
+      }
+      q = query(baseRef, where("place","in",following.slice(0,10)), orderBy("timestamp","desc"), limit(10));
+    } else {
+      q = query(baseRef, orderBy("timestamp","desc"), limit(10));
+    }
+
+    if(!reset && lastDoc) q = query(baseRef, orderBy("timestamp","desc"), startAfter(lastDoc), limit(10));
+
+    const snap = await getDocs(q);
+    if(snap.empty && reset) {
+      feedEl.innerHTML = '<div class="empty-feed">아직 게시글이 없어요.<br>첫 번째 글을 작성해보세요! ✏️</div>';
+      return;
+    }
+
+    lastDoc = snap.docs[snap.docs.length - 1];
+    const posts = snap.docs.map(d => ({id:d.id, ...d.data()}));
+
+    if(reset) feedEl.innerHTML = '';
+
+    if(currentFeedTab === 'reddit') {
+      feedEl.innerHTML += posts.map(p => renderPostCard(p)).join('');
+    } else if(currentFeedTab === 'gallery') {
+      if(reset) feedEl.innerHTML = '<div class="gallery-grid" id="gallery-inner"></div>';
+      document.getElementById('gallery-inner').innerHTML += posts.map(p => renderGalleryCard(p)).join('');
+    } else if(currentFeedTab === 'short') {
+      feedEl.innerHTML += posts.filter(p=>p.type==='short'||!p.title).map(p => renderShortPost(p)).join('');
+    } else if(currentFeedTab === 'club') {
+      feedEl.innerHTML += posts.filter(p=>p.isClub).map(p => renderClubPost(p)).join('');
+    }
+  } catch(e) {
+    feedEl.innerHTML = `<div class="empty-feed">로드 실패: ${e.message}</div>`;
+  }
+}
+
+function renderPostCard(p) {
+  const boost = p.boost || 0;
+  const imgs = p.images || [];
+  return `
+  <div class="post-card" id="post-${p.id}">
+    <div class="post-reddit">
+      <div class="post-vote">
+        <button class="vote-btn" onclick="handleBoost('${p.id}',1,this)">▲</button>
+        <div class="vote-score ${boost>0?'pos':boost<0?'neg':''}">${boost>999?(boost/1000).toFixed(1)+'k':boost}</div>
+        <button class="vote-btn dn" onclick="handleBoost('${p.id}',-1,this)">▼</button>
+      </div>
+      <div class="post-body" style="display:flex;flex-direction:column">
+        <div style="display:flex;gap:8px">
+          <div style="flex:1;min-width:0">
+            <div class="post-meta">
+              <span class="post-place" onclick="filterByPlace('${p.place||''}')">${p.place||'c/global'}</span>
+              <span class="post-author">by ${p.authorNick||'익명'}</span>
+              <span class="post-time">· ${timeAgo(p.timestamp)}</span>
+              ${boost>1000?'<span class="post-tag tag-hot">HOT</span>':''}
+            </div>
+            ${p.title?`<div class="post-title" onclick="openPost('${p.id}')">${p.title}</div>`:''}
+            <div class="post-preview">${(p.content||'').replace(/<[^>]*>/g,'').substring(0,150)}</div>
+          </div>
+          ${imgs[0]?`<img class="post-img" src="${imgs[0]}" onclick="openPost('${p.id}')" loading="lazy">`:''}
+        </div>
+        ${p.voteOptions ? renderVoteInline(p) : ''}
+        <div class="post-foot">
+          <button class="pf-act" onclick="openPost('${p.id}')">💬 ${p.commentCount||0} 댓글</button>
+          <button class="pf-act" onclick="sharePost('${p.id}')">↗ 공유</button>
+          <button class="pf-act" onclick="followPlace('${p.place||''}')">+ 팔로우</button>
+          ${currentUser?.uid===p.authorUid?`<button class="pf-act" onclick="deletePost('${p.id}')" style="color:var(--red)">🗑 삭제</button>`:''}
+        </div>
+      </div>
+    </div>
+  </div>`;
+}
+
+function renderVoteInline(p) {
+  const total = (p.voteResults||[]).reduce((a,b)=>a+(b||0),0);
+  return `<div style="margin:6px 0">${(p.voteOptions||[]).map((opt,i)=>{
+    const cnt = (p.voteResults||[])[i]||0;
+    const pct = total>0?Math.round(cnt/total*100):0;
+    return `<div class="vote-option" onclick="castVote('${p.id}',${i})">
+      <span style="font-size:12px;flex-shrink:0;min-width:100px">${opt}</span>
+      <div class="vote-bar"><div class="vote-fill" style="width:${pct}%"></div></div>
+      <span class="vote-pct">${pct}%</span>
+    </div>`;
+  }).join('')}<div style="font-size:10px;color:var(--text3);margin-top:4px;font-family:'JetBrains Mono',monospace">총 ${total}표</div></div>`;
+}
+
+function renderGalleryCard(p) {
+  const img = (p.images||[])[0];
+  return `
+  <div class="gallery-card" onclick="openPost('${p.id}')">
+    <div class="gallery-thumb">${img?`<img src="${img}" style="width:100%;height:100%;object-fit:cover;position:absolute;inset:0" loading="lazy">`:'📝'}
+      <span class="gallery-place">${p.place||''}</span></div>
+    <div class="gallery-info">
+      <div class="gallery-title">${p.title||p.content?.substring(0,60)||''}</div>
+      <div class="gallery-foot"><span class="gf up">▲${p.boost||0}</span><span class="gf">💬${p.commentCount||0}</span></div>
+    </div>
+  </div>`;
+}
+
+function renderShortPost(p) {
+  const nick = p.authorNick||'익명';
+  return `
+  <div class="short-post">
+    <div class="sp-header">
+      <div class="sp-avatar">${nick.charAt(0).toUpperCase()}</div>
+      <span class="sp-name">${nick}</span>
+      <span class="sp-place">· ${p.place||''}</span>
+      <span class="sp-time">${timeAgo(p.timestamp)}</span>
+    </div>
+    <div class="sp-text">${p.content||''}</div>
+    <div class="sp-foot">
+      <button class="sp-act" onclick="handleBoost('${p.id}',1,this)">▲ Boost ${p.boost||0}</button>
+      <button class="sp-act" onclick="openPost('${p.id}')">💬 ${p.commentCount||0}</button>
+      <button class="sp-act" onclick="sharePost('${p.id}')">↗ 공유</button>
+    </div>
+  </div>`;
+}
+
+function renderClubPost(p) {
+  return `
+  <div class="post-card" style="padding:10px 12px;margin-bottom:6px">
+    <div style="font-size:10px;color:var(--blue);font-family:'JetBrains Mono',monospace;margin-bottom:5px">🏢 ${p.club||p.place||''} · 멤버</div>
+    <div class="post-title" onclick="openPost('${p.id}')">${p.title||p.content?.substring(0,60)||''}</div>
+    <div class="post-foot" style="margin-top:8px">
+      <button class="pf-act" onclick="openPost('${p.id}')">💬 ${p.commentCount||0} 댓글</button>
+      <button class="pf-act" onclick="sharePost('${p.id}')">↗ 공유</button>
+    </div>
+  </div>`;
+}
+
+// ── 더보기 ──
+window.loadMorePosts = () => loadPosts(false);
+
+// ── Boost/Fade ──
+window.handleBoost = async (postId, val, btn) => {
+  if(!currentUser) return openAuthModal('login');
+  try {
+    const ref_ = doc(db, "posts", postId);
+    await updateDoc(ref_, { boost: increment(val) });
+    const scoreEl = btn.closest('.post-vote')?.querySelector('.vote-score') || btn.closest('.sp-foot')?.querySelector('.sp-act');
+    // 간단 로컬 업데이트
+    const card = document.getElementById('post-'+postId);
+    if(card) {
+      const sv = card.querySelector('.vote-score');
+      if(sv) { const n = (parseInt(sv.textContent)||0)+val; sv.textContent = n>999?(n/1000).toFixed(1)+'k':n; sv.className='vote-score '+(n>0?'pos':n<0?'neg':''); }
+    }
+  } catch(e){}
+};
+
+// ── 투표 ──
+window.castVote = async (postId, optIdx) => {
+  if(!currentUser) return openAuthModal('login');
+  try {
+    const ref_ = doc(db, "posts", postId);
+    const snap = await getDoc(ref_);
+    const data = snap.data();
+    const results = data.voteResults || new Array(data.voteOptions.length).fill(0);
+    results[optIdx] = (results[optIdx]||0) + 1;
+    await updateDoc(ref_, { voteResults: results });
+    // 로컬 리로드
+    const card = document.getElementById('post-'+postId);
+    if(card) {
+      const updatedData = {...data, voteResults: results, id: postId};
+      const voteArea = card.querySelector('.vote-option')?.parentElement;
+      if(voteArea) voteArea.outerHTML = renderVoteInline(updatedData);
+    }
+  } catch(e){}
+};
+
+// ── 게시글 상세 ──
+window.openPost = async (postId) => {
+  document.getElementById('post-modal').classList.add('open');
+  document.getElementById('pm-body').innerHTML = '<div class="loading">불러오는 중</div>';
+  try {
+    const snap = await getDoc(doc(db,"posts",postId));
+    if(!snap.exists()) { document.getElementById('pm-body').innerHTML = '게시글을 찾을 수 없습니다.'; return; }
+    const p = {id:snap.id, ...snap.data()};
+    document.getElementById('pm-title').textContent = p.title || '게시글';
+    // 조회수 증가
+    updateDoc(doc(db,"posts",postId), {views: increment(1)}).catch(()=>{});
+    // 댓글 로드
+    const cSnap = await getDocs(query(collection(db,"posts",postId,"comments"), orderBy("timestamp","asc")));
+    const comments = cSnap.docs.map(d=>({id:d.id,...d.data()}));
+    document.getElementById('pm-body').innerHTML = `
+      <div style="margin-bottom:12px">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+          <span style="font-size:10px;color:var(--org3);font-family:'JetBrains Mono',monospace">${p.place||''}</span>
+          <span style="font-size:10px;color:var(--text3)">by ${p.authorNick||'익명'} · ${timeAgo(p.timestamp)}</span>
+        </div>
+        <div style="font-size:14px;font-weight:700;color:var(--text);margin-bottom:8px">${p.title||''}</div>
+        <div style="font-size:13px;color:var(--text);line-height:1.7;white-space:pre-wrap">${p.content||''}</div>
+        ${(p.images||[]).map(img=>`<img src="${img}" style="width:100%;border-radius:4px;margin-top:8px;border:1px solid var(--border)" loading="lazy">`).join('')}
+        ${p.voteOptions ? `<div style="margin-top:12px">${renderVoteInline(p)}</div>` : ''}
+        <div style="display:flex;gap:12px;margin-top:10px">
+          <button class="pf-act" onclick="handleBoost('${p.id}',1,this)">▲ Boost ${p.boost||0}</button>
+          <button class="pf-act" onclick="sharePost('${p.id}')">↗ 공유</button>
+        </div>
+      </div>
+      <div class="comment-area">
+        <div style="font-size:11px;font-weight:700;color:var(--org3);margin-bottom:8px">댓글 ${comments.length}개</div>
+        <div class="comment-inp-wrap">
+          <textarea class="comment-inp" id="comment-inp-${p.id}" placeholder="${currentUser?'댓글을 입력하세요...':'로그인 후 댓글 작성 가능'}" rows="2" ${currentUser?'':'readonly'}></textarea>
+          <button class="comment-submit" onclick="submitComment('${p.id}')">등록</button>
+        </div>
+        <div id="comment-list-${p.id}">
+          ${comments.length===0?'<div style="font-size:11px;color:var(--text3);text-align:center;padding:12px">첫 번째 댓글을 남겨보세요!</div>':
+            comments.map(c=>`
+            <div class="comment-item">
+              <div class="comment-avatar">${(c.authorNick||'?').charAt(0).toUpperCase()}</div>
+              <div class="comment-body">
+                <div class="comment-author">${c.authorNick||'익명'}</div>
+                <div class="comment-text">${c.content||''}</div>
+                <div class="comment-time">${timeAgo(c.timestamp)}</div>
+              </div>
+              ${currentUser?.uid===c.authorUid?`<button class="comment-toggle" onclick="deleteComment('${p.id}','${c.id}')">삭제</button>`:''}
+            </div>`).join('')}
+        </div>
+      </div>`;
+  } catch(e) {
+    document.getElementById('pm-body').innerHTML = `오류: ${e.message}`;
+  }
+};
+
+// ── 댓글 등록 ──
+window.submitComment = async (postId) => {
+  if(!currentUser) return openAuthModal('login');
+  const inp = document.getElementById('comment-inp-'+postId);
+  const text = inp?.value.trim();
+  if(!text) return;
+  try {
+    const nick = currentProfile?.profiles?.community?.nick || currentUser.email?.split('@')[0];
+    await addDoc(collection(db,"posts",postId,"comments"), {
+      content: text, authorUid: currentUser.uid, authorNick: nick,
+      timestamp: serverTimestamp()
+    });
+    await updateDoc(doc(db,"posts",postId), {commentCount: increment(1)});
+    inp.value = '';
+    // 댓글 리로드
+    const cSnap = await getDocs(query(collection(db,"posts",postId,"comments"), orderBy("timestamp","asc")));
+    const comments = cSnap.docs.map(d=>({id:d.id,...d.data()}));
+    const listEl = document.getElementById('comment-list-'+postId);
+    if(listEl) listEl.innerHTML = comments.map(c=>`
+      <div class="comment-item">
+        <div class="comment-avatar">${(c.authorNick||'?').charAt(0).toUpperCase()}</div>
+        <div class="comment-body">
+          <div class="comment-author">${c.authorNick||'익명'}</div>
+          <div class="comment-text">${c.content||''}</div>
+          <div class="comment-time">${timeAgo(c.timestamp)}</div>
+        </div>
+        ${currentUser?.uid===c.authorUid?`<button class="comment-toggle" onclick="deleteComment('${postId}','${c.id}')">삭제</button>`:''}
+      </div>`).join('');
+  } catch(e) { alert('댓글 등록 실패: '+e.message); }
+};
+
+// ── 댓글 삭제 ──
+window.deleteComment = async (postId, commentId) => {
+  if(!confirm('삭제하시겠습니까?')) return;
+  try {
+    await deleteDoc(doc(db,"posts",postId,"comments",commentId));
+    await updateDoc(doc(db,"posts",postId), {commentCount: increment(-1)});
+    openPost(postId);
+  } catch(e) { alert('삭제 실패: '+e.message); }
+};
+
+// ── 게시글 삭제 ──
+window.deletePost = async (postId) => {
+  if(!confirm('게시글을 삭제하시겠습니까?')) return;
+  try {
+    await deleteDoc(doc(db,"posts",postId));
+    document.getElementById('post-'+postId)?.remove();
+  } catch(e) { alert('삭제 실패: '+e.message); }
+};
+
+// ── 게시글 작성 ──
+window.submitPost = async () => {
+  if(!currentUser) return openAuthModal('login');
+  const nick = currentProfile?.profiles?.community?.nick || currentUser.email?.split('@')[0];
+  const place = document.getElementById('w-place').value;
+  const lang = document.getElementById('w-lang').value;
+  const errEl = document.getElementById('err-write');
+  errEl.style.display = 'none';
+
+  let postData = {
+    authorUid: currentUser.uid, authorNick: nick,
+    place, lang, type: writeType,
+    boost: 0, commentCount: 0, views: 0,
+    timestamp: serverTimestamp()
+  };
+
+  if(writeType === 'short') {
+    const content = document.getElementById('w-short').value.trim();
+    if(!content) { errEl.textContent='내용을 입력해주세요.'; errEl.style.display='block'; return; }
+    postData.content = content;
+  } else if(writeType === 'vote') {
+    const title = document.getElementById('w-vote-title').value.trim();
+    const opts = [...document.querySelectorAll('.vote-opt')].map(i=>i.value.trim()).filter(Boolean);
+    if(!title||opts.length<2) { errEl.textContent='투표 제목과 선택지 2개 이상을 입력해주세요.'; errEl.style.display='block'; return; }
+    const duration = parseInt(document.getElementById('w-vote-duration').value);
+    postData.title = title; postData.voteOptions = opts; postData.voteResults = new Array(opts.length).fill(0);
+    postData.voteEnds = new Date(Date.now() + duration*24*60*60*1000).toISOString();
+  } else {
+    const title = document.getElementById('w-title').value.trim();
+    const content = document.getElementById('w-content').value.trim();
+    if(!title&&!content) { errEl.textContent='제목 또는 내용을 입력해주세요.'; errEl.style.display='block'; return; }
+    postData.title = title; postData.content = content;
+    // 이미지 업로드
+    if(uploadedImgUrls.length > 0) {
+      postData.images = uploadedImgUrls;
+    }
+    // 파일
+    if(uploadedFiles.length > 0) {
+      const fileUrls = [];
+      for(const file of uploadedFiles) {
+        const fileRef = ref(storage, `posts/${currentUser.uid}/${Date.now()}_${file.name}`);
+        await uploadBytes(fileRef, file);
+        fileUrls.push({name:file.name, url: await getDownloadURL(fileRef)});
+      }
+      postData.files = fileUrls;
+    }
+  }
+
+  const btn = document.getElementById('btn-write');
+  btn.textContent = '게시 중...'; btn.disabled = true;
+  try {
+    await addDoc(collection(db,"posts"), postData);
+    // place 통계 업데이트
+    const placeRef = doc(db,"places",place.replace('/','_'));
+    await setDoc(placeRef, {name:place, postCount: increment(1)}, {merge:true});
+    closeModal('write-modal');
+    resetWriteForm();
+    loadPosts(true);
+  } catch(e) {
+    errEl.textContent = '게시 실패: '+e.message; errEl.style.display='block';
+  } finally {
+    btn.textContent = '게시하기'; btn.disabled = false;
+  }
+};
+
+// ── 이미지 미리보기 ──
+window.previewImages = async (input) => {
+  const files = [...input.files].slice(0,4);
+  const wrap = document.getElementById('img-preview-wrap');
+  wrap.innerHTML = '';
+  uploadedImgUrls = [];
+  for(const file of files) {
+    const imgRef = ref(storage, `posts/${currentUser.uid}/${Date.now()}_${file.name}`);
+    const snap = await uploadBytes(imgRef, file);
+    const url = await getDownloadURL(snap.ref);
+    uploadedImgUrls.push(url);
+    const img = document.createElement('img');
+    img.src = url; img.className = 'img-preview';
+    img.onclick = () => { uploadedImgUrls = uploadedImgUrls.filter(u=>u!==url); img.remove(); };
+    wrap.appendChild(img);
+  }
+};
+
+// ── 파일 미리보기 ──
+window.previewFiles = (input) => {
+  uploadedFiles = [...input.files];
+  document.getElementById('file-preview').innerHTML = uploadedFiles.map(f=>`📎 ${f.name} (${(f.size/1024).toFixed(1)}KB)`).join('<br>');
+};
+
+// ── mplace 로드 ──
+async function loadMplaces() {
+  try {
+    const q = query(collection(db,"places"), orderBy("postCount","desc"), limit(8));
+    const snap = await getDocs(q);
+    const el = document.getElementById('mplace-list');
+    if(snap.empty) { el.innerHTML = '<div style="padding:5px 14px;font-size:10px;color:var(--text3)">아직 없음</div>'; return; }
+    el.innerHTML = snap.docs.map(d=>{
+      const p = d.data();
+      const isOfficial = p.name?.startsWith('c/');
+      if(isOfficial) return '';
+      return `<div class="place-item" onclick="filterByPlace('${p.name||d.id}')">
+        <div class="place-dot" style="background:var(--text3)"></div>
+        <span class="place-name">${p.name||d.id}</span>
+        <span class="place-cnt">${p.postCount||0}</span>
+      </div>`;
+    }).join('');
+    // 인기 place 우측 패널
+    document.getElementById('hot-places').innerHTML = snap.docs.slice(0,7).map((d,i)=>{
+      const p = d.data();
+      return `<div class="hp-item" onclick="filterByPlace('${p.name||d.id}')">
+        <span class="hp-num ${i<3?'t3':''}">${i+1}</span>
+        <div class="hp-dot" style="background:${p.name?.startsWith('c/')?'var(--org3)':'var(--text3)'}"></div>
+        <span class="hp-name">${p.name||d.id}</span>
+        <span class="hp-cnt">${p.postCount||0}</span>
+      </div>`;
+    }).join('');
+  } catch(e) {}
+}
+
+// ── 내 Club 로드 ──
+async function loadMyClubs() {
+  if(!currentUser) return;
+  try {
+    const q = query(collection(db,"clubs"), where("members","array-contains",currentUser.uid), limit(5));
+    const snap = await getDocs(q);
+    const el = document.getElementById('my-clubs');
+    if(snap.empty) { el.innerHTML = '<div style="padding:5px 14px;font-size:10px;color:var(--text3)">가입한 Club 없음</div>'; return; }
+    el.innerHTML = snap.docs.map(d=>{
+      const c = d.data();
+      return `<div class="place-item" onclick="filterByPlace('club/${d.id}')">
+        <div class="place-dot" style="background:var(--blue)"></div>
+        <span class="place-name">${c.name||d.id}</span>
+        <span class="place-cnt">${(c.members||[]).length}</span>
+      </div>`;
+    }).join('');
+  } catch(e) {}
+}
+
+// ── write place 옵션 로드 ──
+async function loadMyPlacesForWrite() {
+  try {
+    const q = query(collection(db,"places"), orderBy("postCount","desc"), limit(20));
+    const snap = await getDocs(q);
+    const sel = document.getElementById('w-place');
+    snap.docs.forEach(d=>{
+      const p = d.data();
+      if(!sel.querySelector(`option[value="${p.name}"]`)) {
+        const opt = document.createElement('option');
+        opt.value = p.name||d.id; opt.textContent = p.name||d.id;
+        sel.appendChild(opt);
+      }
+    });
+  } catch(e){}
+}
+
+// ── 알림 로드 ──
+async function loadNotifs() {
+  if(!currentUser) return;
+  try {
+    const q = query(collection(db,"notifications"), where("targetUid","==",currentUser.uid), orderBy("timestamp","desc"), limit(10));
+    const snap = await getDocs(q);
+    const unread = snap.docs.filter(d=>!d.data().read).length;
+    const badge = document.getElementById('notif-badge');
+    if(unread > 0) { badge.textContent = unread; badge.classList.add('show'); }
+    document.getElementById('notif-list').innerHTML = snap.empty
+      ? '<div style="padding:14px;text-align:center;font-size:11px;color:var(--text3)">알림 없음</div>'
+      : snap.docs.map(d=>{
+        const n = d.data();
+        return `<div class="notif-item">
+          <div style="display:flex;gap:8px">
+            ${!n.read?'<div class="notif-dot"></div>':'<div style="width:6px"></div>'}
+            <div>
+              <div class="notif-text">${n.message||''}</div>
+              <div class="notif-time">${timeAgo(n.timestamp)}</div>
+            </div>
+          </div>
+        </div>`;
+      }).join('');
+  } catch(e){}
+}
+
+// ── 팔로우 place ──
+window.followPlace = async (place) => {
+  if(!currentUser) return openAuthModal('login');
+  if(!place) return;
+  try {
+    await updateDoc(doc(db,"users",currentUser.uid), { following: arrayUnion(place) });
+    currentProfile.following = [...(currentProfile.following||[]), place];
+    alert(`${place} 팔로우 완료!`);
+  } catch(e) { alert('팔로우 실패: '+e.message); }
+};
+
+// ── 검색 ──
+window.doSearch = async () => {
+  const kw = document.getElementById('search-inp').value.trim();
+  if(!kw) return;
+  const feedEl = document.getElementById('feed-' + currentFeedTab);
+  feedEl.innerHTML = '<div class="loading">검색 중</div>';
+  try {
+    const q = query(collection(db,"posts"), orderBy("timestamp","desc"), limit(50));
+    const snap = await getDocs(q);
+    const results = snap.docs.map(d=>({id:d.id,...d.data()}))
+      .filter(p=>(p.title||'').includes(kw)||(p.content||'').includes(kw)||(p.place||'').includes(kw));
+    if(!results.length) { feedEl.innerHTML = `<div class="empty-feed">"${kw}" 검색 결과가 없습니다.</div>`; return; }
+    feedEl.innerHTML = `<div style="font-size:11px;color:var(--text2);margin-bottom:8px">"${kw}" 검색 결과 ${results.length}건</div>` + results.map(p=>renderPostCard(p)).join('');
+  } catch(e) { feedEl.innerHTML = `<div class="empty-feed">검색 실패: ${e.message}</div>`; }
+};
+
+// ── place 필터 ──
+window.filterByPlace = (place) => {
+  currentPlace = place;
+  document.querySelectorAll('.ls-item').forEach(x=>x.classList.remove('on'));
+  loadPosts(true);
+};
+window.setFeedMode = (el, mode) => {
+  currentFeedMode = mode; currentPlace = null;
+  document.querySelectorAll('.ls-item').forEach(x=>x.classList.remove('on'));
+  el.classList.add('on');
+  loadPosts(true);
+};
+
+// ── 피드 탭 전환 ──
+window.switchFeedTab = (el, tab) => {
+  currentFeedTab = tab;
+  document.querySelectorAll('.ftab').forEach(x=>x.classList.remove('on'));
+  el.classList.add('on');
+  ['reddit','gallery','short','club'].forEach(f=>{
+    document.getElementById('feed-'+f).style.display = f===tab?'block':'none';
+  });
+  loadPosts(true);
+};
+
+// ── 공유 ──
+window.sharePost = (postId) => {
+  const url = `https://community.mannamplace.com?post=${postId}`;
+  navigator.clipboard?.writeText(url).then(()=>alert('링크 복사 완료!')).catch(()=>alert(url));
+};
+
+// ── 내 게시글 ──
+window.showMyPosts = async () => {
+  if(!currentUser) return;
+  togglePD(true);
+  const feedEl = document.getElementById('feed-'+currentFeedTab);
+  feedEl.innerHTML = '<div class="loading">내 게시글 불러오는 중</div>';
+  const q = query(collection(db,"posts"), where("authorUid","==",currentUser.uid), orderBy("timestamp","desc"), limit(20));
+  const snap = await getDocs(q);
+  const posts = snap.docs.map(d=>({id:d.id,...d.data()}));
+  feedEl.innerHTML = posts.length ? posts.map(p=>renderPostCard(p)).join('') : '<div class="empty-feed">작성한 게시글이 없습니다.</div>';
+};
+
+window.showFollowing = () => { currentFeedMode='following'; currentPlace=null; loadPosts(true); togglePD(true); };
+
+// ── place/club 만들기 ──
+window.openCreatePlaceModal = () => {
+  if(!currentUser) return openAuthModal('login');
+  const name = prompt('mplace 이름을 입력하세요 (예: m/내취미)');
+  if(!name) return;
+  const placeName = name.startsWith('m/')?name:'m/'+name;
+  setDoc(doc(db,"places",placeName.replace('/','_')), { name:placeName, creator:currentUser.uid, postCount:0, createdAt:serverTimestamp() }, {merge:true})
+    .then(()=>{ alert(`${placeName} 개설 완료!`); loadMplaces(); })
+    .catch(e=>alert('실패: '+e.message));
+};
+
+window.openCreateClubModal = () => {
+  if(!currentUser) return openAuthModal('login');
+  const name = prompt('Club 이름을 입력하세요');
+  if(!name) return;
+  const type = prompt('Club 종류를 입력하세요 (직장/학교/지역/기타)') || '기타';
+  addDoc(collection(db,"clubs"), { name, type, creator:currentUser.uid, members:[currentUser.uid], createdAt:serverTimestamp() })
+    .then(()=>{ alert(`${name} Club 개설 완료!`); loadMyClubs(); })
+    .catch(e=>alert('실패: '+e.message));
+};
+
+// ── 글 작성 모달 ──
+window.openWriteModal = (type='post') => {
+  if(!currentUser) return openAuthModal('login');
+  document.getElementById('write-modal').classList.add('open');
+  setWriteType(document.querySelector('.mtab'), type);
+};
+window.setWriteType = (el, type) => {
+  writeType = type;
+  document.querySelectorAll('.mtab').forEach(x=>x.classList.remove('on'));
+  if(el) el.classList.add('on');
+  ['post','short','vote'].forEach(t=>{
+    const s = document.getElementById('w-section-'+t);
+    if(s) s.style.display = (type===t||type==='image'&&t==='post')?'block':'none';
+  });
+  const imgGroup = document.getElementById('w-img-group');
+  if(imgGroup) imgGroup.style.display = (type==='image'||type==='post')?'block':'none';
+};
+window.addVoteOption = () => {
+  if(voteOptCount >= 5) return alert('선택지는 최대 5개입니다.');
+  voteOptCount++;
+  const div = document.createElement('div'); div.className = 'form-group';
+  div.innerHTML = `<label class="form-label">선택지 ${voteOptCount}</label><input class="form-inp vote-opt" type="text" placeholder="선택지 입력">`;
+  document.getElementById('vote-options').appendChild(div);
+};
+function resetWriteForm() {
+  document.getElementById('w-title').value = '';
+  document.getElementById('w-content').value = '';
+  document.getElementById('w-short').value = '';
+  document.getElementById('w-vote-title').value = '';
+  document.getElementById('img-preview-wrap').innerHTML = '';
+  document.getElementById('file-preview').innerHTML = '';
+  uploadedImgUrls = []; uploadedFiles = []; voteOptCount = 2;
+}
+
+// ── 로그인/가입 ──
+window.openAuthModal = (tab='login') => {
+  document.getElementById('auth-modal').classList.add('open');
+  switchAuthTab(tab==='join'?document.querySelectorAll('.mtab')[1]:document.querySelectorAll('.mtab')[0], tab);
+};
+window.switchAuthTab = (el, tab) => {
+  document.querySelectorAll('#auth-modal .mtab').forEach(x=>x.classList.remove('on'));
+  el.classList.add('on');
+  document.getElementById('tab-login').style.display = tab==='login'?'block':'none';
+  document.getElementById('tab-join').style.display = tab==='join'?'block':'none';
+};
+window.doLogin = async () => {
+  let id = document.getElementById('li-id').value.trim();
+  const pw = document.getElementById('li-pw').value;
+  if(!id||!pw) return showErr('login','아이디/이메일과 비밀번호를 입력해주세요.');
+  setBtnLoad('login',true);
+  try {
+    let email = id;
+    if(!id.includes('@')) { const found = await findEmailByMpId(id); if(!found){setBtnLoad('login',false);return showErr('login','존재하지 않는 아이디입니다.');} email=found; }
+    await signInWithEmailAndPassword(auth,email,pw);
+    closeModal('auth-modal');
+  } catch(e) {
+    setBtnLoad('login',false);
+    showErr('login',{'auth/wrong-password':'비밀번호가 틀렸습니다.','auth/user-not-found':'존재하지 않는 계정입니다.','auth/invalid-credential':'아이디 또는 비밀번호가 틀렸습니다.'}[e.code]||'로그인 실패: '+e.message);
+  }
+};
+window.doJoin = async () => {
+  const email=document.getElementById('su-email').value.trim();
+  const pw=document.getElementById('su-pw').value;
+  const nick=document.getElementById('su-nick').value.trim();
+  const mpId=document.getElementById('su-mpid').value.trim();
+  const lang=document.getElementById('su-lang').value;
+  if(!email||!pw||!nick||!mpId) return showErr('join','모든 항목을 입력해주세요.');
+  if(pw.length<8) return showErr('join','비밀번호는 8자 이상이어야 합니다.');
+  if(!/^[a-zA-Z0-9_]+$/.test(mpId)) return showErr('join','ID는 영문, 숫자, 언더바만 사용 가능합니다.');
+  const existing=await findEmailByMpId(mpId);
+  if(existing) return showErr('join','이미 사용 중인 아이디입니다.');
+  setBtnLoad('join',true);
+  try {
+    const cred=await createUserWithEmailAndPassword(auth,email,pw);
+    await setDoc(doc(db,"users",cred.user.uid),{mpId,email,lang,createdAt:serverTimestamp(),following:[],profiles:{community:{nick,avatar:''},news:{nick,rank:'일반회원'},cistan:{nick,following:[]}}});
+    closeModal('auth-modal');
+  } catch(e){setBtnLoad('join',false);showErr('join',{'auth/email-already-in-use':'이미 사용 중인 이메일입니다.','auth/weak-password':'비밀번호가 너무 약합니다.'}[e.code]||'가입 실패: '+e.message);}
+};
+window.doGoogleLogin = async () => {
+  try {
+    const result=await signInWithPopup(auth,googleProvider);
+    const fbUser=result.user;
+    const snap=await getDoc(doc(db,"users",fbUser.uid));
+    if(!snap.exists()){const nick=fbUser.displayName||fbUser.email.split('@')[0];await setDoc(doc(db,"users",fbUser.uid),{mpId:fbUser.uid.substring(0,10),email:fbUser.email,lang:'ko',createdAt:serverTimestamp(),following:[],profiles:{community:{nick,avatar:fbUser.photoURL||''},news:{nick,rank:'일반회원'},cistan:{nick,following:[]}}});}
+    closeModal('auth-modal');
+  } catch(e){showErr('login','구글 로그인 실패: '+e.message);}
+};
+window.doLogout = async () => { await signOut(auth); togglePD(true); };
+
+// ── 모달/드롭다운 ──
+window.closeModal = (id) => { document.getElementById(id).classList.remove('open'); document.querySelectorAll('.err-msg').forEach(e=>e.style.display='none'); };
+document.querySelectorAll('.modal-bg').forEach(m=>m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('open');}));
+window.togglePD = (forceClose=false) => { const dd=document.getElementById('pd-dropdown'); if(forceClose)dd.classList.remove('open'); else dd.classList.toggle('open'); };
+window.toggleNotif = () => { const np=document.getElementById('notif-panel'); np.classList.toggle('open'); document.getElementById('notif-badge').classList.remove('show'); };
+document.addEventListener('click',e=>{
+  const pd=document.getElementById('pd-dropdown');
+  const pb=document.getElementById('profile-btn');
+  if(pd&&pb&&!pd.contains(e.target)&&!pb.contains(e.target)) pd.classList.remove('open');
+  const np=document.getElementById('notif-panel');
+  const nb=document.getElementById('notif-btn');
+  if(np&&nb&&!np.contains(e.target)&&!nb.contains(e.target)) np.classList.remove('open');
+});
+
+function showErr(form,msg){const el=document.getElementById('err-'+form);if(el){el.textContent=msg;el.style.display='block';}}
+function setBtnLoad(form,on){const btn=document.getElementById('btn-'+form);if(btn){btn.textContent=on?'처리 중...':(form==='login'?'로그인':'가입하기');btn.disabled=on;}}
+
+// 초기 로드 (비로그인)
+if(!auth.currentUser) loadPosts(true);
+</script>
+</body>
+</html>
