@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mannamplace Pay — 간편결제</title>
+  <link rel="stylesheet" href="../../shared/css/global.css">
+  <link rel="stylesheet" href="../../shared/css/navbar.css">
+  <link rel="stylesheet" href="../../shared/css/footer.css">
+  <style>
+    .pay-hero {
+      padding-top: 100px;
+      padding-bottom: var(--space-16);
+      background: linear-gradient(160deg, rgba(123,47,190,0.06) 0%, transparent 60%);
+    }
+
+    .pay-hero__badge {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: rgba(123,47,190,0.1); border: 1px solid rgba(123,47,190,0.2);
+      color: var(--color-finance); padding: 4px 12px; border-radius: var(--radius-full);
+      font-size: var(--text-xs); font-weight: 600; letter-spacing: 0.08em;
+      text-transform: uppercase; margin-bottom: var(--space-4);
+    }
+
+    /* Card UI */
+    .pay-card-wrap {
+      margin: var(--space-12) 0;
+      display: flex; gap: var(--space-8); align-items: flex-start;
+      flex-wrap: wrap;
+    }
+
+    .pay-card {
+      width: 340px;
+      height: 200px;
+      border-radius: 20px;
+      background: linear-gradient(135deg, #7B2FBE 0%, #4A1880 100%);
+      padding: var(--space-6);
+      color: white;
+      position: relative;
+      overflow: hidden;
+      flex-shrink: 0;
+      box-shadow: 0 20px 60px rgba(123,47,190,0.4);
+    }
+
+    .pay-card::before {
+      content: '';
+      position: absolute;
+      top: -40px; right: -40px;
+      width: 200px; height: 200px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.06);
+    }
+
+    .pay-card__logo {
+      font-family: var(--font-display);
+      font-size: var(--text-sm);
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      opacity: 0.9;
+    }
+
+    .pay-card__number {
+      font-family: var(--font-mono);
+      font-size: var(--text-lg);
+      letter-spacing: 0.15em;
+      margin-top: var(--space-8);
+    }
+
+    .pay-card__bottom {
+      display: flex; justify-content: space-between; align-items: flex-end;
+      margin-top: var(--space-6);
+    }
+
+    .pay-card__label { font-size: 10px; opacity: 0.7; text-transform: uppercase; }
+    .pay-card__value { font-size: var(--text-sm); font-weight: 600; margin-top: 2px; }
+
+    /* Quick actions */
+    .pay-actions {
+      display: grid; grid-template-columns: repeat(2, 1fr);
+      gap: var(--space-3); flex: 1; min-width: 240px;
+    }
+
+    .pay-action {
+      border: 1.5px solid var(--color-border);
+      border-radius: var(--radius-lg);
+      padding: var(--space-5);
+      cursor: pointer;
+      transition: all var(--ease-normal);
+      background: var(--color-white);
+    }
+
+    .pay-action:hover {
+      border-color: var(--color-finance);
+      box-shadow: 0 4px 20px rgba(123,47,190,0.12);
+      transform: translateY(-2px);
+    }
+
+    .pay-action__icon { font-size: 1.6rem; margin-bottom: var(--space-2); }
+
+    .pay-action__name {
+      font-family: var(--font-display);
+      font-weight: 700;
+      font-size: var(--text-base);
+    }
+
+    .pay-action__desc {
+      font-size: var(--text-xs);
+      color: var(--color-text-muted);
+      margin-top: 2px;
+    }
+
+    /* Transaction list */
+    .tx-list { margin-top: var(--space-8); }
+
+    .tx-item {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: var(--space-4) 0;
+      border-bottom: 1px solid var(--color-border);
+    }
+
+    .tx-item:last-child { border-bottom: none; }
+
+    .tx-item__left { display: flex; align-items: center; gap: var(--space-4); }
+
+    .tx-item__icon {
+      width: 42px; height: 42px; border-radius: var(--radius-md);
+      background: var(--color-gray-1);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.2rem; flex-shrink: 0;
+    }
+
+    .tx-item__name { font-weight: 500; font-size: var(--text-sm); }
+    .tx-item__date { font-size: var(--text-xs); color: var(--color-text-muted); margin-top: 2px; }
+
+    .tx-item__amount {
+      font-family: var(--font-display);
+      font-weight: 700;
+      font-size: var(--text-base);
+    }
+
+    .tx-item__amount.plus { color: var(--color-market); }
+    .tx-item__amount.minus { color: var(--color-text); }
+  </style>
+</head>
+<body>
+
+  <div data-mnp-nav></div>
+
+  <section class="pay-hero">
+    <div class="container">
+      <div data-reveal>
+        <span class="pay-hero__badge">💳 Mannamplace Pay</span>
+        <h1 style="font-size: var(--text-4xl); font-weight: 800; letter-spacing: -0.04em; margin-bottom: var(--space-3)">
+          빠르고 안전한<br>
+          <span style="color: var(--color-finance)">간편결제</span>
+        </h1>
+        <p style="color: var(--color-text-muted); font-size: var(--text-md); max-width: 44ch;">
+          Mannamplace 생태계의 모든 결제를 하나의 Pay로. 가맹점, 송금, 예적금까지.
+        </p>
+      </div>
+
+      <div class="pay-card-wrap" data-reveal data-reveal-delay="1">
+        <!-- Card -->
+        <div class="pay-card">
+          <div class="pay-card__logo">Mannamplace Pay</div>
+          <div class="pay-card__number">•••• •••• •••• 1234</div>
+          <div class="pay-card__bottom">
+            <div>
+              <div class="pay-card__label">잔액</div>
+              <div class="pay-card__value">₩1,234,500</div>
+            </div>
+            <div>
+              <div class="pay-card__label">유효기간</div>
+              <div class="pay-card__value">12 / 28</div>
+            </div>
+            <div style="font-size: 1.5rem; opacity: 0.7">Ⓜ</div>
+          </div>
+        </div>
+
+        <!-- Quick actions -->
+        <div class="pay-actions">
+          <div class="pay-action">
+            <div class="pay-action__icon">↑</div>
+            <p class="pay-action__name">송금</p>
+            <p class="pay-action__desc">계좌번호 또는 아이디로</p>
+          </div>
+          <div class="pay-action">
+            <div class="pay-action__icon">↓</div>
+            <p class="pay-action__name">충전</p>
+            <p class="pay-action__desc">계좌에서 바로 충전</p>
+          </div>
+          <div class="pay-action">
+            <div class="pay-action__icon">🏦</div>
+            <p class="pay-action__name">Bank 연결</p>
+            <p class="pay-action__desc">예금·적금 관리</p>
+          </div>
+          <div class="pay-action">
+            <div class="pay-action__icon">📊</div>
+            <p class="pay-action__name">내역</p>
+            <p class="pay-action__desc">소비 분석 리포트</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="container container--md">
+      <h2 style="font-size: var(--text-2xl); font-weight: 800; letter-spacing: -0.03em; margin-bottom: var(--space-6)">
+        최근 거래 내역
+      </h2>
+
+      <div class="tx-list" data-reveal>
+        <div class="tx-item">
+          <div class="tx-item__left">
+            <div class="tx-item__icon">🛍️</div>
+            <div>
+              <p class="tx-item__name">Mannamplace Market</p>
+              <p class="tx-item__date">오늘 14:32</p>
+            </div>
+          </div>
+          <span class="tx-item__amount minus">-₩89,000</span>
+        </div>
+        <div class="tx-item">
+          <div class="tx-item__left">
+            <div class="tx-item__icon">🎵</div>
+            <div>
+              <p class="tx-item__name">Mannamplace Sound 구독</p>
+              <p class="tx-item__date">어제 00:01</p>
+            </div>
+          </div>
+          <span class="tx-item__amount minus">-₩8,900</span>
+        </div>
+        <div class="tx-item">
+          <div class="tx-item__left">
+            <div class="tx-item__icon">💸</div>
+            <div>
+              <p class="tx-item__name">홍길동님에게 받은 송금</p>
+              <p class="tx-item__date">2일 전 18:44</p>
+            </div>
+          </div>
+          <span class="tx-item__amount plus">+₩50,000</span>
+        </div>
+        <div class="tx-item">
+          <div class="tx-item__left">
+            <div class="tx-item__icon">🎬</div>
+            <div>
+              <p class="tx-item__name">Mannamplace OTT 구독</p>
+              <p class="tx-item__date">3일 전 00:01</p>
+            </div>
+          </div>
+          <span class="tx-item__amount minus">-₩13,900</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div data-mnp-footer></div>
+  <script src="../../shared/js/navbar.js"></script>
+  <script src="../../shared/js/footer.js"></script>
+</body>
+</html>
