@@ -1,0 +1,973 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="google-site-verification" content="PeXQT6Ukpb_hTkdiSAePExzDV2ZjDPs6r0B2hx0JEP0" />
+    <meta name="naver-site-verification" content="0294f660d43f5eb4e7e2c6ea4f8f1e2d14a8e039" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title id="site-title-tag">T.N. News - news to all </title>
+    
+    <!-- Open Graph (Dynamic) -->
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="T.N. News">
+    <meta id="og-title" property="og:title" content="T.N. News">
+    <meta id="og-desc" property="og:description" content="모두를 위한 뉴스">
+    <meta id="meta-desc" name="description" content="모두를 위한 뉴스, T.N. News">
+    <meta id="og-img" property="og:image" content="https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=800">
+    <meta property="og:url" content="">
+
+    <meta name="twitter:card" content="summary_large_image">
+    <meta id="tw-title" name="twitter:title" content="T.N. News">
+    <meta id="tw-desc" name="twitter:description" content="모두를 위한 뉴스">
+    <meta id="tw-img" name="twitter:image" content="https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=1200">
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script type="text/javascript" src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
+    
+    <!-- Firebase SDK -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js";
+        import { getFirestore, doc, setDoc, getDoc, collection, onSnapshot, query, orderBy, addDoc, updateDoc, deleteDoc, serverTimestamp, where } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
+
+        // Firebase 설정
+        const firebaseConfig = {
+            apiKey: "AIzaSyAzi4dSgnidJPVado54jTDH94Fyw1CVmx4",
+            authDomain: "tnnews-502d4.firebaseapp.com",
+            projectId: "tnnews-502d4",
+            storageBucket: "tnnews-502d4.firebasestorage.app",
+            messagingSenderId: "116004555413",
+            appId: "1:116004555413:web:a6afaaf6eed644fb2aa99c"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        window.db = db;
+        window.fs = { doc, setDoc, getDoc, collection, onSnapshot, query, orderBy, addDoc, updateDoc, deleteDoc, serverTimestamp, where };
+    </script>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap');
+        body { font-family: 'Noto Sans KR', sans-serif; word-break: keep-all; }
+        .line-clamp-2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+        .line-clamp-3 { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+        .admin-panel { background: rgba(15, 23, 42, 0.98); backdrop-filter: blur(15px); }
+        .goog-te-banner-frame.skiptranslate { display: none !important; }
+        body { top: 0px !important; }
+        #google_translate_element { display: none; }
+        .active-tab { border-bottom: 3px solid #fbbf24; color: #fbbf24; }
+    </style>
+</head>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "NewsMediaOrganization",
+  "name": "T.N. News",
+  "url": "https://tnfocnus.mannamplace.com",
+  "logo": {
+    "@type": "ImageObject",
+    "url": "https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=800"
+  }
+}
+</script>
+<body class="bg-gray-50 text-gray-900 overflow-x-hidden">
+
+    <div id="google_translate_element"></div>
+
+    <!-- Header Section -->
+    <header class="bg-[#003399] text-white sticky top-0 z-[100] shadow-xl">
+        <div class="container mx-auto px-4 py-3 flex items-center justify-between flex-wrap">
+            <div class="flex items-center cursor-pointer" onclick="goHome()">
+                <div class="bg-white text-[#003399] font-black text-2xl px-3 py-1 rounded shadow-sm">T.N.</div>
+            </div>
+            
+            <nav class="hidden lg:flex items-center space-x-5 text-[14px] font-bold">
+                <button onclick="renderCategory('정치')" class="hover:text-yellow-300">정치</button>
+                <button onclick="renderCategory('경제')" class="hover:text-yellow-300">경제</button>
+                <button onclick="renderCategory('사회')" class="hover:text-yellow-300">사회</button>
+                <button onclick="renderCategory('외교통일')" class="hover:text-yellow-300">외교통일</button>
+                <button onclick="renderCategory('국방')" class="hover:text-yellow-300">국방</button>
+                <button onclick="renderCategory('문화')" class="hover:text-yellow-300">문화</button>
+                <button onclick="renderCategory('사설/칼럼')" class="hover:text-yellow-300">사설/칼럼</button>
+                <div class="h-4 w-[1px] bg-blue-400 mx-2"></div>
+                <button onclick="renderCategory('속보')" class="text-orange-400">속보</button>
+                <button onclick="renderCategory('단독')" class="text-orange-400">단독</button>
+                <button onclick="renderCategory('기획보도')" class="text-orange-400">기획보도</button>
+            </nav>
+
+            <div class="flex items-center space-x-3">
+                <select id="lang-select" onchange="changeLang(this.value)" class="bg-blue-800 text-[11px] p-1 rounded border-none outline-none">
+                    <option value="ko">KO</option>
+                    <option value="en">English</option>
+                    <option value="zh-CN">Chinese</option>
+                    <option value="ja">Japanese</option>
+                    <option value="es">Spanish</option>
+                    <option value="fr">French</option>
+                    <option value="ar">Arabic</option>
+                    <option value="pt">Portuguese</option>
+                </select>
+                
+                <div id="auth-ui" class="flex space-x-2">
+                    <button onclick="showModal('login-modal')" class="text-xs font-bold bg-white text-blue-800 px-3 py-1 rounded">로그인</button>
+                    <button onclick="showModal('signup-modal')" class="text-xs font-bold border border-white px-3 py-1 rounded">회원가입</button>
+                </div>
+                
+                <div id="user-ui" class="hidden items-center space-x-3">
+                    <span id="user-badge" class="text-[10px] font-bold bg-yellow-400 text-blue-900 px-2 py-0.5 rounded italic"></span>
+                    <button onclick="toggleAdmin()" id="admin-btn" class="hidden text-yellow-300"><i data-lucide="settings" class="w-5 h-5"></i></button>
+                    <button onclick="handleLogout()" class="text-xs opacity-70 underline">로그아웃</button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+
+    <!-- Breaking News Ticker -->
+    <div id="breaking-ticker" class="hidden bg-red-600 text-white py-2 overflow-hidden border-b border-red-700">
+        <div class="container mx-auto px-4 flex items-center">
+            <span class="font-black bg-white text-red-600 px-2 py-0.5 text-[10px] mr-4 animate-pulse">속보</span>
+            <div id="breaking-content" class="text-sm font-bold whitespace-nowrap overflow-hidden cursor-pointer"></div>
+        </div>
+    </div>
+
+    <!-- Main Content Area -->
+    <main id="main-view" class="container mx-auto px-4 py-8">
+        <!-- News Content will be injected here -->
+    </main>
+
+    <!-- Admin Panel -->
+    <div id="admin-view" class="fixed inset-0 z-[200] admin-panel hidden text-white flex flex-col overflow-hidden">
+        <div class="p-6 border-b border-white/10 flex justify-between items-center bg-slate-900">
+            <h2 class="text-2xl font-black italic tracking-tighter">T.N. CONTROL CENTER</h2>
+            <button onclick="toggleAdmin()" class="bg-red-600 px-4 py-2 rounded font-bold hover:bg-red-700">닫기</button>
+        </div>
+        <div class="flex flex-1">
+            <div class="w-64 border-r border-white/10 p-4 space-y-1 bg-slate-900/50">
+                <button onclick="switchAdminTab('write')" id="btn-tab-write" class="w-full text-left p-3 hover:bg-white/5 rounded font-medium">기사 작성</button>
+                <button onclick="switchAdminTab('approval')" id="btn-tab-approval" class="w-full text-left p-3 hover:bg-white/5 rounded font-medium">기사 승인 관리</button>
+                <button onclick="switchAdminTab('users')" id="btn-tab-users" class="w-full text-left p-3 hover:bg-white/5 rounded font-medium">회원 승급/관리</button>
+                <button onclick="switchAdminTab('settings')" id="btn-tab-settings" class="w-full text-left p-3 hover:bg-white/5 rounded font-medium">사이트 환경 설정</button>
+                <button onclick="switchAdminTab('manage')" id="btn-tab-manage" class="w-full text-left p-3 hover:bg-white/5 rounded font-medium">기사 관리 (삭제)</button>
+
+            </div>
+            <div class="flex-1 p-10 overflow-y-auto">
+                <!-- Write Tab -->
+                <div id="admin-tab-write" class="admin-tab space-y-5">
+                    <h3 class="text-2xl font-bold">기사 작성</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div class="md:col-span-2 space-y-4">
+                            <input type="text" id="post-title" placeholder="기사 제목을 입력하세요" class="w-full bg-white/5 border border-white/20 p-4 rounded text-xl outline-none focus:border-blue-500">
+                            <textarea id="post-content" placeholder="기사 본문 내용을 작성하세요" class="w-full bg-white/5 border border-white/20 p-4 rounded h-[400px] outline-none focus:border-blue-500"></textarea>
+                            <div class="flex space-x-2">
+                                <button onclick="execCmd('bold')" class="bg-slate-700 px-3 py-1 rounded text-xs"><b>B</b></button>
+                                <button onclick="execCmd('fontSize', '5')" class="bg-slate-700 px-3 py-1 rounded text-xs">크게</button>
+                                <button onclick="execCmd('fontSize', '3')" class="bg-slate-700 px-3 py-1 rounded text-xs">보통</button>
+                            </div>
+                        </div>
+                        <div class="space-y-4">
+                            <div class="bg-white/5 p-4 rounded border border-white/10">
+                                <label class="block text-xs font-bold mb-2">카테고리 (복수 선택 가능)</label>
+                                <div id="cat-checkboxes" class="grid grid-cols-2 gap-2 text-sm">
+                                    <label><input type="checkbox" value="정치"> 정치</label>
+                                    <label><input type="checkbox" value="경제"> 경제</label>
+                                    <label><input type="checkbox" value="사회"> 사회</label>
+                                    <label><input type="checkbox" value="외교통일"> 외교통일</label>
+                                    <label><input type="checkbox" value="국방"> 국방</label>
+                                    <label><input type="checkbox" value="문화"> 문화</label>
+                                    <label><input type="checkbox" value="사설/칼럼"> 사설/칼럼</label>
+                                    <label class="text-red-400"><input type="checkbox" value="속보"> 속보</label>
+                                    <label class="text-orange-400"><input type="checkbox" value="단독"> 단독</label>
+                                    <label class="text-yellow-400"><input type="checkbox" value="기획보도"> 기획보도</label>
+                                </div>
+                            </div>
+                            <input type="text" id="post-img-main" placeholder="대표 이미지 URL" class="w-full bg-white/5 border border-white/20 p-3 rounded text-sm">
+                            <input type="text" id="post-desc" placeholder="기사 짧은 설명 (OpenGraph)" class="w-full bg-white/5 border border-white/20 p-3 rounded text-sm">
+                            <button onclick="handlePublish()" class="w-full bg-blue-600 hover:bg-blue-700 py-4 rounded font-black text-lg">발행/승인 요청</button>
+                        </div>
+                        <div class="grid grid-cols-2 gap-4 mt-4">
+                            <div>
+                                <label class="block text-[10px] mb-1">수동 날짜 설정</label>
+                                <input type="text" id="post-date" placeholder="2023. 11. 22." class="w-full bg-white/5 border border-white/20 p-2 rounded text-xs">
+                            </div>
+                            <div>
+                                <label class="block text-[10px] mb-1">초기 조회수 설정</label>
+                                <input type="number" id="post-views" placeholder="0" class="w-full bg-white/5 border border-white/20 p-2 rounded text-xs">
+                            </div>
+                        </div>
+                        <div class="mt-4">
+                            <label class="block text-[10px] mb-1 text-yellow-400">보이는 라디오 유튜브 URL</label>
+                            <input type="text" id="post-radio-url" placeholder="https://www.youtube.com/watch?v=..." class="w-full bg-white/5 border border-white/20 p-2 rounded text-xs">
+                        </div>
+                        <div class="mt-4">
+                            <label class="block text-[10px] mb-1">본문 이미지 URL (줄바꿈으로 구분)</label>
+                            <textarea id="post-inline-images" placeholder="이미지 주소를 한 줄에 하나씩 넣으세요. 본문에 [img1], [img2]로 삽입됩니다." class="w-full bg-white/5 border border-white/20 p-2 rounded text-xs h-20"></textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Approval Tab -->
+                <div id="admin-tab-approval" class="admin-tab hidden space-y-5">
+                    <h3 class="text-2xl font-bold">대기 중인 기사 승인</h3>
+                    <div id="approval-list" class="space-y-3"></div>
+                </div>
+
+                <div id="admin-tab-manage" class="admin-tab hidden space-y-5">
+                    <h3 class="text-2xl font-bold">기사 목록 관리 (삭제)</h3>
+                    <div id="news-manage-list" class="space-y-3">
+                    </div>
+                </div>
+
+                <!-- User Management Tab -->
+                <div id="admin-tab-users" class="admin-tab hidden space-y-5">
+                    <h3 class="text-2xl font-bold">회원 관리 및 승급 심사</h3>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-sm">
+                            <thead>
+                                <tr class="border-b border-white/10">
+                                    <th class="p-3">ID</th>
+                                    <th class="p-3">현재 등급</th>
+                                    <th class="p-3">변경</th>
+                                </tr>
+                            </thead>
+                            <tbody id="user-table-body"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Settings Tab -->
+                <div id="admin-tab-settings" class="admin-tab hidden space-y-6">
+                    <h3 class="text-2xl font-bold">사이트 환경 설정</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <div class="space-y-4">
+                            <div>
+                                <label class="block text-xs mb-1">사이트 제목</label>
+                                <input type="text" id="set-site-title" class="w-full bg-white/5 border border-white/20 p-3 rounded outline-none">
+                            </div>
+                            <div>
+                                <label class="block text-xs mb-1">관리자 비밀번호 변경</label>
+                                <input type="password" id="set-admin-pw" class="w-full bg-white/5 border border-white/20 p-3 rounded outline-none" placeholder="새 비밀번호">
+                            </div>
+                            <button onclick="saveSiteSettings()" class="bg-green-600 px-6 py-2 rounded font-bold">설정 저장</button>
+                        </div>
+                        <div class="space-y-4">
+                            <h4 class="font-bold border-b border-white/10 pb-2">전체 코드 수정 (HTML/JS)</h4>
+                            <textarea id="set-full-code" class="w-full bg-black border border-white/20 p-4 rounded h-64 font-mono text-xs text-green-400"></textarea>
+                            <button onclick="deployCode()" class="bg-purple-600 px-6 py-2 rounded font-bold">코드 즉시 배포</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 로그인 모달 -->
+    <div id="login-modal" class="fixed inset-0 z-[300] bg-black/80 hidden flex items-center justify-center p-4">
+        <div class="bg-white w-full max-w-sm rounded-2xl p-8 text-slate-900">
+            <h2 class="text-2xl font-black mb-2">TNfocnus 로그인</h2>
+            <p class="text-xs text-gray-400 mb-5">기존 계정 또는 Mannamplace 계정으로 로그인</p>
+ 
+            <!-- 로그인 탭 -->
+            <div class="flex gap-0 mb-5 bg-gray-100 rounded-lg p-1">
+                <button id="ltab-legacy" onclick="switchLoginTab('legacy')"
+                    class="flex-1 py-2 rounded-md text-xs font-bold bg-[#003399] text-white transition">기존 계정</button>
+                <button id="ltab-mp" onclick="switchLoginTab('mp')"
+                    class="flex-1 py-2 rounded-md text-xs font-bold text-gray-500 transition">Mannamplace 계정</button>
+            </div>
+ 
+            <!-- 기존 계정 로그인 -->
+            <div id="login-legacy">
+                <div class="text-xs text-blue-600 bg-blue-50 rounded-lg p-3 mb-4">
+                    TNfocnus 전용 아이디/비밀번호로 로그인합니다.
+                </div>
+                <input type="text" id="li-id-legacy" placeholder="TNfocus 아이디" class="w-full border p-3 rounded-lg mb-3">
+                <input type="password" id="li-pw-legacy" placeholder="비밀번호" class="w-full border p-3 rounded-lg mb-4">
+                <button onclick="handleLoginLegacy()" class="w-full bg-[#003399] text-white py-3 rounded-lg font-bold">로그인</button>
+                <div class="text-center mt-4 text-xs text-gray-400">
+                    Mannamplace 계정 연동 →
+                    <button onclick="switchLoginTab('mp')" class="text-blue-600 underline ml-1">연동하기</button>
+                </div>
+            </div>
+ 
+            <!-- Mannamplace 계정 로그인 -->
+            <div id="login-mp" style="display:none">
+                <div class="text-xs text-orange-600 bg-orange-50 rounded-lg p-3 mb-4">
+                    Mannamplace 통합 계정으로 로그인합니다.<br>
+                    포털·커뮤니티·Cistan 등 전 서비스 공통 사용.
+                </div>
+                <input type="text" id="li-id-mp" placeholder="이메일 또는 Mannamplace ID" class="w-full border p-3 rounded-lg mb-3">
+                <input type="password" id="li-pw-mp" placeholder="비밀번호" class="w-full border p-3 rounded-lg mb-4"
+                    onkeydown="if(event.key==='Enter')handleLoginMP()">
+                <button onclick="handleLoginMP()" class="w-full bg-[#B84A00] text-white py-3 rounded-lg font-bold">Mannamplace 계정으로 로그인</button>
+                <button onclick="handleGoogleLogin()" class="w-full mt-3 bg-white border border-gray-300 text-gray-700 py-3 rounded-lg font-bold flex items-center justify-center gap-2">🟦 Google로 로그인</button>
+            </div>
+ 
+            <button onclick="hideModal('login-modal')" class="w-full mt-4 text-xs text-gray-400 underline">닫기</button>
+        </div>
+    </div>
+ 
+    <!-- 회원가입 모달 -->
+    <div id="signup-modal" class="fixed inset-0 z-[300] bg-black/80 hidden flex items-center justify-center p-4">
+        <div class="bg-white w-full max-w-sm rounded-2xl p-8 text-slate-900 max-h-[90vh] overflow-y-auto">
+            <h2 class="text-2xl font-black mb-2">TNfocnus 가입</h2>
+            <p class="text-xs text-gray-400 mb-5">신규 가입은 Mannamplace 계정으로 진행합니다</p>
+ 
+            <div class="text-xs text-orange-600 bg-orange-50 rounded-lg p-3 mb-5">
+                ✅ Mannamplace 계정 하나로<br>
+                커뮤니티 · TNfocnus 뉴스 · Cistan · 마켓 전부 이용<br>
+                뉴스 사이트 전용 닉네임/등급은 별도 설정합니다.
+            </div>
+ 
+            <div class="text-xs font-bold text-gray-500 mb-2">── Mannamplace 계정 정보</div>
+            <input type="email" id="su-email" placeholder="이메일" class="w-full border p-3 rounded-lg mb-3">
+            <input type="text" id="su-mpid" placeholder="Mannamplace ID (영문·숫자·언더바)" class="w-full border p-3 rounded-lg mb-3">
+            <input type="password" id="su-pw" placeholder="비밀번호 (8자 이상)" class="w-full border p-3 rounded-lg mb-4">
+ 
+            <div class="text-xs font-bold text-gray-500 mb-2">── TNfocnus 뉴스 전용 정보</div>
+            <input type="text" id="su-name" placeholder="실명 (내부 확인용)" class="w-full border p-3 rounded-lg mb-3">
+            <input type="text" id="su-nick" placeholder="기사 표시 이름 (닉네임/필명)" class="w-full border p-3 rounded-lg mb-3">
+            <select id="su-type" class="w-full border p-3 rounded-lg mb-5">
+                <option value="일반회원">일반회원</option>
+                <option value="시민기자">시민기자 신청</option>
+                <option value="기자">기자 신청</option>
+            </select>
+ 
+            <button onclick="handleSignup()" class="w-full bg-[#B84A00] text-white py-3 rounded-lg font-bold">가입 신청</button>
+            <button onclick="hideModal('signup-modal')" class="w-full mt-4 text-xs text-gray-400 underline">닫기</button>
+        </div>
+    </div>
+ 
+    <!-- 계정 연동 모달 -->
+    <div id="link-modal" class="fixed inset-0 z-[300] bg-black/80 hidden flex items-center justify-center p-4">
+        <div class="bg-white w-full max-w-sm rounded-2xl p-8 text-slate-900">
+            <h2 class="text-xl font-black mb-2">Mannamplace 계정 연동</h2>
+            <p class="text-xs text-gray-400 mb-5">기존 TNfocnus 계정에 Mannamplace 계정을 연결합니다.<br>연동 후 포털·커뮤니티에서도 동일 계정으로 이용 가능합니다.</p>
+            <div class="text-xs bg-blue-50 text-blue-700 rounded-lg p-3 mb-4">
+                현재 로그인: <strong id="link-current-user">-</strong>
+            </div>
+            <input type="text" id="link-mp-id" placeholder="Mannamplace 이메일 또는 ID" class="w-full border p-3 rounded-lg mb-3">
+            <input type="password" id="link-mp-pw" placeholder="Mannamplace 비밀번호" class="w-full border p-3 rounded-lg mb-4">
+            <button onclick="handleLinkAccount()" class="w-full bg-[#B84A00] text-white py-3 rounded-lg font-bold">연동하기</button>
+            <button onclick="hideModal('link-modal')" class="w-full mt-3 text-xs text-gray-400 underline">닫기</button>
+        </div>
+    </div>
+ 
+    <script>
+        // State Management
+        let user = null;
+        let allNews = [];
+        let siteConfig = { title: "T.N. News", adminPw: "1234" };
+        const RANK_POWER = { "최고운영진": 5, "기자 간부": 4, "기자": 3, "시민기자": 2, "일반회원": 1 };
+
+        let isFirstLoad = true;
+
+        async function init() {
+            // ✅ Firebase에서 siteConfig 먼저 불러오기
+            const configSnap = await window.fs.getDoc(window.fs.doc(window.db, "settings", "global"));
+            if (configSnap.exists()) {
+            siteConfig = configSnap.data();
+            }
+            const q = window.fs.query(window.fs.collection(window.db, "articles"), window.fs.orderBy("timestamp", "desc"));
+            window.fs.onSnapshot(q, (snap) => {
+                allNews = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+        
+                if (isFirstLoad) {
+                    // 주소창에서 /카테고리/숫자 분석
+                    const pathParts = window.location.pathname.split('/').filter(p => p);
+                    const numFromPath = pathParts.length >= 2 ? pathParts[1] : null;
+                    const numFromQuery = new URLSearchParams(window.location.search).get('num');
+                    const targetNum = numFromPath || numFromQuery;
+
+                    if (targetNum) {
+                        const found = allNews.find(n => String(n.globalNum) === String(targetNum));
+                        if (found) renderDetail(found.id);
+                        else renderHome();
+                    } else {
+                        renderHome();
+                    }
+                    isFirstLoad = false;
+                }
+                updateAdminLists();
+            });
+}
+        
+        // --- News Rendering ---
+        function renderHome() {
+            const container = document.getElementById('main-view');
+            if (!container) return;
+
+            // 1. 데이터를 먼저 가공
+            const breaking = allNews.filter(n => n.cat && n.cat.includes('속보') && n.approved);
+            const approved = allNews.filter(n => n.approved);
+
+            // 2. 속보 티커 처리
+            const ticker = document.getElementById('breaking-ticker');
+            if (ticker) {
+                if (breaking.length > 0) {
+                    ticker.classList.remove('hidden');
+                    const breakingContent = document.getElementById('breaking-content');
+                    if (breakingContent) {
+                        breakingContent.innerHTML = breaking[0].title;
+                        breakingContent.onclick = () => renderDetail(breaking[0].id);
+                    }
+                } else {
+                    ticker.classList.add('hidden');
+                }
+            }
+
+            // 3. 기사가 없을 경우 예외 처리
+            if (approved.length === 0) {
+                container.innerHTML = '<div class="py-40 text-center text-gray-400 font-bold">발행된 뉴스가 없습니다.</div>';
+                return;
+            }
+
+            // 4. 뉴스 배치용 변수 할당
+            const mainNews = approved[0];
+            const sub1 = approved[1];
+            const sub2 = approved[2];
+            const sub3 = approved[3];
+
+            // 5. 화면 렌더링 (백틱 오류 수정 및 들여쓰기 조정)
+            container.innerHTML = `
+                <!-- 메인 뉴스 영역 -->
+                <section class="grid grid-cols-1 lg:grid-cols-12 gap-10 mb-16">
+                    <div class="lg:col-span-7 cursor-pointer group" onclick="renderDetail('${mainNews.id}')">
+                        <div class="overflow-hidden rounded-2xl shadow-2xl aspect-video bg-gray-200">
+                            <img src="${mainNews.img}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700">
+                        </div>
+                    </div>
+                    <div class="lg:col-span-5 flex flex-col justify-center">
+                        <span class="text-blue-700 font-black text-xs uppercase tracking-widest mb-3">
+                            ${mainNews.cat ? mainNews.cat[0] : 'NEWS'}
+                        </span>
+                        <h1 class="text-4xl font-black mb-5 hover:text-blue-800 cursor-pointer leading-tight" onclick="renderDetail('${mainNews.id}')">
+                            ${mainNews.title}
+                        </h1>
+                        <p class="text-gray-600 text-lg leading-relaxed line-clamp-3 mb-6">
+                            ${mainNews.content ? mainNews.content.substring(0, 200) : ''}...
+                        </p>
+                        <div class="flex items-center text-sm font-bold text-gray-400">
+                            <span>T.N. ${mainNews.author} 기자</span>
+                            <span class="mx-3">|</span>
+                            <span>${mainNews.date}</span>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- 서브 메인 뉴스 영역 -->
+                <section class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 pb-16 border-b">
+                    ${sub1 ? `
+                        <div class="space-y-4 group cursor-pointer" onclick="renderDetail('${sub1.id}')">
+                            <div class="aspect-video bg-gray-100 rounded-xl overflow-hidden shadow-md">
+                                <img src="${sub1.img}" class="w-full h-full object-cover group-hover:opacity-90 transition">
+                            </div>
+                            <h3 class="text-xl font-bold line-clamp-2 group-hover:text-blue-700">${sub1.title}</h3>
+                            <p class="text-sm text-gray-500 line-clamp-2">${sub1.content ? sub1.content.substring(0, 80) : ''}...</p>
+                        </div>
+                    ` : ''}
+                    ${sub2 ? `
+                        <div class="space-y-6">
+                            <div class="border-l-4 border-blue-900 pl-4 py-1">
+                                <h3 class="text-lg font-black cursor-pointer hover:text-blue-800" onclick="renderDetail('${sub2.id}')">${sub2.title}</h3>
+                            </div>
+                            <div class="space-y-4">
+                                <p class="text-xs font-bold text-gray-400">관련 기사</p>
+                                ${approved.slice(4, 6).map(n => `
+                                    <p class="text-sm hover:underline cursor-pointer line-clamp-1" onclick="renderDetail('${n.id}')">• ${n.title}</p>
+                                `).join('')}
+                            </div>
+                        </div>
+                    ` : ''}
+                    ${sub3 ? `
+                        <div class="space-y-6">
+                            <div class="border-l-4 border-slate-400 pl-4 py-1">
+                                <h3 class="text-lg font-black cursor-pointer hover:text-blue-800" onclick="renderDetail('${sub3.id}')">${sub3.title}</h3>
+                            </div>
+                            <div class="space-y-4">
+                                <p class="text-xs font-bold text-gray-400">관련 기사</p>
+                                ${approved.slice(6, 8).map(n => `
+                                    <p class="text-sm hover:underline cursor-pointer line-clamp-1" onclick="renderDetail('${n.id}')">• ${n.title}</p>
+                                `).join('')}
+                            </div>
+                        </div>
+                    ` : ''}
+                </section>
+
+                <!-- 카테고리별 미리보기 섹션 -->
+                <section class="py-16 grid grid-cols-1 md:grid-cols-2 gap-12">
+                    ${['정치', '경제', '사회', '외교통일','문화'].map(c => renderCategoryPreview(c, approved)).join('')}
+                </section>
+            `;
+        }
+
+        function renderCategoryPreview(cat, newsList) {
+            const list = newsList.filter(n => n.cat.includes(cat));
+            if(list.length === 0) return '';
+            const top = list[0];
+            return `
+                <div class="space-y-4">
+                    <h2 class="text-xl font-black border-b-2 border-black pb-2 flex justify-between items-center">
+                        ${cat} <button onclick="renderCategory('${cat}')" class="text-xs text-gray-400">전체보기 +</button>
+                    </h2>
+                    <div class="flex gap-4 cursor-pointer group" onclick="renderDetail('${top.id}')">
+                        <img src="${top.img}" class="w-32 h-20 object-cover rounded shadow">
+                        <div>
+                            <h4 class="font-bold text-md group-hover:text-blue-700 line-clamp-2">${top.title}</h4>
+                            <p class="text-xs text-gray-500 mt-1">${top.date}</p>
+                        </div>
+                    </div>
+                    <ul class="space-y-2">
+                        ${list.slice(1, 3).map(n => `<li onclick="renderDetail('${n.id}')" class="text-sm hover:text-blue-600 cursor-pointer line-clamp-1">• ${n.title}</li>`).join('')}
+                    </ul>
+                </div>
+            `;
+        }
+
+        function renderDetail(id) {
+            const n = allNews.find(x => x.id === id);
+            if (!n) return 
+    
+            // 브라우저 주소창을 /카테고리/기사번호 로 변경 (새로고침 없이)
+            const category = (n.cat && n.cat[0]) || 'news';
+            const newPath = `/${encodeURIComponent(category)}/${n.globalNum}`;
+            window.history.pushState({ id: n.id }, '', newPath);
+            
+            // 2. 본문 이미지 [img1] 치환 로직
+            let processedContent = n.content;
+            if (n.inlineImages && Array.isArray(n.inlineImages)) {
+                n.inlineImages.forEach((imgUrl, idx) => {
+                    const targetTag = `[img${idx + 1}]`;
+                    processedContent = processedContent.replace(targetTag, `
+                        <div class="my-8 text-center">
+                            <img src="${imgUrl}" class="max-w-full h-auto rounded-lg shadow-md mx-auto">
+                            <p class="text-xs text-gray-400 mt-2 italic text-center">사진: T.N. News</p>
+                        </div>
+                    `);
+                });
+            }
+
+            // 3. 라디오 플레이어 로직
+            const radioHtml = (n.cat && n.cat.includes('라디오') && n.radioUrl) ? `
+                <div class="mb-8 bg-black rounded-2xl overflow-hidden aspect-video shadow-xl">
+                    <iframe class="w-full h-full" src="https://www.youtube.com/embed/${getYTId(n.radioUrl)}" frameborder="0" allowfullscreen></iframe>
+                </div>
+            ` : '';
+
+            // 4. UI 렌더링
+            const container = document.getElementById('main-view');
+            container.innerHTML = `
+                <article class="max-w-3xl mx-auto py-10">
+                    <header class="mb-10">
+                        <div class="flex flex-wrap gap-2 mb-4">
+                            ${n.cat ? n.cat.map(c => `<span class="bg-blue-900 text-white px-2 py-0.5 text-[10px] font-bold uppercase rounded-sm">${c}</span>`).join('') : ''}
+                        </div>
+                        <h1 class="text-4xl font-black mt-4 mb-6 leading-tight">${n.title}</h1>
+                        <div class="flex items-center justify-between text-sm text-gray-400 border-y py-4">
+                            <div class="flex group cursor-pointer" onclick="alert('기사번호: ${n.globalNum}')">
+                                <span class="font-bold text-gray-600">T.N. ${n.author} 기자</span>
+                            </div>
+                            <span>발행: ${n.date} (조회: ${n.views || 0})</span>
+                        </div>
+                    </header>
+
+                    ${radioHtml}
+                    
+                    ${!radioHtml ? `<img src="${n.img}" class="w-full rounded-2xl shadow-xl mb-12">` : ''}
+                
+                    <div class="prose prose-blue max-w-none text-xl leading-relaxed text-gray-800" style="white-space: pre-wrap;">${processedContent}</div>
+                
+                    <div class="mt-20 pt-10 border-t flex justify-between items-center">
+                        <button onclick="goHome()" class="bg-gray-100 px-6 py-2 rounded-full text-sm font-bold hover:bg-gray-200 transition">목록으로</button>
+                        <div class="flex gap-2">
+                            ${(user && (user.id === n.authorId || RANK_POWER[user.rank] >= 4)) ? 
+                                `<button onclick="editArticle('${n.id}')" class="bg-gray-800 text-white px-6 py-2 rounded-full text-sm font-bold hover:bg-black transition">수정</button>` : ''}
+                            <button onclick="shareLink()" class="bg-blue-50 text-blue-800 px-6 py-2 rounded-full text-sm font-bold hover:bg-blue-100 transition">공유</button>
+                        </div>
+                    </div>
+                </article>
+            `;
+            
+            window.scrollTo(0, 0);
+            if (typeof updateOG === 'function') updateOG(n);
+
+            // 5. 조회수 증가 로직 (단순 증가)
+            if (window.db) {
+                window.fs.updateDoc(window.fs.doc(window.db, "articles", n.id), { 
+                    views: (n.views || 0) + 1 
+                }).catch(e => console.error("조회수 업데이트 실패", e));
+            }
+        }
+
+        // URL의 id 파라미터를 읽어 기사를 즉시 렌더링하는 로직
+        async function checkDirectLink() {
+          const params = new URLSearchParams(window.location.search);
+          const articleId = params.get('id'); // 'cat'과 'num' 대신 직관적인 'id' 사용
+
+          if (articleId) {
+            try {
+              // Firebase에서 문서 ID로 직접 조회
+              const docRef = window.fs.doc(window.db, "articles", articleId);
+              const docSnap = await window.fs.getDoc(docRef);
+              
+              if (docSnap.exists()) {
+                const data = { id: docSnap.id, ...docSnap.data() };
+                // 기사 상세 화면 그리기 함수 호출
+                renderDetail(data); 
+              } else {
+                console.error("기사를 찾을 수 없습니다: ", articleId);
+                loadMain();
+              }
+            } catch (e) {
+              console.error("기사 로딩 중 오류 발생:", e);
+            }
+          }
+        }
+
+        // 페이지 로드 시 실행
+        window.addEventListener('load', () => {
+          // DB 객체 준비 대기 후 실행
+          setTimeout(checkDirectLink, 500);
+        });
+
+
+
+
+
+
+    // 유튜브 ID 추출 유틸리티 함수
+        function getYTId(url) {
+            const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+            const match = url.match(regExp);
+            return (match && match[2].length === 11) ? match[2] : null;
+        }
+
+        function renderCategory(cat) {
+            const filtered = allNews.filter(n => n.cat && n.cat.includes(cat));
+            const container = document.getElementById('main-view');
+            container.innerHTML = `
+                <h2 class="text-2xl font-black mb-8 border-b-2 border-blue-900 pb-2">${cat}</h2>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                    ${filtered.map(n => `
+                        <div class="cursor-pointer group" onclick="renderDetail('${n.id}')">
+                            <img src="${n.img}" class="w-full aspect-video object-cover rounded-lg mb-4">
+                            <h3 class="font-bold group-hover:text-blue-700">${n.title}</h3>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+        }
+
+
+        // --- Auth & Admin ---
+        async function handleLogin() {
+            const id = document.getElementById('li-id').value;
+            const pw = document.getElementById('li-pw').value;
+
+            if(id === 'admin' && pw === siteConfig.adminPw) {
+                user = { id: 'admin', name: '최고관리자', rank: '최고운영진' };
+            } else {
+                const userSnap = await window.fs.getDoc(window.fs.doc(window.db, "users", id));
+                if(userSnap.exists() && userSnap.data().pw === pw) {
+                    if(!userSnap.data().approved && userSnap.data().rank !== '일반회원') {
+                        return alert('아직 승인 대기 중인 계정입니다.');
+                    }
+                    user = userSnap.data();
+                } else {
+                    return alert('로그인 정보가 일치하지 않습니다.');
+                }
+            }
+            
+            loginSuccess();
+        }
+
+        async function handleSignup() {
+            const id = document.getElementById('su-id').value;
+            const pw = document.getElementById('su-pw').value;
+            const rank = document.getElementById('su-type').value;
+            const name = document.getElementById('su-name').value || id;
+            const nick = document.getElementById('su-nick').value || id;
+            
+            if(!id || !pw) return alert('필수 정보를 입력하세요.');
+
+            await window.fs.setDoc(window.fs.doc(window.db, "users", id), {
+                id, pw, name, nick, rank, 
+                approved: rank === '일반회원' ? true : false,
+                timestamp: window.fs.serverTimestamp()
+            });
+            
+            alert(rank === '일반회원' ? '가입 완료!' : '가입 신청 완료! 심사를 기다려주세요.');
+            hideModal('signup-modal');
+        }
+
+        function loginSuccess() {
+            hideModal('login-modal');
+            document.getElementById('auth-ui').classList.add('hidden');
+            const userUi = document.getElementById('user-ui');
+            userUi.classList.remove('hidden');
+            userUi.classList.add('flex');
+            document.getElementById('user-badge').innerText = user.rank;
+            
+            if(RANK_POWER[user.rank] >= 3) {
+                document.getElementById('admin-btn').classList.remove('hidden');
+                lucide.createIcons(); //
+            }
+        }
+
+        let editingId = null; // 수정 모드 판별 변수
+
+        async function handlePublish() {
+            const title = document.getElementById('post-title').value;
+            const content = document.getElementById('post-content').value;
+            const img = document.getElementById('post-img-main').value;
+            const radioUrl = document.getElementById('post-radio-url').value;
+            const inlineImages = document.getElementById('post-inline-images').value.split('\n').filter(l => l.trim());
+            const cats = Array.from(document.querySelectorAll('#cat-checkboxes input:checked')).map(i => i.value);
+    
+            // 수동 설정값
+            const date = document.getElementById('post-date').value || new Date().toLocaleDateString();
+            const views = parseInt(document.getElementById('post-views').value) || 0;
+
+            if(!title || !content) return alert('제목과 본문은 필수입니다.');
+
+            const articleData = {
+               title, content, img, radioUrl, inlineImages, cat: cats,
+               author: user.name, authorId: user.id,
+               date, views,
+               timestamp: window.fs.serverTimestamp(),
+               approved: RANK_POWER[user.rank] >= 4
+            };
+
+            if (editingId) {
+                // 1번 요건: 수정하기
+                await window.fs.updateDoc(window.fs.doc(window.db, "articles", editingId), articleData);
+                alert('기사가 수정되었습니다.');
+                editingId = null;
+            } else {
+                // 9번 요건: 전체 기사 번호 부여 (전체 기사 수 + 1)
+                articleData.globalNum = allNews.length + 1;
+                await window.fs.addDoc(window.fs.collection(window.db, "articles"), articleData);
+                alert('기사가 발행/요청 되었습니다.');
+            }
+    
+            toggleAdmin();
+        }
+        
+        // 수정 모드 진입 함수
+        function editArticle(id) {
+            const n = allNews.find(x => x.id === id);
+            if(!n) return;
+            editingId = id;
+            toggleAdmin(); // 관리자 창 열기
+    
+            // 값 채워넣기
+            document.getElementById('post-title').value = n.title;
+            document.getElementById('post-content').value = n.content;
+            document.getElementById('post-img-main').value = n.img;
+            document.getElementById('post-date').value = n.date;
+            document.getElementById('post-views').value = n.views;
+            document.getElementById('post-radio-url').value = n.radioUrl || '';
+            document.getElementById('post-inline-images').value = (n.inlineImages || []).join('\n');
+            // 체크박스 초기화 및 세팅...
+       }
+
+        // --- Admin Tabs ---
+        function switchAdminTab(id) {
+            document.querySelectorAll('.admin-tab').forEach(t => t.classList.add('hidden'));
+            document.getElementById('admin-tab-' + id).classList.remove('hidden');
+            
+            if(id === 'approval') loadApprovals();
+            if(id === 'users') loadUsers();
+            if(id === 'settings') loadSettings();
+            if(id === 'manage') loadNewsList();
+        }
+
+        async function loadApprovals() {
+            const q = window.fs.query(window.fs.collection(window.db, "articles"), window.fs.where("approved", "==", false));
+            window.fs.onSnapshot(q, (snap) => {
+                const list = snap.docs.map(d => ({id: d.id, ...d.data()}));
+                document.getElementById('approval-list').innerHTML = list.map(a => `
+                    <div class="flex justify-between items-center bg-white/5 p-4 rounded border border-white/10">
+                        <div>
+                            <p class="font-bold">${a.title}</p>
+                            <p class="text-xs text-gray-400">${a.author} 기자 | ${a.cat.join(', ')}</p>
+                        </div>
+                        <button onclick="approveArticle('${a.id}')" class="bg-green-600 px-4 py-1 rounded text-xs">승인</button>
+                    </div>
+                `).join('') || '<p class="text-gray-500">대기 중인 기사가 없습니다.</p>';
+            });
+        }
+
+        async function loadUsers() {
+            const q = window.fs.query(window.fs.collection(window.db, "users"));
+            window.fs.onSnapshot(q, (snap) => {
+                const list = snap.docs.map(d => ({id: d.id, ...d.data()}));
+                document.getElementById('user-table-body').innerHTML = list.map(u => `
+                    <tr class="border-b border-white/5">
+                        <td class="p-3">${u.id}</td>
+                        <td class="p-3"><span class="${u.approved ? 'text-green-400' : 'text-yellow-400'}">${u.rank} ${u.approved ? '' : '(대기)'}</span></td>
+                        <td class="p-3 space-x-2">
+                            ${!u.approved ? `<button onclick="approveUser('${u.id}')" class="text-blue-400 text-xs">승인</button>` : ''}
+                            <select onchange="updateUserRank('${u.id}', this.value)" class="bg-slate-800 text-[10px] p-1 border border-white/20">
+                                <option>변경 선택</option>
+                                <option value="일반회원">일반회원</option>
+                                <option value="시민기자">시민기자</option>
+                                <option value="기자">기자</option>
+                                <option value="기자 간부">기자 간부</option>
+                                <option value="최고운영진">최고운영진</option>
+                            </select>
+                        </td>
+                    </tr>
+                `).join('');
+            });
+        }
+
+        // --- Helper Actions ---
+        async function approveArticle(id) {
+            await window.fs.updateDoc(window.fs.doc(window.db, "articles", id), { approved: true });
+            alert('기사가 승인되어 발행되었습니다.');
+        }
+
+        async function approveUser(id) {
+            await window.fs.updateDoc(window.fs.doc(window.db, "users", id), { approved: true });
+            alert('사용자가 승인되었습니다.');
+        }
+
+        async function updateUserRank(id, newRank) {
+            if(newRank === '변경 선택') return;
+            await window.fs.updateDoc(window.fs.doc(window.db, "users", id), { rank: newRank, approved: true });
+            alert('등급이 변경되었습니다.');
+        }
+
+        function loadSettings() {
+            document.getElementById('set-site-title').value = siteConfig.title;
+            document.getElementById('set-full-code').value = document.documentElement.outerHTML;
+        }
+
+        async function saveSiteSettings() {
+            const newTitle = document.getElementById('set-site-title').value;
+            const newPw = document.getElementById('set-admin-pw').value;
+            
+            siteConfig.title = newTitle;
+            if(newPw) siteConfig.adminPw = newPw;
+
+            await window.fs.setDoc(window.fs.doc(window.db, "settings", "global"), siteConfig);
+            alert('설정 저장 완료!');
+            location.reload();
+        }
+
+        function deployCode() {
+            if(confirm('코드를 즉시 배포하시겠습니까? (저장되지 않은 변경사항은 사라질 수 있습니다)')) {
+                // 실제 환경에서는 이 코드를 DB에 저장하고, index.html이 로드될 때 감시하여 리로드하는 로직 필요
+                alert('배포 시스템은 현재 읽기 전용으로 시뮬레이션되었습니다.');
+            }
+        }
+
+        function updateOG(article) {
+            if (!article) return;
+
+            const title = article.title;
+            const desc = (article.desc || article.content.substring(0, 100)).replace(/\n/g, ' ');
+            const img = article.img;
+
+            document.title = title + " - T.N. News";
+
+            const metaTags = {
+                'og:title': title,
+                'og:description': desc,
+                'og:image': img,
+                'og:url': window.location.href
+            };
+
+            Object.entries(metaTags).forEach(([prop, content]) => {
+                let el = document.querySelector(`meta[property="${prop}"]`);
+                if (el) {
+                    el.setAttribute('content', content);
+            } else {
+                const meta = document.createElement('meta');
+            meta.setAttribute('property', prop);
+            meta.setAttribute('content', content);
+            document.head.appendChild(meta);
+                    }
+                });
+        }
+
+        function showModal(id) { document.getElementById(id).classList.remove('hidden'); }
+        function hideModal(id) { document.getElementById(id).classList.add('hidden'); }
+        function toggleAdmin() { 
+            const admin = document.getElementById('admin-view');
+            admin.classList.toggle('hidden');
+            if(!admin.classList.contains('hidden')) switchAdminTab('write');
+        }
+        function goHome() {
+            window.history.pushState({}, '', window.location.pathname);
+            renderHome();
+        }
+        function execCmd(cmd, arg) { document.execCommand(cmd, false, arg); }
+        function googleTranslateElementInit() { new google.translate.TranslateElement({pageLanguage: 'ko'}, 'google_translate_element'); }
+        function changeLang(code) {
+            const select = document.querySelector('.goog-te-combo');
+            if(select) { select.value = code; select.dispatchEvent(new Event('change')); }
+        }
+        function shareLink() {
+             const url = window.location.href;
+            // 가상 브라우저 환경 호환을 위한 복사 로직
+            const t = document.createElement("textarea");
+            document.body.appendChild(t);
+            t.value = url;
+            t.select();
+            document.execCommand('copy');
+            document.body.removeChild(t);
+            alert('기사 주소가 복사되었습니다.');
+        }
+        function handleLogout() { location.reload(); }
+
+        // 기사 관리 탭 목록 표시
+        function loadNewsList() {
+            const container = document.getElementById('news-manage-list');
+            if(!container) return;
+            container.innerHTML = allNews.map(n => `
+                <div class="flex justify-between items-center bg-white/5 p-4 rounded border border-white/10 mb-2">
+                    <div>
+                        <p class="font-bold text-white">${n.title}</p>
+                        <p class="text-[10px] text-gray-400">${n.author} | ${n.date}</p>
+                    </div>
+                    <button onclick="deleteArticle('${n.id}')" class="bg-red-600 hover:bg-red-700 px-3 py-1 rounded text-xs font-bold transition">삭제</button>
+                </div>
+            `).join('') || '<p class="text-gray-500">기사가 없습니다.</p>';
+        }
+
+        // 기사 검색
+        function handleSearch() {
+            const keyword = document.getElementById('search-input').value.trim();
+            if(!keyword) return;
+    
+            // 제목(title)과 내용(content)에서 키워드 포함 기사 필터링
+            const results = allNews.filter(n => 
+                n.approved && (n.title.includes(keyword) || n.content.includes(keyword))
+            );
+
+            const container = document.getElementById('main-view');
+            container.innerHTML = `
+                <h2 class="text-2xl font-black mb-8">"${keyword}" 검색 결과 <span class="text-blue-600">${results.length}건</span></h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+            ${results.map(n => renderSmallCard(n)).join('')}
+                </div>
+            `;
+        }
+
+        // 실제 삭제 실행
+        async function deleteArticle(id) {
+            if(!user || RANK_POWER[user.rank] < 4) return alert('권한이 없습니다.');
+            if(!confirm('영구 삭제하시겠습니까?')) return;
+            try {
+                await window.fs.deleteDoc(window.fs.doc(window.db, "articles", id));
+                alert('삭제되었습니다.');
+                loadNewsList();
+            } catch(e) { alert('실패: ' + e.message); }
+        }
+
+        
+        window.onload = init;
+    </script>
+</body>
+</html>
+
