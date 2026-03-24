@@ -1,0 +1,8 @@
+name = "mannamplacecore"
+main = "index.js"
+compatibility_date = "2024-03-09"
+
+[[rules]]
+type = "Text"
+globs = ["**/*.html"]
+fallthrough = true
