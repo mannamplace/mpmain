@@ -1,0 +1,285 @@
+/* ══════════════════════════════════════
+   Mannamplace Navbar Styles
+   navbar.css
+   ══════════════════════════════════════ */
+
+/* ── 전체 네비바 ── */
+.mp-navbar {
+  background: rgba(26,10,0,0.95);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--mp-border);
+  position: sticky;
+  top: 0;
+  z-index: var(--mp-z-topbar);
+  height: var(--mp-topbar-h);
+  display: flex;
+  align-items: center;
+  padding: 0 16px;
+  gap: 12px;
+}
+
+/* 포털 전용 (배경 더 진함) */
+.mp-navbar--portal {
+  background: var(--mp-org-deeper);
+  border-bottom: 2px solid var(--mp-org);
+}
+
+/* ── 로고 ── */
+.mp-navbar__logo {
+  font-family: var(--mp-font-brand);
+  font-size: 18px;
+  color: var(--mp-white);
+  text-decoration: none;
+  white-space: nowrap;
+  line-height: 1;
+}
+.mp-navbar__logo em {
+  color: var(--mp-org3);
+  font-style: normal;
+}
+.mp-navbar__logo-sub {
+  font-size: 9px;
+  color: var(--mp-text3);
+  font-family: var(--mp-font-mono);
+  letter-spacing: 2px;
+  display: block;
+  margin-top: -2px;
+  text-transform: uppercase;
+}
+
+/* ── 검색창 ── */
+.mp-navbar__search {
+  flex: 1;
+  max-width: 440px;
+  position: relative;
+}
+.mp-navbar__search-ico {
+  position: absolute;
+  left: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--mp-text3);
+  font-size: 13px;
+  pointer-events: none;
+}
+.mp-navbar__search-inp {
+  width: 100%;
+  background: var(--mp-bg3);
+  border: 1px solid var(--mp-border2);
+  border-radius: var(--mp-radius-full);
+  padding: 7px 12px 7px 32px;
+  color: var(--mp-text);
+  font-size: var(--mp-text-sm);
+  transition: border-color var(--mp-transition);
+}
+.mp-navbar__search-inp:focus {
+  border-color: var(--mp-org);
+}
+.mp-navbar__search-inp::placeholder {
+  color: var(--mp-text3);
+}
+
+/* 포털 검색 (흰 배경) */
+.mp-navbar__search--portal .mp-navbar__search-inp {
+  background: var(--mp-white);
+  color: #1A0A00;
+  border: none;
+  border-radius: var(--mp-radius-sm) 0 0 var(--mp-radius-sm);
+}
+.mp-navbar__search-btn {
+  background: var(--mp-org);
+  border: none;
+  border-radius: 0 var(--mp-radius-sm) var(--mp-radius-sm) 0;
+  padding: 8px 14px;
+  color: #fff;
+  font-size: var(--mp-text-sm);
+  font-weight: 700;
+  transition: background var(--mp-transition);
+}
+.mp-navbar__search-btn:hover { background: var(--mp-org2); }
+
+/* ── 오른쪽 영역 ── */
+.mp-navbar__right {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* ── 버튼 ── */
+.mp-navbar__btn {
+  background: none;
+  border: 1px solid rgba(255,255,255,0.25);
+  border-radius: var(--mp-radius-sm);
+  padding: 5px 12px;
+  color: var(--mp-white);
+  font-size: var(--mp-text-sm);
+  transition: var(--mp-transition);
+}
+.mp-navbar__btn:hover {
+  background: rgba(255,255,255,0.1);
+}
+.mp-navbar__btn--primary {
+  background: var(--mp-white);
+  border-color: var(--mp-white);
+  color: var(--mp-org-deeper);
+  font-weight: 700;
+}
+.mp-navbar__btn--primary:hover {
+  background: var(--mp-org3);
+  border-color: var(--mp-org3);
+  color: #fff;
+}
+
+/* ── 프로필 버튼 ── */
+.mp-navbar__profile {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: var(--mp-org-dark);
+  border: 2px solid var(--mp-org);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--mp-white);
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: border-color var(--mp-transition);
+}
+.mp-navbar__profile:hover {
+  border-color: var(--mp-org3);
+}
+
+/* ── 알림 버튼 ── */
+.mp-navbar__notif {
+  position: relative;
+  cursor: pointer;
+  font-size: 18px;
+  line-height: 1;
+  user-select: none;
+}
+.mp-navbar__notif-badge {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  background: var(--mp-red);
+  color: #fff;
+  font-size: 8px;
+  border-radius: 50%;
+  width: 14px;
+  height: 14px;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--mp-font-mono);
+}
+.mp-navbar__notif-badge.show {
+  display: flex;
+}
+
+/* ── 드롭다운 ── */
+.mp-navbar__dropdown-wrap {
+  position: relative;
+}
+.mp-navbar__dropdown {
+  position: absolute;
+  top: 38px;
+  right: 0;
+  background: var(--mp-bg2);
+  border: 1px solid var(--mp-border2);
+  border-radius: var(--mp-radius-lg);
+  width: 230px;
+  z-index: var(--mp-z-dropdown);
+  display: none;
+  overflow: hidden;
+  box-shadow: var(--mp-shadow-lg);
+}
+.mp-navbar__dropdown.open {
+  display: block;
+}
+.mp-navbar__dropdown-head {
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--mp-border);
+  background: var(--mp-bg3);
+}
+.mp-navbar__dropdown-id {
+  font-size: var(--mp-text-xs);
+  color: var(--mp-org3);
+  font-family: var(--mp-font-mono);
+}
+.mp-navbar__dropdown-name {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--mp-white);
+  margin-top: 2px;
+}
+.mp-navbar__dropdown-badge {
+  display: inline-block;
+  font-size: 9px;
+  background: rgba(184,74,0,0.2);
+  border: 1px solid var(--mp-org);
+  color: var(--mp-org3);
+  padding: 1px 6px;
+  border-radius: var(--mp-radius-sm);
+  margin-top: 3px;
+  font-family: var(--mp-font-mono);
+}
+.mp-navbar__dropdown-menu {
+  padding: 6px 0;
+}
+.mp-navbar__dropdown-item {
+  display: block;
+  padding: 8px 14px;
+  font-size: var(--mp-text-sm);
+  color: var(--mp-text2);
+  cursor: pointer;
+  transition: var(--mp-transition);
+  text-decoration: none;
+}
+.mp-navbar__dropdown-item:hover {
+  background: var(--mp-bg3);
+  color: var(--mp-text);
+}
+.mp-navbar__dropdown-item--danger {
+  color: var(--mp-red);
+}
+.mp-navbar__dropdown-divider {
+  height: 1px;
+  background: var(--mp-border);
+  margin: 4px 0;
+}
+
+/* ── 검색 탭바 (포털) ── */
+.mp-search-tabs {
+  background: var(--mp-org-bg);
+  border-bottom: 1px solid var(--mp-border2);
+  display: flex;
+  padding: 0 16px;
+  overflow-x: auto;
+}
+.mp-search-tabs::-webkit-scrollbar { display: none; }
+.mp-search-tab {
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  padding: 7px 14px;
+  color: rgba(245,230,216,0.6);
+  font-size: var(--mp-text-sm);
+  white-space: nowrap;
+  transition: var(--mp-transition);
+}
+.mp-search-tab:hover { color: var(--mp-text); }
+.mp-search-tab.on {
+  color: var(--mp-white);
+  border-bottom-color: var(--mp-org3);
+  font-weight: 700;
+}
+
+/* ── 반응형 ── */
+@media (max-width: 600px) {
+  .mp-navbar__search { max-width: 200px; }
+  .mp-navbar__logo-sub { display: none; }
+}
