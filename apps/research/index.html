@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Research - 위탁 여론조사</title>
+    <style>
+        body { font-family: sans-serif; max-width: 600px; margin: 50px auto; padding: 20px; }
+        .poll-header { background: #e8f4fd; padding: 20px; border-radius: 8px; margin-bottom: 20px; }
+        .question { background: #f9f9f9; padding: 20px; margin-bottom: 20px; border-radius: 8px; }
+        label { display: block; margin: 10px 0; cursor: pointer; }
+        input[type="radio"], input[type="checkbox"] { margin-right: 10px; transform: scale(1.2); }
+        button { background: #007bff; color: white; padding: 15px 30px; border: none; border-radius: 5px; font-size: 16px; width: 100%; }
+        .client { font-weight: bold; color: #007bff; }
+    </style>
+</head>
+<body>
+    <div class="poll-header">
+        <h2>위탁 여론조사: 2026 대통령 지지율 (ABC 언론사 의뢰)</h2>
+        <p class="client">의뢰처: ABC 뉴스 | 기간: 2026.03.01 ~ 03.31</p>
+    </div>
+    <form onsubmit="submitPoll(event)">
+        <div class="question">
+            <h3>1. 현 대통령 지지 여부?</h3>
+            <label><input type="radio" name="q1" value="지지"> 지지</label>
+            <label><input type="radio" name="q1" value="반대"> 반대</label>
+            <label><input type="radio" name="q1" value="모름"> 모름/무응답</label>
+        </div>
+        <div class="question">
+            <h3>2. 다음 정책 우선순위? (복수 선택)</h3>
+            <label><input type="checkbox" name="q2" value="경제"> 경제 활성화</label>
+            <label><input type="checkbox" name="q2" value="안보"> 안보 강화</label>
+            <label><input type="checkbox" name="q2" value="복지"> 복지 확대</label>
+        </div>
+        <button type="submit">투표 제출 (익명 처리)</button>
+    </form>
+    <div id="result" style="display:none; margin-top:20px;">
+        <h3>중간 집계 결과</h3>
+        <p>지지율: 45% | 반대: 35% | 모름: 20%</p>
+    </div>
+    <script>
+        function submitPoll(e) {
+            e.preventDefault();
+            document.getElementById('result').style.display = 'block';
+            alert('투표 감사합니다. 결과는 실시간 업데이트됩니다.');
+        }
+    </script>
+</body>
+</html>
