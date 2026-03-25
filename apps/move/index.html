@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Move/Map - 지역 밈</title>
+    <style>
+        body { font-family: sans-serif; margin: 0; }
+        #map { height: 400px; width: 100%; }
+        .meme-list { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; padding: 20px; }
+        .meme { background: #f0f8ff; padding: 15px; border-radius: 8px; cursor: pointer; }
+        .meme:hover { background: #e0f0ff; }
+    </style>
+</head>
+<body>
+    <header><h1>지역 밈 맵</h1></header>
+    <div id="map">지도 영역 (Google Maps 또는 Kakao Map API 삽입)</div>
+    <div class="meme-list">
+        <div class="meme">서울: 햄부기 밈<img src="meme1.jpg" width="100"></div>
+        <div class="meme">부산: 게장 랩<img src="meme2.jpg" width="100"></div>
+        <div class="meme">제주: 돌하르방<img src="meme3.jpg" width="100"></div>
+    </div>
+    <script>
+        // Kakao Map 예제 (API 키 필요)
+        if (window.kakao && window.kakao.maps) {
+            kakao.maps.load(() => {
+                var mapContainer = document.getElementById('map');
+                var mapOption = { center: new kakao.maps.LatLng(37.5665, 126.9780), level: 3 };
+                var map = new kakao.maps.Map(mapContainer, mapOption);
+            });
+        }
+    </script>
+</body>
+</html>
