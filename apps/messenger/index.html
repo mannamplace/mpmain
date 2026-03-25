@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Messenger</title>
+    <style>
+        body { font-family: sans-serif; display: flex; height: 100vh; margin: 0; }
+        #sidebar { width: 30%; background: #f5f5f5; padding: 20px; }
+        #chat { flex: 1; display: flex; flex-direction: column; }
+        .tab { padding: 10px; cursor: pointer; border-bottom: 1px solid #ddd; }
+        .tab.active { background: #e0e0e0; }
+        .profile { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+        .privacy { font-size: 12px; color: #666; }
+    </style>
+</head>
+<body>
+    <div id="sidebar">
+        <div class="tab active" onclick="switchTab('contact')">연락처 기반</div>
+        <div class="tab" onclick="switchTab('follow')">팔로우 기반</div>
+        <div id="contact-list" class="list">
+            <div class="profile">
+                <img src="user1.jpg" width="40"><span>친구1</span>
+                <select class="privacy"><option>공개</option><option>비공개</option></select>
+            </div>
+        </div>
+        <div id="follow-list" class="list" style="display:none;">
+            <div class="profile">
+                <img src="user2.jpg" width="40"><span>팔로워2</span>
+                <select class="privacy"><option>공개</option><option>비공개</option></select>
+            </div>
+        </div>
+    </div>
+    <div id="chat">
+        <div>채팅 영역</div>
+        <input type="text" placeholder="메시지 입력">
+    </div>
+    <script>
+        function switchTab(tab) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            event.target.classList.add('active');
+            document.getElementById('contact-list').style.display = tab === 'contact' ? 'block' : 'none';
+            document.getElementById('follow-list').style.display = tab === 'follow' ? 'block' : 'none';
+        }
+    </script>
+</body>
+</html>
