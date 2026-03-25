@@ -1,0 +1,31 @@
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: '돋움', sans-serif; background: #f5f5f5; }
+
+#wrap { max-width: 1200px; margin: 0 auto; }
+
+header { background: white; padding: 20px; text-align: center; border-bottom: 1px solid #ddd; }
+#search { margin-top: 10px; }
+#search input { width: 60%; padding: 10px; }
+#search button { padding: 10px 20px; background: #03c75a; color: white; border: none; }
+
+nav ul { display: flex; list-style: none; background: white; margin: 10px 0; }
+nav li { padding: 15px 20px; cursor: pointer; }
+nav li:hover { background: #eee; }
+
+#container { display: flex; gap: 20px; padding: 20px; }
+#main-content { flex: 2; }
+#sidebar { flex: 1; background: white; padding: 20px; border-radius: 8px; }
+
+#news-stand { background: white; padding: 20px; margin-bottom: 20px; border-radius: 8px; }
+.news-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 10px; }
+.news-item { background: #f0f0f0; padding: 20px; text-align: center; cursor: pointer; border-radius: 4px; }
+.news-item:hover { background: #e0e0e0; }
+
+#headlines article { margin-bottom: 15px; padding: 15px; background: white; border-radius: 8px; }
+.big-news { height: 200px; background: linear-gradient(to right, #4facfe, #00f2fe); color: white; }
+.sub-news { display: flex; flex-direction: column; gap: 10px; }
+
+#quick-menu, #ads { background: #f9f9f9; padding: 15px; margin-bottom: 15px; text-align: center; }
+#ranking ol { list-style-position: inside; }
+
+footer { background: #333; color: white; text-align: center; padding: 20px; margin-top: 20px; }
