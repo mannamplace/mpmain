@@ -10,8 +10,8 @@
     <!-- Open Graph (Dynamic) -->
     <meta property="og:type" content="website">
     <meta property="og:site_name" content="T.N. News">
-    <meta id="og-title" property="og:title" content="T.N. News">
-    <meta id="og-desc" property="og:description" content="모두를 위한 뉴스">
+    <title id="site-title-tag">TNfocnus - Global News Network</title>
+    <meta id="og-desc" property="og:description" content="Global News Network - News from Everywhere, for Everyone">
     <meta id="meta-desc" name="description" content="모두를 위한 뉴스, T.N. News">
     <meta id="og-img" property="og:image" content="https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=800">
     <meta property="og:url" content="">
@@ -47,8 +47,10 @@
     </script>
 
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap');
-        body { font-family: 'Noto Sans KR', sans-serif; word-break: keep-all; }
+    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&family=Noto+Sans:wght@300;400;500;700;900&family=Noto+Sans+SC:wght@300;400;500;700;900&family=Noto+Sans+JP:wght@300;400;500;700;900&family=Noto+Sans+Arabic:wght@300;400;500;700;900&display=swap');
+    body { 
+    font-family: 'Noto Sans KR', 'Noto Sans', 'Noto Sans SC', 'Noto Sans JP', 'Noto Sans Arabic', sans-serif; 
+    }
         .line-clamp-2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
         .line-clamp-3 { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
         .admin-panel { background: rgba(15, 23, 42, 0.98); backdrop-filter: blur(15px); }
@@ -82,6 +84,16 @@
             </div>
             
             <nav class="hidden lg:flex items-center space-x-5 text-[14px] font-bold">
+                <button onclick="renderCategory('한국')" class="hover:text-yellow-300 px-2">🇰🇷 한국</button>
+                <button onclick="renderCategory('미국')" class="hover:text-yellow-300 px-2">🇺🇸 미국</button>
+                <button onclick="renderCategory('유럽')" class="hover:text-yellow-300 px-2">🇪🇺 유럽</button>
+                <button onclick="renderCategory('중국')" class="hover:text-yellow-300 px-2">🇨🇳 중국</button>
+                <button onclick="renderCategory('일본')" class="hover:text-yellow-300 px-2">🇯🇵 일본</button>
+                <button onclick="renderCategory('인도')" class="hover:text-yellow-300 px-2">🇮🇳 인도</button>
+                <button onclick="renderCategory('중동')" class="hover:text-yellow-300 px-2">🌍 중동</button>
+                <button onclick="renderCategory('아프리카')" class="hover:text-yellow-300 px-2">🌍 아프리카</button>
+                <button onclick="renderCategory('남미')" class="hover:text-yellow-300 px-2">🌎 남미</button>
+                <div class="h-4 w-[1px] bg-blue-400 mx-2"></div>
                 <button onclick="renderCategory('정치')" class="hover:text-yellow-300">정치</button>
                 <button onclick="renderCategory('경제')" class="hover:text-yellow-300">경제</button>
                 <button onclick="renderCategory('사회')" class="hover:text-yellow-300">사회</button>
@@ -96,20 +108,23 @@
             </nav>
 
             <div class="flex items-center space-x-3">
-                <select id="lang-select" onchange="changeLang(this.value)" class="bg-blue-800 text-[11px] p-1 rounded border-none outline-none">
-                    <option value="ko">KO</option>
-                    <option value="en">English</option>
-                    <option value="zh-CN">Chinese</option>
-                    <option value="ja">Japanese</option>
-                    <option value="es">Spanish</option>
-                    <option value="fr">French</option>
-                    <option value="ar">Arabic</option>
-                    <option value="pt">Portuguese</option>
+                <select id="lang-select" onchange="changeLang(this.value)" class="bg-blue-800 text-[11px] p-1.5 rounded border-none outline-none cursor-pointer">
+                    <option value="ko">🇰🇷 한국어</option>
+                    <option value="en">🇺🇸 English</option>
+                    <option value="zh-CN">🇨🇳 中文</option>
+                    <option value="ja">🇯🇵 日本語</option>
+                    <option value="es">🇪🇸 Español</option>
+                    <option value="fr">🇫🇷 Français</option>
+                    <option value="ar">🇸🇦 العربية</option>
+                    <option value="hi">🇮🇳 हिन्दी</option>
+                    <option value="pt">🇧🇷 Português</option>
+                    <option value="de">🇩🇪 Deutsch</option>
+                    <option value="ru">🇷🇺 Русский</option>
                 </select>
                 
                 <div id="auth-ui" class="flex space-x-2">
-                    <button onclick="showModal('login-modal')" class="text-xs font-bold bg-white text-blue-800 px-3 py-1 rounded">로그인</button>
-                    <button onclick="showModal('signup-modal')" class="text-xs font-bold border border-white px-3 py-1 rounded">회원가입</button>
+                    <button onclick="showModal('login-modal')" class="text-xs font-bold bg-white text-blue-800 px-3 py-1 rounded">Log in</button>
+                    <button onclick="showModal('signup-modal')" class="text-xs font-bold border border-white px-3 py-1 rounded">Register</button>
                 </div>
                 
                 <div id="user-ui" class="hidden items-center space-x-3">
@@ -117,6 +132,33 @@
                     <button onclick="toggleAdmin()" id="admin-btn" class="hidden text-yellow-300"><i data-lucide="settings" class="w-5 h-5"></i></button>
                     <button onclick="handleLogout()" class="text-xs opacity-70 underline">로그아웃</button>
                 </div>
+            </div>
+        </div>
+    </header>
+
+        <!-- Mobile Region Navigation -->
+        <div class="lg:hidden border-t border-blue-400/30 px-4 py-2 overflow-x-auto">
+            <div class="flex space-x-2 text-xs font-bold min-w-max">
+                <button onclick="renderCategory('한국')" class="hover:text-yellow-300 px-2 py-1">🇰🇷</button>
+                <button onclick="renderCategory('미국')" class="hover:text-yellow-300 px-2 py-1">🇺🇸</button>
+                <button onclick="renderCategory('유럽')" class="hover:text-yellow-300 px-2 py-1">🇪🇺</button>
+                <button onclick="renderCategory('중국')" class="hover:text-yellow-300 px-2 py-1">🇨🇳</button>
+                <button onclick="renderCategory('일본')" class="hover:text-yellow-300 px-2 py-1">🇯🇵</button>
+                <button onclick="renderCategory('인도')" class="hover:text-yellow-300 px-2 py-1">🇮🇳</button>
+                <button onclick="renderCategory('중동')" class="hover:text-yellow-300 px-2 py-1">🌍</button>
+                <button onclick="renderCategory('아프리카')" class="hover:text-yellow-300 px-2 py-1">🌍</button>
+                <button onclick="renderCategory('남미')" class="hover:text-yellow-300 px-2 py-1">🌎</button>
+                <button onclick="renderCategory('정치')" class="hover:text-yellow-300">정치</button>
+                <button onclick="renderCategory('경제')" class="hover:text-yellow-300">경제</button>
+                <button onclick="renderCategory('사회')" class="hover:text-yellow-300">사회</button>
+                <button onclick="renderCategory('외교통일')" class="hover:text-yellow-300">외교통일</button>
+                <button onclick="renderCategory('국방')" class="hover:text-yellow-300">국방</button>
+                <button onclick="renderCategory('문화')" class="hover:text-yellow-300">문화</button>
+                <button onclick="renderCategory('사설/칼럼')" class="hover:text-yellow-300">사설/칼럼</button>
+                <span class="text-blue-300">|</span>
+                <button onclick="renderCategory('속보')" class="text-orange-400">속보</button>
+                <button onclick="renderCategory('단독')" class="text-orange-400">단독</button>
+                <button onclick="renderCategory('기획보도')" class="text-orange-400">기획보도</button>
             </div>
         </div>
     </header>
@@ -166,6 +208,20 @@
                         </div>
                         <div class="space-y-4">
                             <div class="bg-white/5 p-4 rounded border border-white/10">
+                                <label class="block text-sm mb-2 font-medium">지역 카테고리 (복수 선택 가능)</label>
+                                <div class="space-y-2 max-h-[300px] overflow-y-auto bg-white/5 p-3 rounded border border-white/20">
+                                    <label class="flex items-center space-x-2"><input type="checkbox" value="한국" class="cat-check"> <span>🇰🇷 한국 (Korea)</span></label>
+                                    <label class="flex items-center space-x-2"><input type="checkbox" value="미국" class="cat-check"> <span>🇺🇸 미국 (USA)</span></label>
+                                    <label class="flex items-center space-x-2"><input type="checkbox" value="유럽" class="cat-check"> <span>🇪🇺 유럽 (Europe)</span></label>
+                                    <label class="flex items-center space-x-2"><input type="checkbox" value="중국" class="cat-check"> <span>🇨🇳 중국 (China)</span></label>
+                                    <label class="flex items-center space-x-2"><input type="checkbox" value="일본" class="cat-check"> <span>🇯🇵 일본 (Japan)</span></label>
+                                    <label class="flex items-center space-x-2"><input type="checkbox" value="인도" class="cat-check"> <span>🇮🇳 인도 (India)</span></label>
+                                    <label class="flex items-center space-x-2"><input type="checkbox" value="중동" class="cat-check"> <span>🌍 중동 (Middle East)</span></label>
+                                    <label class="flex items-center space-x-2"><input type="checkbox" value="아프리카" class="cat-check"> <span>🌍 아프리카 (Africa)</span></label>
+                                    <label class="flex items-center space-x-2"><input type="checkbox" value="남미" class="cat-check"> <span>🌎 남미 (South America)</span></label>
+                                    <label class="flex items-center space-x-2"><input type="checkbox" value="동남아" class="cat-check"> <span>🌏 동남아 (Southeast Asia)</span></label>
+                                    <label class="flex items-center space-x-2"><input type="checkbox" value="오세아니아" class="cat-check"> <span>🇦🇺 오세아니아 (Oceania)</span></label>
+                                    <label class="flex items-center space-x-2"><input type="checkbox" value="러시아" class="cat-check"> <span>🇷🇺 러시아 (Russia)</span></label>
                                 <label class="block text-xs font-bold mb-2">카테고리 (복수 선택 가능)</label>
                                 <div id="cat-checkboxes" class="grid grid-cols-2 gap-2 text-sm">
                                     <label><input type="checkbox" value="정치"> 정치</label>
@@ -180,6 +236,7 @@
                                     <label class="text-yellow-400"><input type="checkbox" value="기획보도"> 기획보도</label>
                                 </div>
                             </div>
+                            <input type="email" id="post-email" placeholder="기자 이메일 (투명성 강화)" class="w-full bg-white/5 border border-white/20 p-3 rounded text-sm outline-none focus:border-blue-500">
                             <input type="text" id="post-img-main" placeholder="대표 이미지 URL" class="w-full bg-white/5 border border-white/20 p-3 rounded text-sm">
                             <input type="text" id="post-desc" placeholder="기사 짧은 설명 (OpenGraph)" class="w-full bg-white/5 border border-white/20 p-3 rounded text-sm">
                             <button onclick="handlePublish()" class="w-full bg-blue-600 hover:bg-blue-700 py-4 rounded font-black text-lg">발행/승인 요청</button>
@@ -499,6 +556,18 @@
             `;
         }
 
+        function formatDateTime(timestamp) {
+            if (!timestamp) return '';
+            const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            const hours = String(date.getHours()).padStart(2, '0');
+            const minutes = String(date.getMinutes()).padStart(2, '0');
+            const seconds = String(date.getSeconds()).padStart(2, '0');
+            return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+        }
+        
         function renderCategoryPreview(cat, newsList) {
             const list = newsList.filter(n => n.cat.includes(cat));
             if(list.length === 0) return '';
@@ -629,7 +698,51 @@
         });
 
 
-
+        function renderBigCard(article) {
+            const cats = article.cat || [];
+            const dateStr = formatDateTime(article.timestamp);
+            return `
+                <div class="border-b border-gray-200 pb-6 mb-6 cursor-pointer hover:bg-gray-50 p-4 rounded transition" onclick='renderArticle(${JSON.stringify(article).replace(/'/g, "&apos;")})'>
+                    <div class="flex flex-col md:flex-row items-start space-y-4 md:space-y-0 md:space-x-6">
+                        <img src="${article.img}" alt="${article.title}" class="w-full md:w-64 h-48 object-cover rounded shadow-lg flex-shrink-0">
+                        <div class="flex-1">
+                            <div class="flex flex-wrap gap-2 mb-2">
+                                ${cats.map(c => `<span class="bg-blue-600 text-white text-[10px] px-2 py-0.5 rounded font-bold">${c}</span>`).join('')}
+                            </div>
+                            <h3 class="text-2xl font-black mb-2 line-clamp-2">${article.title}</h3>
+                            <p class="text-gray-600 text-sm line-clamp-2 mb-3">${article.desc || ''}</p>
+                            <div class="flex flex-wrap items-center text-xs text-gray-500 gap-x-3 gap-y-1">
+                                <span class="font-medium">✍️ ${article.author}</span>
+                                ${article.email ? `<span class="text-blue-600">✉ ${article.email}</span>` : ''}
+                                <span class="opacity-75">🕐 ${dateStr}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+ 
+        function renderSmallCard(article) {
+            const cats = article.cat || [];
+            const dateStr = formatDateTime(article.timestamp);
+            return `
+                <div class="bg-white rounded-lg shadow-md overflow-hidden cursor-pointer hover:shadow-xl transition" onclick='renderArticle(${JSON.stringify(article).replace(/'/g, "&apos;")})'>
+                    <img src="${article.img}" alt="${article.title}" class="w-full h-48 object-cover">
+                    <div class="p-4">
+                        <div class="flex flex-wrap gap-1 mb-2">
+                            ${cats.slice(0, 3).map(c => `<span class="bg-gray-200 text-gray-800 text-[9px] px-1.5 py-0.5 rounded font-bold">${c}</span>`).join('')}
+                        </div>
+                        <h3 class="text-lg font-bold mb-2 line-clamp-2">${article.title}</h3>
+                        <p class="text-gray-600 text-sm line-clamp-2 mb-3">${article.desc || ''}</p>
+                        <div class="flex flex-wrap items-center text-[10px] text-gray-500 gap-x-2 gap-y-1">
+                            <span class="font-medium">${article.author}</span>
+                            ${article.email ? `<span class="text-blue-600">${article.email}</span>` : ''}
+                            <span class="opacity-75">${dateStr}</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
 
 
 
@@ -656,7 +769,66 @@
             `;
         }
 
-
+        function renderArticle(article) {
+            const cats = article.cat || [];
+            const dateStr = formatDateTime(article.timestamp);
+            const main = document.getElementById('main-view');
+            
+            updateOG(article);
+            window.history.pushState({ article }, '', `/${cats[0] || 'news'}/${article.globalNum}`);
+ 
+            main.innerHTML = `
+                <div class="max-w-4xl mx-auto">
+                    <button onclick="goHome()" class="mb-6 text-blue-600 hover:underline flex items-center space-x-1">
+                        <i data-lucide="arrow-left" class="w-4 h-4"></i>
+                        <span>Back to home</span>
+                    </button>
+                    
+                    <div class="flex flex-wrap gap-2 mb-4">
+                        ${cats.map(c => `<span class="bg-blue-600 text-white text-xs px-3 py-1 rounded-full font-bold">${c}</span>`).join('')}
+                    </div>
+                    
+                    <h1 class="text-4xl md:text-5xl font-black mb-4 leading-tight">${article.title}</h1>
+                    
+                    ${article.desc ? `<p class="text-xl text-gray-600 mb-6 font-medium">${article.desc}</p>` : ''}
+                    
+                    <div class="flex flex-wrap items-center gap-x-4 gap-y-2 mb-6 pb-6 border-b border-gray-200">
+                        <div class="flex items-center space-x-2">
+                            <div class="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center text-white font-bold">
+                                ${article.author[0].toUpperCase()}
+                            </div>
+                            <div>
+                                <p class="font-bold text-sm">${article.author}</p>
+                                ${article.email ? `<p class="text-xs text-blue-600">${article.email}</p>` : ''}
+                            </div>
+                        </div>
+                        <div class="text-sm text-gray-500">
+                            <p>📅 Published: ${dateStr}</p>
+                        </div>
+                        <button onclick="shareLink()" class="ml-auto bg-blue-600 text-white px-4 py-2 rounded-full text-sm font-bold hover:bg-blue-700 flex items-center space-x-2">
+                            <i data-lucide="share-2" class="w-4 h-4"></i>
+                            <span>Share</span>
+                        </button>
+                    </div>
+                    
+                    <img src="${article.img}" alt="${article.title}" class="w-full h-auto rounded-lg shadow-lg mb-8">
+                    
+                    <div class="prose prose-lg max-w-none">
+                        ${article.content}
+                    </div>
+                    
+                    <div class="mt-12 pt-8 border-t border-gray-200">
+                        <button onclick="goHome()" class="text-blue-600 hover:underline flex items-center space-x-1">
+                            <i data-lucide="arrow-left" class="w-4 h-4"></i>
+                            <span>Back to home</span>
+                        </button>
+                    </div>
+                </div>
+            `;
+            lucide.createIcons();
+            window.scrollTo(0, 0);
+        }
+        
         // --- Auth & Admin ---
         async function handleLogin() {
             const id = document.getElementById('li-id').value;
@@ -717,6 +889,7 @@
         async function handlePublish() {
             const title = document.getElementById('post-title').value;
             const content = document.getElementById('post-content').value;
+            const email = document.getElementById('post-email').value.trim();
             const img = document.getElementById('post-img-main').value;
             const radioUrl = document.getElementById('post-radio-url').value;
             const inlineImages = document.getElementById('post-inline-images').value.split('\n').filter(l => l.trim());
@@ -731,6 +904,7 @@
             const articleData = {
                title, content, img, radioUrl, inlineImages, cat: cats,
                author: user.name, authorId: user.id,
+               email: email || '',
                date, views,
                timestamp: window.fs.serverTimestamp(),
                approved: RANK_POWER[user.rank] >= 4
