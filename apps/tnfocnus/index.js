@@ -64,7 +64,7 @@ ${urls.join('\n')}
       const response = await fetch(fbUrl);
 
       let title = "T.N. News";
-      let description = "모두를 위한 뉴스";
+      let description = "News to all";
       let imageUrl = "https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=800";
       let articleUrl = url.href;
 
