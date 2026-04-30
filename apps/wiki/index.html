@@ -1,0 +1,1236 @@
+<!DOCTYPE html>
+<html lang="ko" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>위키 — Mannamplace</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;600;700&family=Noto+Sans+KR:wght@300;400;500;700&family=Noto+Sans+JP:wght@400;500;700&family=Noto+Sans+SC:wght@400;500;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+
+// Expose to global scope for non-module scripts
+window._fb = { auth, db, googleProvider,
+  signInWithPopup, GoogleAuthProvider, createUserWithEmailAndPassword,
+  signInWithEmailAndPassword, signOut, onAuthStateChanged,
+  collection, doc, getDoc, getDocs, setDoc, deleteDoc,
+  query, orderBy, limit, serverTimestamp, where };
+
+window.dispatchEvent(new Event('firebaseReady'));
+</script>
+
+<style>
+:root {
+  --bg:#f7f5f0; --bg2:#eeeae2; --surface:#fff; --border:#d4cfc6;
+  --border-strong:#b8b0a2; --text:#1a1714; --text2:#4a453f; --text3:#7a736a;
+  --accent:#c0392b; --accent2:#e74c3c; --accent-soft:#fdf0ef;
+  --link:#1a5276; --link-hover:#c0392b;
+  --header-h:56px; --sidebar-w:260px;
+  --radius:4px; --shadow:0 1px 3px rgba(0,0,0,.08),0 2px 8px rgba(0,0,0,.04);
+  --shadow-lg:0 4px 20px rgba(0,0,0,.12);
+  --font-sans:'Noto Sans KR',sans-serif;
+  --font-serif:'Noto Serif KR',serif;
+  --font-mono:'JetBrains Mono',monospace;
+}
+[lang="ja"]{--font-sans:'Noto Sans JP',sans-serif;}
+[lang="zh"],[lang="zh-Hans"]{--font-sans:'Noto Sans SC',sans-serif;}
+[dir="rtl"] #sidebar{right:0;left:auto;border-right:none;border-left:1px solid var(--border);}
+[dir="rtl"] #main{margin-right:var(--sidebar-w);margin-left:0;}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+body{font-family:var(--font-sans);background:var(--bg);color:var(--text);min-height:100vh;font-size:15px;line-height:1.7;}
+
+/* HEADER */
+#header{position:fixed;top:0;left:0;right:0;z-index:100;height:var(--header-h);background:var(--surface);border-bottom:2px solid var(--accent);display:flex;align-items:center;gap:12px;padding:0 16px;box-shadow:var(--shadow);}
+#logo{font-family:var(--font-serif);font-size:19px;font-weight:700;color:var(--accent);cursor:pointer;white-space:nowrap;letter-spacing:-.5px;display:flex;align-items:center;gap:8px;}
+#logo-sub{color:var(--text3);font-weight:400;font-size:12px;}
+#search-wrap{flex:1;max-width:440px;position:relative;}
+#search-input{width:100%;padding:8px 38px 8px 14px;border:1.5px solid var(--border);border-radius:20px;font-family:var(--font-sans);font-size:14px;background:var(--bg);color:var(--text);transition:border-color .2s,box-shadow .2s;outline:none;}
+#search-input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(192,57,43,.1);}
+#search-btn{position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--text3);font-size:15px;}
+#search-btn:hover{color:var(--accent);}
+#search-results{position:absolute;top:calc(100% + 6px);left:0;right:0;background:var(--surface);border:1.5px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow-lg);display:none;z-index:200;max-height:300px;overflow-y:auto;}
+.sr-item{padding:10px 16px;cursor:pointer;border-bottom:1px solid var(--bg2);transition:background .15s;}
+.sr-item:last-child{border-bottom:none;}
+.sr-item:hover{background:var(--accent-soft);}
+.sr-title{font-weight:600;font-size:14px;}
+.sr-cat{font-size:12px;color:var(--text3);margin-top:2px;}
+#header-right{display:flex;align-items:center;gap:8px;margin-left:auto;}
+
+/* LANGUAGE PICKER */
+#lang-picker{position:relative;}
+#lang-btn{padding:6px 12px;border:1.5px solid var(--border);border-radius:var(--radius);background:none;cursor:pointer;font-size:13px;color:var(--text2);display:flex;align-items:center;gap:6px;font-family:var(--font-sans);transition:border-color .2s;}
+#lang-btn:hover{border-color:var(--accent);color:var(--accent);}
+#lang-menu{position:absolute;top:calc(100%+6px);right:0;background:var(--surface);border:1.5px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow-lg);z-index:300;display:none;min-width:160px;max-height:360px;overflow-y:auto;}
+#lang-menu.open{display:block;}
+.lang-item{padding:9px 16px;cursor:pointer;font-size:13px;display:flex;align-items:center;gap:10px;transition:background .15s;border-bottom:1px solid var(--bg2);}
+.lang-item:last-child{border-bottom:none;}
+.lang-item:hover{background:var(--accent-soft);}
+.lang-item.active{color:var(--accent);font-weight:700;}
+.lang-flag{font-size:16px;}
+
+/* AUTH */
+#auth-btn{padding:7px 14px;border-radius:var(--radius);font-size:13px;font-weight:500;cursor:pointer;border:1.5px solid var(--accent);background:var(--accent);color:#fff;font-family:var(--font-sans);transition:background .2s;}
+#auth-btn:hover{background:var(--accent2);}
+#user-info{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text2);}
+#user-avatar{width:28px;height:28px;border-radius:50%;background:var(--accent);color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;}
+#signout-btn{padding:5px 10px;border:1px solid var(--border);border-radius:var(--radius);background:none;cursor:pointer;font-size:12px;color:var(--text3);font-family:var(--font-sans);transition:all .15s;}
+#signout-btn:hover{border-color:var(--accent);color:var(--accent);}
+
+.hbtn{padding:7px 13px;border-radius:var(--radius);font-family:var(--font-sans);font-size:13px;font-weight:500;cursor:pointer;transition:all .2s;border:1.5px solid transparent;}
+.hbtn-outline{border-color:var(--border);background:none;color:var(--text2);}
+.hbtn-outline:hover{border-color:var(--accent);color:var(--accent);}
+.hbtn-fill{background:var(--accent);color:#fff;border-color:var(--accent);}
+.hbtn-fill:hover{background:var(--accent2);}
+
+/* LAYOUT */
+#layout{display:flex;margin-top:var(--header-h);min-height:calc(100vh - var(--header-h));}
+#sidebar{width:var(--sidebar-w);flex-shrink:0;background:var(--surface);border-right:1px solid var(--border);position:sticky;top:var(--header-h);height:calc(100vh - var(--header-h));overflow-y:auto;padding:16px 0;}
+.sb-title{font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--text3);padding:0 16px;margin:0 0 4px;}
+.sb-item{display:flex;align-items:center;gap:8px;padding:8px 16px;cursor:pointer;font-size:14px;color:var(--text2);transition:background .15s,color .15s;border-left:3px solid transparent;}
+.sb-item:hover{background:var(--bg);color:var(--text);border-left-color:var(--border);}
+.sb-item.active{background:var(--accent-soft);color:var(--accent);font-weight:600;border-left-color:var(--accent);}
+.sb-item .ico{font-size:15px;}
+.sb-hr{border:none;border-top:1px solid var(--border);margin:10px 16px;}
+
+/* MAIN */
+#main{flex:1;padding:28px 36px;max-width:900px;min-width:0;}
+
+/* PAGE HEADER */
+.pg-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;padding-bottom:14px;border-bottom:1px solid var(--border);}
+.pg-header h1{font-family:var(--font-serif);font-size:24px;font-weight:700;}
+
+/* CATEGORY TABS */
+.cat-tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:18px;}
+.cat-tab{padding:5px 13px;border-radius:20px;font-size:13px;font-weight:500;cursor:pointer;border:1.5px solid var(--border);background:none;color:var(--text2);transition:all .2s;font-family:var(--font-sans);}
+.cat-tab:hover,.cat-tab.active{background:var(--accent);color:#fff;border-color:var(--accent);}
+
+/* DOC GRID */
+.doc-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:12px;}
+.doc-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px;cursor:pointer;transition:all .2s;position:relative;overflow:hidden;}
+.doc-card::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--accent);transform:scaleY(0);transition:transform .2s;transform-origin:bottom;}
+.doc-card:hover{border-color:var(--accent);box-shadow:var(--shadow);transform:translateY(-1px);}
+.doc-card:hover::before{transform:scaleY(1);}
+.doc-card-title{font-size:15px;font-weight:700;margin-bottom:5px;}
+.doc-card-preview{font-size:13px;color:var(--text3);line-height:1.5;margin-bottom:8px;}
+.doc-card-meta{display:flex;gap:5px;flex-wrap:wrap;align-items:center;}
+.tag{display:inline-block;padding:2px 7px;border-radius:3px;font-size:11px;font-weight:600;background:var(--bg2);color:var(--text3);}
+.doc-card-date{font-size:11px;color:var(--text3);margin-left:auto;}
+.lang-badge{font-size:11px;padding:2px 7px;border-radius:3px;background:var(--accent-soft);color:var(--accent);font-weight:600;border:1px solid rgba(192,57,43,.2);}
+
+/* DOC VIEW */
+.doc-nav{display:flex;align-items:center;gap:6px;margin-bottom:16px;font-size:13px;color:var(--text3);}
+.doc-nav a{color:var(--link);cursor:pointer;text-decoration:none;}
+.doc-nav a:hover{color:var(--link-hover);text-decoration:underline;}
+.doc-title-row{display:flex;align-items:flex-start;gap:14px;margin-bottom:16px;}
+.doc-title{font-family:var(--font-serif);font-size:30px;font-weight:700;line-height:1.2;flex:1;}
+.doc-actions{display:flex;gap:6px;flex-shrink:0;margin-top:4px;flex-wrap:wrap;}
+.btn{padding:7px 14px;border-radius:var(--radius);font-family:var(--font-sans);font-size:13px;font-weight:500;cursor:pointer;transition:all .2s;border:1.5px solid var(--border);background:var(--surface);color:var(--text2);}
+.btn:hover{border-color:var(--accent);color:var(--accent);}
+.btn-primary{background:var(--accent);color:#fff;border-color:var(--accent);}
+.btn-primary:hover{background:var(--accent2);border-color:var(--accent2);color:#fff;}
+.btn-danger{background:none;color:#c0392b;border-color:#e8b4b0;}
+.btn-danger:hover{background:#fdf0ef;}
+.btn-sm{padding:5px 10px;font-size:12px;}
+
+/* LANG VERSION BAR */
+.lang-ver-bar{display:flex;align-items:center;gap:6px;margin-bottom:14px;flex-wrap:wrap;padding:10px 14px;background:var(--bg2);border-radius:var(--radius);border:1px solid var(--border);}
+.lang-ver-bar span{font-size:12px;color:var(--text3);}
+.lv-btn{padding:4px 10px;border-radius:12px;font-size:12px;font-weight:600;border:1.5px solid var(--border);background:none;cursor:pointer;color:var(--text3);transition:all .15s;font-family:var(--font-sans);}
+.lv-btn:hover{border-color:var(--accent);color:var(--accent);}
+.lv-btn.active{background:var(--accent);color:#fff;border-color:var(--accent);}
+.lv-btn.has-content{border-color:var(--border-strong);color:var(--text2);}
+.lv-btn.translating{opacity:.6;pointer-events:none;}
+
+.doc-tags-row{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:14px;}
+.doc-tag{padding:3px 10px;border-radius:3px;font-size:12px;font-weight:600;background:#2c3e50;color:#fff;cursor:pointer;transition:opacity .15s;}
+.doc-tag:hover{opacity:.8;}
+.doc-meta-bar{font-size:12px;color:var(--text3);padding:8px 0;border-top:1px solid var(--border);border-bottom:1px solid var(--border);margin-bottom:24px;display:flex;gap:16px;flex-wrap:wrap;}
+.doc-meta-bar span strong{color:var(--text2);}
+
+/* INFO BOX */
+.info-box{float:right;margin:0 0 18px 20px;width:250px;background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;font-size:13px;}
+.info-box-header{background:var(--accent);color:#fff;padding:8px 14px;font-weight:700;font-size:14px;font-family:var(--font-serif);}
+.info-box-row{display:flex;border-bottom:1px solid var(--border);}
+.info-box-row:last-child{border-bottom:none;}
+.info-box-key{width:75px;flex-shrink:0;padding:6px 10px;background:var(--bg);font-weight:600;color:var(--text2);border-right:1px solid var(--border);}
+.info-box-val{padding:6px 10px;color:var(--text);}
+
+/* DOC BODY */
+.doc-body{line-height:1.85;color:var(--text);}
+.doc-body h2{font-family:var(--font-serif);font-size:20px;font-weight:700;margin:28px 0 10px;padding-bottom:5px;border-bottom:2px solid var(--bg2);}
+.doc-body h3{font-size:16px;font-weight:700;margin:20px 0 8px;}
+.doc-body p{margin-bottom:12px;}
+.doc-body a{color:var(--link);text-decoration:none;border-bottom:1px solid rgba(26,82,118,.3);}
+.doc-body a:hover{color:var(--link-hover);border-bottom-color:var(--link-hover);}
+.doc-body ul,.doc-body ol{margin:8px 0 12px 22px;}
+.doc-body li{margin-bottom:3px;}
+.doc-body blockquote{border-left:3px solid var(--accent);padding:10px 16px;margin:14px 0;background:var(--accent-soft);color:var(--text2);font-style:italic;}
+.doc-body code{font-family:var(--font-mono);font-size:13px;background:var(--bg2);padding:2px 6px;border-radius:3px;color:var(--accent);}
+.doc-body pre{background:#1a1714;color:#f0ece4;padding:14px 18px;border-radius:var(--radius);overflow-x:auto;margin:14px 0;font-family:var(--font-mono);font-size:13px;line-height:1.6;}
+.doc-body pre code{background:none;color:inherit;padding:0;}
+.clearfix::after{content:'';display:table;clear:both;}
+.toc{background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);padding:12px 16px;margin:0 0 20px;display:inline-block;min-width:180px;font-size:13px;}
+.toc-title{font-weight:700;margin-bottom:6px;}
+.toc ol{margin:0 0 0 14px;}
+.toc li{margin-bottom:3px;}
+.toc a{color:var(--link);text-decoration:none;}
+
+/* EDIT */
+.edit-hdr{margin-bottom:20px;}
+.field-group{margin-bottom:16px;}
+.field-label{font-size:13px;font-weight:600;color:var(--text2);margin-bottom:5px;display:block;}
+.field-input,.field-textarea,.field-select{width:100%;padding:9px 13px;border:1.5px solid var(--border);border-radius:var(--radius);font-family:var(--font-sans);font-size:14px;background:var(--surface);color:var(--text);transition:border-color .2s;outline:none;}
+.field-input:focus,.field-textarea:focus{border-color:var(--accent);}
+.field-textarea{resize:vertical;min-height:320px;font-family:var(--font-mono);font-size:13px;line-height:1.7;}
+.field-select{cursor:pointer;}
+.editor-toolbar{display:flex;gap:4px;padding:7px 10px;background:var(--bg2);border:1.5px solid var(--border);border-bottom:none;border-radius:var(--radius) var(--radius) 0 0;flex-wrap:wrap;}
+.tb-btn{padding:4px 9px;border-radius:3px;font-size:12px;font-weight:600;border:1px solid var(--border);background:var(--surface);cursor:pointer;color:var(--text2);transition:all .15s;font-family:var(--font-mono);}
+.tb-btn:hover{background:var(--accent);color:#fff;border-color:var(--accent);}
+.infobox-editor{border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-top:6px;}
+.ibrow{display:flex;border-bottom:1px solid var(--border);}
+.ibrow:last-of-type{border-bottom:none;}
+.ibrow input{flex:1;padding:7px 11px;border:none;border-right:1px solid var(--border);font-family:var(--font-sans);font-size:13px;background:var(--bg);outline:none;color:var(--text);}
+.ibrow input:last-child{border-right:none;background:var(--surface);}
+.ibrow-del{padding:0 10px;background:none;border:none;border-left:1px solid var(--border);cursor:pointer;color:var(--text3);font-size:14px;}
+.ibrow-del:hover{color:var(--accent);background:var(--accent-soft);}
+.ib-add-btn{width:100%;padding:7px;background:var(--bg2);border:none;border-top:1px solid var(--border);cursor:pointer;font-size:13px;color:var(--text3);transition:background .15s;}
+.ib-add-btn:hover{background:var(--accent-soft);color:var(--accent);}
+.preview-panel{background:var(--surface);border:1.5px solid var(--border);border-radius:var(--radius);padding:20px;margin-top:14px;display:none;}
+.preview-panel.active{display:block;}
+.preview-panel h3{font-family:var(--font-serif);font-size:16px;margin-bottom:12px;color:var(--text3);border-bottom:1px solid var(--border);padding-bottom:6px;}
+.edit-footer{display:flex;gap:8px;margin-top:20px;flex-wrap:wrap;}
+
+/* LANG EDIT TABS */
+.lang-edit-tabs{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:14px;}
+.let-btn{padding:5px 11px;border-radius:3px;font-size:12px;font-weight:600;border:1.5px solid var(--border);background:none;cursor:pointer;color:var(--text3);transition:all .15s;font-family:var(--font-sans);}
+.let-btn:hover{border-color:var(--accent);color:var(--accent);}
+.let-btn.active{background:var(--accent);color:#fff;border-color:var(--accent);}
+.let-btn.filled{border-color:var(--border-strong);color:var(--text2);}
+
+/* RECENT */
+.recent-item{display:flex;align-items:center;gap:10px;padding:12px 0;border-bottom:1px solid var(--border);cursor:pointer;transition:padding-left .15s;}
+.recent-item:hover{padding-left:6px;}
+.recent-item:hover .recent-title{color:var(--accent);}
+.r-dot{width:7px;height:7px;border-radius:50%;background:var(--accent);flex-shrink:0;}
+.recent-title{font-weight:600;font-size:14px;flex:1;}
+.recent-meta{font-size:12px;color:var(--text3);}
+
+/* AI PANEL */
+#ai-panel{position:fixed;right:0;top:var(--header-h);bottom:0;width:340px;background:var(--surface);border-left:1px solid var(--border);display:flex;flex-direction:column;transform:translateX(100%);transition:transform .3s cubic-bezier(.4,0,.2,1);z-index:90;box-shadow:var(--shadow-lg);}
+#ai-panel.open{transform:translateX(0);}
+#ai-toggle{position:fixed;right:16px;bottom:24px;width:50px;height:50px;border-radius:50%;background:var(--accent);color:#fff;border:none;font-size:20px;cursor:pointer;z-index:95;box-shadow:0 4px 16px rgba(192,57,43,.4);transition:transform .2s,box-shadow .2s;display:flex;align-items:center;justify-content:center;}
+#ai-toggle:hover{transform:scale(1.08);}
+.ai-header{padding:14px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;}
+.ai-header h3{font-family:var(--font-serif);font-size:15px;font-weight:700;flex:1;}
+.ai-close{background:none;border:none;cursor:pointer;font-size:16px;color:var(--text3);}
+.ai-close:hover{color:var(--accent);}
+.ai-messages{flex:1;overflow-y:auto;padding:14px 18px;display:flex;flex-direction:column;gap:10px;}
+.ai-msg{max-width:88%;padding:9px 13px;border-radius:12px;font-size:13px;line-height:1.6;}
+.ai-msg.user{align-self:flex-end;background:var(--accent);color:#fff;border-radius:12px 12px 2px 12px;}
+.ai-msg.ai{align-self:flex-start;background:var(--bg2);color:var(--text);border-radius:12px 12px 12px 2px;}
+.ai-msg.system{align-self:center;color:var(--text3);font-size:12px;font-style:italic;}
+.ai-input-row{padding:14px 18px;border-top:1px solid var(--border);display:flex;gap:7px;}
+.ai-input{flex:1;padding:8px 13px;border:1.5px solid var(--border);border-radius:20px;font-family:var(--font-sans);font-size:13px;background:var(--bg);color:var(--text);outline:none;transition:border-color .2s;}
+.ai-input:focus{border-color:var(--accent);}
+.ai-send{width:34px;height:34px;border-radius:50%;background:var(--accent);color:#fff;border:none;cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.ai-send:hover{background:var(--accent2);}
+.ai-quick-btns{display:flex;gap:5px;flex-wrap:wrap;padding:0 18px 10px;}
+.ai-quick{padding:4px 10px;border-radius:12px;font-size:12px;border:1px solid var(--border);background:none;cursor:pointer;color:var(--text2);transition:all .15s;font-family:var(--font-sans);}
+.ai-quick:hover{border-color:var(--accent);color:var(--accent);}
+
+/* AUTH MODAL */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:500;display:none;align-items:center;justify-content:center;}
+.modal-overlay.open{display:flex;}
+.modal{background:var(--surface);border-radius:8px;padding:28px 30px;max-width:380px;width:92%;box-shadow:var(--shadow-lg);}
+.modal h2{font-family:var(--font-serif);font-size:20px;font-weight:700;margin-bottom:18px;}
+.modal-tabs{display:flex;gap:0;margin-bottom:20px;border:1.5px solid var(--border);border-radius:var(--radius);overflow:hidden;}
+.modal-tab{flex:1;padding:9px;border:none;background:none;cursor:pointer;font-size:13px;font-weight:600;font-family:var(--font-sans);color:var(--text3);transition:all .15s;}
+.modal-tab.active{background:var(--accent);color:#fff;}
+.google-btn{width:100%;padding:11px;border:1.5px solid var(--border);border-radius:var(--radius);background:var(--surface);cursor:pointer;font-size:14px;font-family:var(--font-sans);display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:14px;transition:border-color .2s;}
+.google-btn:hover{border-color:var(--accent);}
+.modal-divider{display:flex;align-items:center;gap:10px;margin:12px 0;color:var(--text3);font-size:13px;}
+.modal-divider::before,.modal-divider::after{content:'';flex:1;height:1px;background:var(--border);}
+.modal-err{color:var(--accent);font-size:13px;margin-bottom:10px;padding:8px 12px;background:var(--accent-soft);border-radius:var(--radius);display:none;}
+.modal-err.show{display:block;}
+.modal-footer{display:flex;gap:8px;margin-top:16px;}
+#confirm-modal .modal{text-align:center;}
+#confirm-modal .modal h3{font-family:var(--font-serif);font-size:18px;margin-bottom:8px;}
+#confirm-modal .modal p{font-size:14px;color:var(--text2);margin-bottom:18px;}
+
+/* TOAST */
+#toast{position:fixed;bottom:86px;left:50%;transform:translateX(-50%) translateY(20px);background:#1a1714;color:#fff;padding:11px 22px;border-radius:22px;font-size:14px;opacity:0;transition:opacity .3s,transform .3s;z-index:999;pointer-events:none;white-space:nowrap;}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
+/* SPINNER */
+.spin{display:inline-block;animation:spin .8s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:translateY(0);}}
+.anim{animation:fadeIn .3s ease;}
+
+/* TRANSLATE LOADING */
+.translate-loading{display:flex;align-items:center;gap:10px;padding:16px;color:var(--text3);font-size:14px;background:var(--bg2);border-radius:var(--radius);}
+
+/* EMPTY STATE */
+.empty-state{grid-column:1/-1;text-align:center;padding:50px 0;color:var(--text3);}
+.empty-state .ei{font-size:44px;margin-bottom:14px;}
+.empty-state p{font-size:15px;margin-bottom:16px;}
+
+::-webkit-scrollbar{width:5px;}
+::-webkit-scrollbar-track{background:var(--bg);}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px;}
+
+@media(max-width:768px){
+  #sidebar{display:none;}
+  #main{padding:16px;}
+  .doc-grid{grid-template-columns:1fr;}
+  #ai-panel{width:100%;}
+  .info-box{float:none;width:100%;margin:0 0 16px;}
+  #logo-sub{display:none;}
+}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header id="header">
+  <div id="logo" onclick="showPage('list')">
+    🌐 위키<span id="logo-sub">Mannamplace</span>
+  </div>
+  <div id="search-wrap">
+    <input id="search-input" type="text" autocomplete="off">
+    <button id="search-btn" onclick="doSearch()">🔍</button>
+    <div id="search-results"></div>
+  </div>
+  <div id="header-right">
+    <!-- Language Picker -->
+    <div id="lang-picker">
+      <button id="lang-btn" onclick="toggleLangMenu()">
+        <span id="lang-flag">🇰🇷</span>
+        <span id="lang-label">한국어</span> ▾
+      </button>
+      <div id="lang-menu"></div>
+    </div>
+    <!-- Auth -->
+    <div id="auth-area">
+      <button id="auth-btn" onclick="openAuthModal()">로그인</button>
+    </div>
+    <button class="hbtn hbtn-outline" onclick="showPage('recent')" id="btn-recent">최근 변경</button>
+    <button class="hbtn hbtn-fill" onclick="newDoc()" id="btn-new">✏️ 새 문서</button>
+  </div>
+</header>
+
+<!-- LAYOUT -->
+<div id="layout">
+  <nav id="sidebar">
+    <div style="margin-bottom:14px;">
+      <div class="sb-title" id="sb-nav-title">탐색</div>
+      <div class="sb-item active" onclick="showPage('list')" id="sb-home"><span class="ico">🏠</span> <span data-i18n="home">메인</span></div>
+      <div class="sb-item" onclick="showPage('recent')" id="sb-recent"><span class="ico">📋</span> <span data-i18n="recent">최근 변경</span></div>
+    </div>
+    <hr class="sb-hr">
+    <div style="margin-bottom:14px;">
+      <div class="sb-title" data-i18n="categories">카테고리</div>
+      <div id="sidebar-cats"></div>
+    </div>
+    <hr class="sb-hr">
+    <div>
+      <div class="sb-title" data-i18n="tools">도구</div>
+      <div class="sb-item" onclick="toggleAI()"><span class="ico">🤖</span> <span data-i18n="ai_assistant">AI 도우미</span></div>
+      <div class="sb-item" onclick="newDoc()"><span class="ico">✏️</span> <span data-i18n="new_doc">새 문서 작성</span></div>
+    </div>
+  </nav>
+
+  <main id="main">
+    <!-- LIST -->
+    <div id="page-list" class="anim">
+      <div class="pg-header">
+        <h1 data-i18n="all_docs">📚 전체 문서</h1>
+        <span id="doc-count" style="color:var(--text3);font-size:13px;"></span>
+      </div>
+      <div class="cat-tabs" id="cat-tabs"></div>
+      <div class="doc-grid" id="doc-grid"></div>
+    </div>
+    <!-- VIEW -->
+    <div id="page-view" style="display:none"></div>
+    <!-- EDIT -->
+    <div id="page-edit" style="display:none"></div>
+    <!-- RECENT -->
+    <div id="page-recent" style="display:none">
+      <div class="pg-header"><h1 data-i18n="recent_changes">📋 최근 변경 목록</h1></div>
+      <div id="recent-list"></div>
+    </div>
+  </main>
+</div>
+
+<!-- AI PANEL -->
+<div id="ai-panel">
+  <div class="ai-header">
+    <span>🤖</span>
+    <h3 data-i18n="ai_assistant">AI 위키 도우미</h3>
+    <button class="ai-close" onclick="toggleAI()">✕</button>
+  </div>
+  <div class="ai-messages" id="ai-messages">
+    <div class="ai-msg system" data-i18n="ai_greeting">안녕하세요! 위키 문서 작성을 도와드릴게요.</div>
+    <div class="ai-msg ai" data-i18n="ai_intro">문서 내용 생성, 요약, 번역, 편집 제안 등을 도와드릴 수 있어요. 📝</div>
+  </div>
+  <div class="ai-quick-btns">
+    <button class="ai-quick" onclick="aiQuick('summarize')" data-i18n="ai_q_summary">📄 문서 요약</button>
+    <button class="ai-quick" onclick="aiQuick('write')" data-i18n="ai_q_write">✏️ 내용 생성</button>
+    <button class="ai-quick" onclick="aiQuick('related')" data-i18n="ai_q_related">🔗 관련 항목</button>
+    <button class="ai-quick" onclick="aiQuick('translate')" data-i18n="ai_q_translate">🌐 번역 도움</button>
+  </div>
+  <div class="ai-input-row">
+    <input class="ai-input" id="ai-input" onkeydown="if(event.key==='Enter')sendAI()">
+    <button class="ai-send" onclick="sendAI()">➤</button>
+  </div>
+</div>
+<button id="ai-toggle" onclick="toggleAI()">🤖</button>
+
+<!-- TOAST -->
+<div id="toast"></div>
+
+<!-- AUTH MODAL -->
+<div class="modal-overlay" id="auth-modal">
+  <div class="modal">
+    <h2 data-i18n="login">로그인 / 회원가입</h2>
+    <div class="modal-tabs">
+      <button class="modal-tab active" onclick="switchAuthTab('login')" id="tab-login" data-i18n="login_tab">로그인</button>
+      <button class="modal-tab" onclick="switchAuthTab('signup')" id="tab-signup" data-i18n="signup_tab">회원가입</button>
+    </div>
+    <button class="google-btn" onclick="signInGoogle()">
+      <svg width="18" height="18" viewBox="0 0 18 18"><path fill="#4285F4" d="M16.51 8H8.98v3h4.3c-.18 1-.74 1.48-1.6 2.04v2.01h2.6a7.8 7.8 0 0 0 2.38-5.88c0-.57-.05-.66-.15-1.18z"/><path fill="#34A353" d="M8.98 17c2.16 0 3.97-.72 5.3-1.94l-2.6-2a4.8 4.8 0 0 1-7.18-2.54H1.83v2.07A8 8 0 0 0 8.98 17z"/><path fill="#FBBC05" d="M4.5 10.52a4.8 4.8 0 0 1 0-3.04V5.41H1.83a8 8 0 0 0 0 7.18l2.67-2.07z"/><path fill="#EA4335" d="M8.98 4.18c1.17 0 2.23.4 3.06 1.2l2.3-2.3A8 8 0 0 0 1.83 5.4L4.5 7.49a4.77 4.77 0 0 1 4.48-3.31z"/></svg>
+      Google로 계속하기
+    </button>
+    <div class="modal-divider">또는</div>
+    <div class="modal-err" id="auth-err"></div>
+    <div class="field-group">
+      <label class="field-label" data-i18n="email">이메일</label>
+      <input class="field-input" id="auth-email" type="email" placeholder="example@email.com">
+    </div>
+    <div class="field-group">
+      <label class="field-label" data-i18n="password">비밀번호</label>
+      <input class="field-input" id="auth-pw" type="password" placeholder="••••••••" onkeydown="if(event.key==='Enter')doAuth()">
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-primary" onclick="doAuth()" id="auth-submit-btn" style="flex:1" data-i18n="login_tab">로그인</button>
+      <button class="btn" onclick="closeModal('auth-modal')" data-i18n="cancel">취소</button>
+    </div>
+  </div>
+</div>
+
+<!-- CONFIRM MODAL -->
+<div class="modal-overlay" id="confirm-modal">
+  <div class="modal">
+    <h3 data-i18n="delete_doc">문서 삭제</h3>
+    <p data-i18n="delete_confirm">정말로 이 문서를 삭제하시겠습니까?<br>이 작업은 되돌릴 수 없습니다.</p>
+    <div class="modal-footer" style="justify-content:center;">
+      <button class="btn" onclick="closeModal('confirm-modal')" data-i18n="cancel">취소</button>
+      <button class="btn btn-danger" id="confirm-del-btn" data-i18n="delete">삭제</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════════════════════════
+// 🌐 I18N — 11 LANGUAGES
+// ══════════════════════════════════════════════════════
+const LANGS = [
+  { code:'ko', label:'한국어',   flag:'🇰🇷', dir:'ltr' },
+  { code:'en', label:'English',  flag:'🇺🇸', dir:'ltr' },
+  { code:'ja', label:'日本語',   flag:'🇯🇵', dir:'ltr' },
+  { code:'zh', label:'中文',     flag:'🇨🇳', dir:'ltr' },
+  { code:'es', label:'Español',  flag:'🇪🇸', dir:'ltr' },
+  { code:'fr', label:'Français', flag:'🇫🇷', dir:'ltr' },
+  { code:'de', label:'Deutsch',  flag:'🇩🇪', dir:'ltr' },
+  { code:'pt', label:'Português',flag:'🇧🇷', dir:'ltr' },
+  { code:'ru', label:'Русский',  flag:'🇷🇺', dir:'ltr' },
+  { code:'ar', label:'العربية',  flag:'🇸🇦', dir:'rtl' },
+  { code:'hi', label:'हिन्दी',    flag:'🇮🇳', dir:'ltr' },
+];
+
+const UI_STRINGS = {
+  ko:{ home:'메인', recent:'최근 변경', categories:'카테고리', tools:'도구', all_docs:'📚 전체 문서', recent_changes:'📋 최근 변경 목록', new_doc:'새 문서 작성', ai_assistant:'AI 위키 도우미', ai_greeting:'안녕하세요! 위키 문서 작성을 도와드릴게요.', ai_intro:'문서 내용 생성, 요약, 번역, 편집 제안 등을 도와드릴 수 있어요. 📝', ai_q_summary:'📄 문서 요약', ai_q_write:'✏️ 내용 생성', ai_q_related:'🔗 관련 항목', ai_q_translate:'🌐 번역 도움', login:'로그인 / 회원가입', login_tab:'로그인', signup_tab:'회원가입', email:'이메일', password:'비밀번호', cancel:'취소', delete_doc:'문서 삭제', delete_confirm:'정말로 이 문서를 삭제하시겠습니까?\n이 작업은 되돌릴 수 없습니다.', delete:'삭제', edit:'편집', search_placeholder:'문서 검색...', btn_recent:'📋 최근 변경', btn_new:'✏️ 새 문서', no_docs:'아직 문서가 없어요', first_doc:'첫 문서 작성하기', no_recent:'변경 내역이 없습니다.', save:'저장', preview:'👁 미리보기', author:'작성자', created:'생성', updated:'수정', translate_btn:'이 언어로 번역', translating:'번역 중…', translated:'AI 번역됨', original:'원문', lang_ver:'언어 버전', no_lang_ver:'이 언어로 작성된 내용이 없습니다.', write_this_lang:'이 언어로 직접 작성', info_box:'정보 상자', tags_label:'태그 (쉼표 구분)', category_label:'카테고리', title_label:'제목', content_label:'내용 (마크다운)', new_doc_title:'새 문서 작성', edit_doc_title:'문서 편집', doc_saved:'✅ 저장되었습니다!', doc_created:'✅ 문서가 생성되었습니다!', doc_deleted:'🗑 삭제되었습니다.', need_login:'로그인 후 이용해주세요.', need_title:'제목을 입력해주세요.', need_content:'내용을 입력해주세요.', deleted_label:'(삭제됨)', just_now:'방금 전', min_ago:'분 전', hour_ago:'시간 전', day_ago:'일 전' },
+  en:{ home:'Home', recent:'Recent Changes', categories:'Categories', tools:'Tools', all_docs:'📚 All Documents', recent_changes:'📋 Recent Changes', new_doc:'New Document', ai_assistant:'AI Wiki Assistant', ai_greeting:"Hello! I'm here to help you write wiki documents.", ai_intro:'I can help with content generation, summaries, translation, and editing. 📝', ai_q_summary:'📄 Summarize', ai_q_write:'✏️ Generate', ai_q_related:'🔗 Related', ai_q_translate:'🌐 Translate', login:'Login / Sign Up', login_tab:'Login', signup_tab:'Sign Up', email:'Email', password:'Password', cancel:'Cancel', delete_doc:'Delete Document', delete_confirm:'Are you sure you want to delete this document?\nThis action cannot be undone.', delete:'Delete', edit:'Edit', search_placeholder:'Search documents...', btn_recent:'📋 Recent', btn_new:'✏️ New Doc', no_docs:'No documents yet', first_doc:'Write the first document', no_recent:'No recent changes.', save:'Save', preview:'👁 Preview', author:'Author', created:'Created', updated:'Updated', translate_btn:'Translate to this language', translating:'Translating…', translated:'AI Translated', original:'Original', lang_ver:'Language Versions', no_lang_ver:'No content in this language yet.', write_this_lang:'Write in this language', info_box:'Info Box', tags_label:'Tags (comma separated)', category_label:'Category', title_label:'Title', content_label:'Content (Markdown)', new_doc_title:'New Document', edit_doc_title:'Edit Document', doc_saved:'✅ Saved!', doc_created:'✅ Document created!', doc_deleted:'🗑 Deleted.', need_login:'Please log in first.', need_title:'Please enter a title.', need_content:'Please enter content.', deleted_label:'(deleted)', just_now:'Just now', min_ago:' min ago', hour_ago:' hr ago', day_ago:' day ago' },
+  ja:{ home:'ホーム', recent:'最近の変更', categories:'カテゴリ', tools:'ツール', all_docs:'📚 全文書', recent_changes:'📋 最近の変更', new_doc:'新規文書', ai_assistant:'AIウィキアシスタント', ai_greeting:'こんにちは！ウィキ文書の作成をお手伝いします。', ai_intro:'コンテンツ生成、要約、翻訳、編集提案などをお手伝いできます。📝', ai_q_summary:'📄 要約', ai_q_write:'✏️ 生成', ai_q_related:'🔗 関連', ai_q_translate:'🌐 翻訳', login:'ログイン / 新規登録', login_tab:'ログイン', signup_tab:'新規登録', email:'メール', password:'パスワード', cancel:'キャンセル', delete_doc:'文書を削除', delete_confirm:'本当にこの文書を削除しますか？\nこの操作は元に戻せません。', delete:'削除', edit:'編集', search_placeholder:'文書を検索...', btn_recent:'📋 最近の変更', btn_new:'✏️ 新規文書', no_docs:'文書がありません', first_doc:'最初の文書を書く', no_recent:'変更履歴がありません。', save:'保存', preview:'👁 プレビュー', author:'作成者', created:'作成', updated:'更新', translate_btn:'この言語に翻訳', translating:'翻訳中…', translated:'AI翻訳', original:'原文', lang_ver:'言語バージョン', no_lang_ver:'この言語のコンテンツはまだありません。', write_this_lang:'この言語で作成', info_box:'情報ボックス', tags_label:'タグ（カンマ区切り）', category_label:'カテゴリ', title_label:'タイトル', content_label:'内容（マークダウン）', new_doc_title:'新規文書作成', edit_doc_title:'文書編集', doc_saved:'✅ 保存しました！', doc_created:'✅ 文書を作成しました！', doc_deleted:'🗑 削除しました。', need_login:'ログインしてください。', need_title:'タイトルを入力してください。', need_content:'内容を入力してください。', deleted_label:'（削除済み）', just_now:'たった今', min_ago:'分前', hour_ago:'時間前', day_ago:'日前' },
+  zh:{ home:'主页', recent:'最近更改', categories:'分类', tools:'工具', all_docs:'📚 全部文档', recent_changes:'📋 最近更改', new_doc:'新建文档', ai_assistant:'AI维基助手', ai_greeting:'您好！我将帮助您撰写维基文档。', ai_intro:'我可以帮助生成内容、摘要、翻译和编辑建议。📝', ai_q_summary:'📄 摘要', ai_q_write:'✏️ 生成', ai_q_related:'🔗 相关', ai_q_translate:'🌐 翻译', login:'登录 / 注册', login_tab:'登录', signup_tab:'注册', email:'邮箱', password:'密码', cancel:'取消', delete_doc:'删除文档', delete_confirm:'确定要删除此文档吗？\n此操作无法撤销。', delete:'删除', edit:'编辑', search_placeholder:'搜索文档...', btn_recent:'📋 最近更改', btn_new:'✏️ 新建', no_docs:'暂无文档', first_doc:'撰写第一篇文档', no_recent:'暂无变更记录。', save:'保存', preview:'👁 预览', author:'作者', created:'创建', updated:'更新', translate_btn:'翻译成此语言', translating:'翻译中…', translated:'AI翻译', original:'原文', lang_ver:'语言版本', no_lang_ver:'尚无此语言内容。', write_this_lang:'用此语言撰写', info_box:'信息框', tags_label:'标签（逗号分隔）', category_label:'分类', title_label:'标题', content_label:'内容（Markdown）', new_doc_title:'新建文档', edit_doc_title:'编辑文档', doc_saved:'✅ 已保存！', doc_created:'✅ 文档已创建！', doc_deleted:'🗑 已删除。', need_login:'请先登录。', need_title:'请输入标题。', need_content:'请输入内容。', deleted_label:'（已删除）', just_now:'刚刚', min_ago:'分钟前', hour_ago:'小时前', day_ago:'天前' },
+  es:{ home:'Inicio', recent:'Cambios recientes', categories:'Categorías', tools:'Herramientas', all_docs:'📚 Todos los documentos', recent_changes:'📋 Cambios recientes', new_doc:'Nuevo documento', ai_assistant:'Asistente Wiki IA', ai_greeting:'¡Hola! Estoy aquí para ayudarte con los documentos wiki.', ai_intro:'Puedo ayudarte con generación de contenido, resúmenes, traducción y edición. 📝', ai_q_summary:'📄 Resumir', ai_q_write:'✏️ Generar', ai_q_related:'🔗 Relacionados', ai_q_translate:'🌐 Traducir', login:'Iniciar sesión / Registrarse', login_tab:'Iniciar sesión', signup_tab:'Registrarse', email:'Correo', password:'Contraseña', cancel:'Cancelar', delete_doc:'Eliminar documento', delete_confirm:'¿Seguro que deseas eliminar este documento?\nEsta acción no se puede deshacer.', delete:'Eliminar', edit:'Editar', search_placeholder:'Buscar documentos...', btn_recent:'📋 Recientes', btn_new:'✏️ Nuevo', no_docs:'Aún no hay documentos', first_doc:'Escribir el primer documento', no_recent:'Sin cambios recientes.', save:'Guardar', preview:'👁 Vista previa', author:'Autor', created:'Creado', updated:'Actualizado', translate_btn:'Traducir a este idioma', translating:'Traduciendo…', translated:'Traducido por IA', original:'Original', lang_ver:'Versiones de idioma', no_lang_ver:'No hay contenido en este idioma aún.', write_this_lang:'Escribir en este idioma', info_box:'Cuadro de información', tags_label:'Etiquetas (separadas por coma)', category_label:'Categoría', title_label:'Título', content_label:'Contenido (Markdown)', new_doc_title:'Nuevo documento', edit_doc_title:'Editar documento', doc_saved:'✅ ¡Guardado!', doc_created:'✅ ¡Documento creado!', doc_deleted:'🗑 Eliminado.', need_login:'Por favor inicia sesión.', need_title:'Por favor ingresa un título.', need_content:'Por favor ingresa contenido.', deleted_label:'(eliminado)', just_now:'Justo ahora', min_ago:' min atrás', hour_ago:' hr atrás', day_ago:' día atrás' },
+  fr:{ home:'Accueil', recent:'Modifications récentes', categories:'Catégories', tools:'Outils', all_docs:'📚 Tous les documents', recent_changes:'📋 Modifications récentes', new_doc:'Nouveau document', ai_assistant:'Assistant Wiki IA', ai_greeting:'Bonjour ! Je suis là pour vous aider à rédiger des documents wiki.', ai_intro:"Je peux aider à générer du contenu, des résumés, des traductions et des suggestions d'édition. 📝", ai_q_summary:'📄 Résumer', ai_q_write:'✏️ Générer', ai_q_related:'🔗 Connexes', ai_q_translate:'🌐 Traduire', login:'Connexion / Inscription', login_tab:'Connexion', signup_tab:'Inscription', email:'E-mail', password:'Mot de passe', cancel:'Annuler', delete_doc:'Supprimer le document', delete_confirm:'Voulez-vous vraiment supprimer ce document ?\nCette action est irréversible.', delete:'Supprimer', edit:'Modifier', search_placeholder:'Rechercher des documents...', btn_recent:'📋 Récents', btn_new:'✏️ Nouveau', no_docs:'Aucun document pour le moment', first_doc:'Écrire le premier document', no_recent:'Aucune modification récente.', save:'Enregistrer', preview:'👁 Aperçu', author:'Auteur', created:'Créé', updated:'Mis à jour', translate_btn:'Traduire dans cette langue', translating:'Traduction en cours…', translated:'Traduit par IA', original:'Original', lang_ver:'Versions linguistiques', no_lang_ver:"Pas encore de contenu dans cette langue.", write_this_lang:'Écrire dans cette langue', info_box:"Boîte d'information", tags_label:'Tags (séparés par virgule)', category_label:'Catégorie', title_label:'Titre', content_label:'Contenu (Markdown)', new_doc_title:'Nouveau document', edit_doc_title:'Modifier le document', doc_saved:'✅ Enregistré !', doc_created:'✅ Document créé !', doc_deleted:'🗑 Supprimé.', need_login:'Veuillez vous connecter.', need_title:'Veuillez entrer un titre.', need_content:'Veuillez entrer du contenu.', deleted_label:'(supprimé)', just_now:"À l'instant", min_ago:' min', hour_ago:' h', day_ago:' j' },
+  de:{ home:'Startseite', recent:'Letzte Änderungen', categories:'Kategorien', tools:'Werkzeuge', all_docs:'📚 Alle Dokumente', recent_changes:'📋 Letzte Änderungen', new_doc:'Neues Dokument', ai_assistant:'KI-Wiki-Assistent', ai_greeting:'Hallo! Ich helfe Ihnen beim Schreiben von Wiki-Dokumenten.', ai_intro:'Ich kann bei der Inhaltserstellung, Zusammenfassungen, Übersetzungen und Bearbeitungsvorschlägen helfen. 📝', ai_q_summary:'📄 Zusammenfassen', ai_q_write:'✏️ Generieren', ai_q_related:'🔗 Verwandte', ai_q_translate:'🌐 Übersetzen', login:'Anmelden / Registrieren', login_tab:'Anmelden', signup_tab:'Registrieren', email:'E-Mail', password:'Passwort', cancel:'Abbrechen', delete_doc:'Dokument löschen', delete_confirm:'Möchten Sie dieses Dokument wirklich löschen?\nDiese Aktion kann nicht rückgängig gemacht werden.', delete:'Löschen', edit:'Bearbeiten', search_placeholder:'Dokumente suchen...', btn_recent:'📋 Letzte', btn_new:'✏️ Neu', no_docs:'Noch keine Dokumente', first_doc:'Erstes Dokument schreiben', no_recent:'Keine letzten Änderungen.', save:'Speichern', preview:'👁 Vorschau', author:'Autor', created:'Erstellt', updated:'Aktualisiert', translate_btn:'In diese Sprache übersetzen', translating:'Übersetze…', translated:'KI-übersetzt', original:'Original', lang_ver:'Sprachversionen', no_lang_ver:'Noch kein Inhalt in dieser Sprache.', write_this_lang:'In dieser Sprache schreiben', info_box:'Infobox', tags_label:'Tags (kommagetrennt)', category_label:'Kategorie', title_label:'Titel', content_label:'Inhalt (Markdown)', new_doc_title:'Neues Dokument', edit_doc_title:'Dokument bearbeiten', doc_saved:'✅ Gespeichert!', doc_created:'✅ Dokument erstellt!', doc_deleted:'🗑 Gelöscht.', need_login:'Bitte melden Sie sich an.', need_title:'Bitte geben Sie einen Titel ein.', need_content:'Bitte geben Sie Inhalt ein.', deleted_label:'(gelöscht)', just_now:'Gerade eben', min_ago:' Min.', hour_ago:' Std.', day_ago:' Tage' },
+  pt:{ home:'Início', recent:'Mudanças recentes', categories:'Categorias', tools:'Ferramentas', all_docs:'📚 Todos os documentos', recent_changes:'📋 Mudanças recentes', new_doc:'Novo documento', ai_assistant:'Assistente Wiki IA', ai_greeting:'Olá! Estou aqui para ajudá-lo a escrever documentos wiki.', ai_intro:'Posso ajudar com geração de conteúdo, resumos, tradução e sugestões de edição. 📝', ai_q_summary:'📄 Resumir', ai_q_write:'✏️ Gerar', ai_q_related:'🔗 Relacionados', ai_q_translate:'🌐 Traduzir', login:'Entrar / Cadastrar', login_tab:'Entrar', signup_tab:'Cadastrar', email:'E-mail', password:'Senha', cancel:'Cancelar', delete_doc:'Excluir documento', delete_confirm:'Tem certeza que deseja excluir este documento?\nEsta ação não pode ser desfeita.', delete:'Excluir', edit:'Editar', search_placeholder:'Buscar documentos...', btn_recent:'📋 Recentes', btn_new:'✏️ Novo', no_docs:'Nenhum documento ainda', first_doc:'Escrever o primeiro documento', no_recent:'Sem mudanças recentes.', save:'Salvar', preview:'👁 Pré-visualizar', author:'Autor', created:'Criado', updated:'Atualizado', translate_btn:'Traduzir para este idioma', translating:'Traduzindo…', translated:'Traduzido por IA', original:'Original', lang_ver:'Versões de idioma', no_lang_ver:'Nenhum conteúdo neste idioma ainda.', write_this_lang:'Escrever neste idioma', info_box:'Caixa de informações', tags_label:'Tags (separadas por vírgula)', category_label:'Categoria', title_label:'Título', content_label:'Conteúdo (Markdown)', new_doc_title:'Novo documento', edit_doc_title:'Editar documento', doc_saved:'✅ Salvo!', doc_created:'✅ Documento criado!', doc_deleted:'🗑 Excluído.', need_login:'Por favor, faça login.', need_title:'Por favor, insira um título.', need_content:'Por favor, insira conteúdo.', deleted_label:'(excluído)', just_now:'Agora mesmo', min_ago:' min atrás', hour_ago:' h atrás', day_ago:' dia atrás' },
+  ru:{ home:'Главная', recent:'Последние изменения', categories:'Категории', tools:'Инструменты', all_docs:'📚 Все документы', recent_changes:'📋 Последние изменения', new_doc:'Новый документ', ai_assistant:'ИИ-ассистент вики', ai_greeting:'Привет! Я здесь, чтобы помочь вам писать вики-документы.', ai_intro:'Я могу помочь с генерацией контента, резюме, переводом и предложениями по редактированию. 📝', ai_q_summary:'📄 Резюме', ai_q_write:'✏️ Создать', ai_q_related:'🔗 Связанные', ai_q_translate:'🌐 Перевести', login:'Войти / Зарегистрироваться', login_tab:'Войти', signup_tab:'Регистрация', email:'Эл. почта', password:'Пароль', cancel:'Отмена', delete_doc:'Удалить документ', delete_confirm:'Вы уверены, что хотите удалить этот документ?\nЭто действие нельзя отменить.', delete:'Удалить', edit:'Редактировать', search_placeholder:'Поиск документов...', btn_recent:'📋 Последние', btn_new:'✏️ Новый', no_docs:'Документов пока нет', first_doc:'Написать первый документ', no_recent:'Нет недавних изменений.', save:'Сохранить', preview:'👁 Предпросмотр', author:'Автор', created:'Создан', updated:'Обновлён', translate_btn:'Перевести на этот язык', translating:'Перевод…', translated:'Переведено ИИ', original:'Оригинал', lang_ver:'Языковые версии', no_lang_ver:'Контента на этом языке пока нет.', write_this_lang:'Написать на этом языке', info_box:'Информационная панель', tags_label:'Теги (через запятую)', category_label:'Категория', title_label:'Заголовок', content_label:'Содержание (Markdown)', new_doc_title:'Новый документ', edit_doc_title:'Редактировать документ', doc_saved:'✅ Сохранено!', doc_created:'✅ Документ создан!', doc_deleted:'🗑 Удалено.', need_login:'Пожалуйста, войдите в систему.', need_title:'Пожалуйста, введите заголовок.', need_content:'Пожалуйста, введите содержание.', deleted_label:'(удалён)', just_now:'Только что', min_ago:' мин назад', hour_ago:' ч назад', day_ago:' дн назад' },
+  ar:{ home:'الرئيسية', recent:'التغييرات الأخيرة', categories:'الفئات', tools:'الأدوات', all_docs:'📚 جميع المستندات', recent_changes:'📋 التغييرات الأخيرة', new_doc:'مستند جديد', ai_assistant:'مساعد ويكي الذكاء الاصطناعي', ai_greeting:'مرحبا! أنا هنا لمساعدتك في كتابة مستندات الويكي.', ai_intro:'يمكنني المساعدة في إنشاء المحتوى والملخصات والترجمة واقتراحات التحرير. 📝', ai_q_summary:'📄 تلخيص', ai_q_write:'✏️ إنشاء', ai_q_related:'🔗 ذات صلة', ai_q_translate:'🌐 ترجمة', login:'تسجيل الدخول / إنشاء حساب', login_tab:'تسجيل الدخول', signup_tab:'إنشاء حساب', email:'البريد الإلكتروني', password:'كلمة المرور', cancel:'إلغاء', delete_doc:'حذف المستند', delete_confirm:'هل أنت متأكد أنك تريد حذف هذا المستند؟\nلا يمكن التراجع عن هذا الإجراء.', delete:'حذف', edit:'تحرير', search_placeholder:'البحث في المستندات...', btn_recent:'📋 الأخيرة', btn_new:'✏️ جديد', no_docs:'لا توجد مستندات بعد', first_doc:'كتابة المستند الأول', no_recent:'لا توجد تغييرات حديثة.', save:'حفظ', preview:'👁 معاينة', author:'المؤلف', created:'تم الإنشاء', updated:'تم التحديث', translate_btn:'الترجمة إلى هذه اللغة', translating:'جارٍ الترجمة…', translated:'مترجم بالذكاء الاصطناعي', original:'الأصل', lang_ver:'إصدارات اللغة', no_lang_ver:'لا يوجد محتوى بهذه اللغة بعد.', write_this_lang:'الكتابة بهذه اللغة', info_box:'مربع المعلومات', tags_label:'الوسوم (مفصولة بفاصلة)', category_label:'الفئة', title_label:'العنوان', content_label:'المحتوى (Markdown)', new_doc_title:'مستند جديد', edit_doc_title:'تحرير المستند', doc_saved:'✅ تم الحفظ!', doc_created:'✅ تم إنشاء المستند!', doc_deleted:'🗑 تم الحذف.', need_login:'يرجى تسجيل الدخول.', need_title:'يرجى إدخال عنوان.', need_content:'يرجى إدخال محتوى.', deleted_label:'(محذوف)', just_now:'الآن', min_ago:' دقيقة', hour_ago:' ساعة', day_ago:' يوم' },
+  hi:{ home:'होम', recent:'हाल के बदलाव', categories:'श्रेणियाँ', tools:'उपकरण', all_docs:'📚 सभी दस्तावेज़', recent_changes:'📋 हाल के बदलाव', new_doc:'नया दस्तावेज़', ai_assistant:'AI विकी सहायक', ai_greeting:'नमस्ते! मैं आपको विकी दस्तावेज़ लिखने में मदद करने के लिए यहाँ हूँ।', ai_intro:'मैं सामग्री निर्माण, सारांश, अनुवाद और संपादन सुझावों में मदद कर सकता हूँ। 📝', ai_q_summary:'📄 सारांश', ai_q_write:'✏️ उत्पन्न करें', ai_q_related:'🔗 संबंधित', ai_q_translate:'🌐 अनुवाद', login:'लॉगिन / साइन अप', login_tab:'लॉगिन', signup_tab:'साइन अप', email:'ईमेल', password:'पासवर्ड', cancel:'रद्द करें', delete_doc:'दस्तावेज़ हटाएँ', delete_confirm:'क्या आप वाकई इस दस्तावेज़ को हटाना चाहते हैं?\nयह क्रिया पूर्ववत नहीं की जा सकती।', delete:'हटाएँ', edit:'संपादित करें', search_placeholder:'दस्तावेज़ खोजें...', btn_recent:'📋 हाल के', btn_new:'✏️ नया', no_docs:'अभी तक कोई दस्तावेज़ नहीं', first_doc:'पहला दस्तावेज़ लिखें', no_recent:'कोई हालिया बदलाव नहीं।', save:'सहेजें', preview:'👁 पूर्वावलोकन', author:'लेखक', created:'बनाया गया', updated:'अपडेट किया गया', translate_btn:'इस भाषा में अनुवाद करें', translating:'अनुवाद हो रहा है…', translated:'AI द्वारा अनुवादित', original:'मूल', lang_ver:'भाषा संस्करण', no_lang_ver:'इस भाषा में अभी तक कोई सामग्री नहीं।', write_this_lang:'इस भाषा में लिखें', info_box:'जानकारी बॉक्स', tags_label:'टैग (अल्पविराम से अलग)', category_label:'श्रेणी', title_label:'शीर्षक', content_label:'सामग्री (Markdown)', new_doc_title:'नया दस्तावेज़', edit_doc_title:'दस्तावेज़ संपादित करें', doc_saved:'✅ सहेजा गया!', doc_created:'✅ दस्तावेज़ बनाया गया!', doc_deleted:'🗑 हटाया गया।', need_login:'कृपया पहले लॉगिन करें।', need_title:'कृपया शीर्षक दर्ज करें।', need_content:'कृपया सामग्री दर्ज करें।', deleted_label:'(हटाया गया)', just_now:'अभी', min_ago:' मिनट पहले', hour_ago:' घंटे पहले', day_ago:' दिन पहले' },
+};
+
+let currentLang = localStorage.getItem('wiki_lang') || 'ko';
+function t(key){ return (UI_STRINGS[currentLang]||UI_STRINGS.ko)[key] || UI_STRINGS.ko[key] || key; }
+
+function applyLang(code) {
+  currentLang = code;
+  localStorage.setItem('wiki_lang', code);
+  const lang = LANGS.find(l=>l.code===code);
+  document.documentElement.lang = code;
+  document.documentElement.dir = lang?.dir || 'ltr';
+  document.getElementById('lang-flag').textContent = lang?.flag || '';
+  document.getElementById('lang-label').textContent = lang?.label || '';
+  document.getElementById('search-input').placeholder = t('search_placeholder');
+  document.getElementById('btn-recent').textContent = t('btn_recent');
+  document.getElementById('btn-new').textContent = t('btn_new');
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    const key = el.getAttribute('data-i18n');
+    if(UI_STRINGS[code]?.[key]) el.textContent = UI_STRINGS[code][key];
+  });
+  if(currentPage==='list') renderList();
+  if(currentPage==='view' && currentDocId) renderView(currentDocId);
+  if(currentPage==='recent') renderRecent();
+  updateSidebar();
+}
+
+function buildLangMenu() {
+  const menu = document.getElementById('lang-menu');
+  menu.innerHTML = LANGS.map(l=>`
+    <div class="lang-item ${l.code===currentLang?'active':''}" onclick="selectLang('${l.code}')">
+      <span class="lang-flag">${l.flag}</span>
+      <span>${l.label}</span>
+    </div>`).join('');
+}
+
+function toggleLangMenu() {
+  buildLangMenu();
+  document.getElementById('lang-menu').classList.toggle('open');
+}
+function selectLang(code) {
+  applyLang(code);
+  document.getElementById('lang-menu').classList.remove('open');
+  langMenuOpen = false;
+}
+let langMenuOpen = false;
+document.addEventListener('click', e => {
+  if(!e.target.closest('#lang-picker')) document.getElementById('lang-menu').classList.remove('open');
+});
+
+// ══════════════════════════════════════════════════════
+// 🔥 FIREBASE STATE
+// ══════════════════════════════════════════════════════
+let fb = null;
+let currentUser = null;
+let fbReady = false;
+
+window.addEventListener('firebaseReady', () => {
+  fb = window._fb;
+  fbReady = true;
+  fb.onAuthStateChanged(fb.auth, user => {
+    currentUser = user;
+    renderAuthUI();
+    if(currentPage==='list') renderList();
+  });
+});
+
+function renderAuthUI() {
+  const area = document.getElementById('auth-area');
+  if(currentUser) {
+    const initial = (currentUser.displayName || currentUser.email || '?')[0].toUpperCase();
+    area.innerHTML = `
+      <div id="user-info">
+        <div id="user-avatar">${initial}</div>
+        <span style="max-width:90px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${currentUser.displayName || currentUser.email}</span>
+        <button id="signout-btn" onclick="doSignOut()">로그아웃</button>
+      </div>`;
+  } else {
+    area.innerHTML = `<button id="auth-btn" onclick="openAuthModal()">${t('login_tab')}</button>`;
+  }
+}
+
+// ── Firestore helpers ──
+async function fsGetDocs(col) {
+  if(!fb) return [];
+  try {
+    const snap = await fb.getDocs(fb.query(fb.collection(fb.db, col), fb.orderBy('updated','desc')));
+    return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  } catch(e) { console.warn('Firestore read failed:', e); return []; }
+}
+async function fsSetDoc(col, id, data) {
+  if(!fb) return;
+  await fb.setDoc(fb.doc(fb.db, col, id), { ...data, updated: fb.serverTimestamp() });
+}
+async function fsDelDoc(col, id) {
+  if(!fb) return;
+  await fb.deleteDoc(fb.doc(fb.db, col, id));
+}
+
+// ── Local fallback ──
+const LS_DOCS = 'wiki_docs_v3';
+const LS_RECENT = 'wiki_recent_v3';
+function lsLoad(k){ try{return JSON.parse(localStorage.getItem(k))||[];}catch{return [];} }
+function lsSave(k,v){ localStorage.setItem(k, JSON.stringify(v)); }
+
+// ── Merge local + remote ──
+let docs = [];
+async function loadAllDocs() {
+  let remote = await fsGetDocs('wiki_documents');
+  let local = lsLoad(LS_DOCS);
+  if(remote.length > 0) {
+    docs = remote;
+    lsSave(LS_DOCS, docs);
+  } else {
+    docs = local;
+    if(docs.length===0){ docs = getSampleDocs(); lsSave(LS_DOCS, docs); }
+  }
+  renderList();
+  updateSidebar();
+}
+
+function getSampleDocs() {
+  return [{
+    id:'wiki-guide', title:'위키 사용 가이드', category:'안내',
+    tags:['가이드','도움말'],
+    infoBox:{ 제목:'위키 사용 가이드', 종류:'안내 문서' },
+    bodies:{ ko:'## 소개\n이 위키에 오신 걸 환영합니다!\n\n## 기능\n- **문서 작성** 및 편집\n- **다국어** 지원 (11개 언어)\n- **Firebase** 연동으로 실시간 저장\n- **AI 도우미**로 번역·생성\n\n## 언어 전환\n상단 언어 버튼을 클릭하면 UI가 바뀌고, 문서 뷰에서 언어 탭을 선택해 각 언어판을 볼 수 있습니다.' },
+    created: Date.now() - 86400000, updated: Date.now()
+  }];
+}
+
+function addRecent(doc, action) {
+  const list = lsLoad(LS_RECENT).filter(r=>r.id!==doc.id);
+  list.unshift({ id:doc.id, title:doc.title, time:Date.now(), action });
+  lsSave(LS_RECENT, list.slice(0,40));
+}
+
+// ══════════════════════════════════════════════════════
+// PAGES
+// ══════════════════════════════════════════════════════
+let currentPage = 'list';
+let currentDocId = null;
+let currentCat = '전체';
+let currentViewLang = null; // which language version is shown
+let aiOpen = false;
+let currentEditId = null;
+let currentEditLang = null;
+
+function showPage(name, docId) {
+  ['list','view','edit','recent'].forEach(p => {
+    document.getElementById('page-'+p).style.display = 'none';
+  });
+  document.getElementById('page-'+name).style.display = 'block';
+  document.getElementById('page-'+name).classList.add('anim');
+  setTimeout(()=>document.getElementById('page-'+name).classList.remove('anim'),400);
+  currentPage = name;
+  if(name==='list') renderList();
+  if(name==='recent') renderRecent();
+  if(name==='view' && docId) renderView(docId);
+  if(name==='edit') renderEdit(docId);
+  updateSidebar();
+}
+
+// ══════════════════════════════════════════════════════
+// SIDEBAR
+// ══════════════════════════════════════════════════════
+function updateSidebar() {
+  const cats = ['전체', ...new Set(docs.map(d=>d.category).filter(Boolean))];
+  const el = document.getElementById('sidebar-cats');
+  el.innerHTML = cats.map(c=>`
+    <div class="sb-item ${currentCat===c?'active':''}" onclick="filterCat('${c}')">
+      <span class="ico">${c==='전체'?'🌐':'📁'}</span> ${esc(c)}
+    </div>`).join('');
+}
+function filterCat(cat){ currentCat=cat; showPage('list'); }
+
+// ══════════════════════════════════════════════════════
+// LIST
+// ══════════════════════════════════════════════════════
+function renderList() {
+  const cats = ['전체', ...new Set(docs.map(d=>d.category).filter(Boolean))];
+  const tabsEl = document.getElementById('cat-tabs');
+  tabsEl.innerHTML = cats.map(c=>`
+    <button class="cat-tab ${currentCat===c?'active':''}" onclick="filterCat('${c}')">${esc(c)}</button>`).join('');
+
+  const filtered = currentCat==='전체' ? docs : docs.filter(d=>d.category===currentCat);
+  document.getElementById('doc-count').textContent = `${filtered.length}`;
+  const grid = document.getElementById('doc-grid');
+  if(!filtered.length) {
+    grid.innerHTML = `<div class="empty-state"><div class="ei">📭</div><p>${t('no_docs')}</p><button class="btn btn-primary" onclick="newDoc()">${t('first_doc')}</button></div>`;
+    return;
+  }
+  grid.innerHTML = filtered.map(doc => {
+    const bodies = doc.bodies || {};
+    const langCount = Object.keys(bodies).filter(k=>bodies[k]).length;
+    const preview = getPreview(bodies[currentLang] || bodies.ko || bodies.en || Object.values(bodies)[0] || '');
+    return `<div class="doc-card" onclick="showPage('view','${doc.id}')">
+      <div class="doc-card-title">${esc(doc.title)}</div>
+      <div class="doc-card-preview">${esc(preview)}</div>
+      <div class="doc-card-meta">
+        ${(doc.tags||[]).slice(0,2).map(t2=>`<span class="tag">#${esc(t2)}</span>`).join('')}
+        ${langCount>1?`<span class="lang-badge">🌐 ${langCount}</span>`:''}
+        <span class="doc-card-date">${timeAgo(doc.updated)}</span>
+      </div>
+    </div>`;
+  }).join('');
+  updateSidebar();
+}
+
+function getPreview(body) {
+  return (body||'').replace(/#{1,3}\s/g,'').replace(/\*\*/g,'').replace(/\*/g,'').replace(/`/g,'').substring(0,80)+'…';
+}
+
+// ══════════════════════════════════════════════════════
+// VIEW
+// ══════════════════════════════════════════════════════
+function renderView(id) {
+  currentDocId = id;
+  const doc = docs.find(d=>d.id===id);
+  if(!doc){ showPage('list'); return; }
+
+  const bodies = doc.bodies || {};
+  currentViewLang = bodies[currentLang] ? currentLang : (Object.keys(bodies)[0] || 'ko');
+
+  const tagsHtml = (doc.tags||[]).map(tg=>`<span class="doc-tag" onclick="filterTagSearch('${esc(tg)}')">#${esc(tg)}</span>`).join('');
+  const infoHtml = buildInfoBox(doc);
+  const bodyContent = bodies[currentViewLang] || '';
+
+  document.getElementById('page-view').innerHTML = `
+    <div class="doc-nav">
+      <a onclick="showPage('list')">${t('home')}</a> › <span>${esc(doc.category||'')}</span> › <span>${esc(doc.title)}</span>
+    </div>
+    <div class="doc-title-row">
+      <h1 class="doc-title">${esc(doc.title)}</h1>
+      <div class="doc-actions">
+        <button class="btn" onclick="showPage('edit','${doc.id}')">${t('edit')}</button>
+        <button class="btn btn-danger" onclick="confirmDelete('${doc.id}')">🗑</button>
+      </div>
+    </div>
+    ${tagsHtml?`<div class="doc-tags-row">${tagsHtml}</div>`:''}
+    <div class="doc-meta-bar">
+      <span>📁 <strong>${esc(doc.category||'')}</strong></span>
+      ${doc.authorName?`<span>👤 <strong>${esc(doc.authorName)}</strong></span>`:''}
+      <span>🕐 ${t('updated')}: <strong>${dateStr(doc.updated)}</strong></span>
+    </div>
+    <div class="lang-ver-bar" id="lang-ver-bar">
+      <span>🌐 ${t('lang_ver')}:</span>
+      ${buildLangVerBtns(doc)}
+    </div>
+    <div id="doc-body-wrap" class="doc-body clearfix">
+      ${infoHtml}
+      <div id="doc-body-content">${bodyContent ? parseMarkdown(bodyContent) : renderEmptyLangState(doc, currentViewLang)}</div>
+    </div>
+  `;
+}
+
+function buildLangVerBtns(doc) {
+  const bodies = doc.bodies || {};
+  return LANGS.map(l => {
+    const has = !!bodies[l.code];
+    const isActive = l.code===currentViewLang;
+    return `<button class="lv-btn ${isActive?'active':''} ${has?'has-content':''}"
+      onclick="switchViewLang('${doc.id}','${l.code}')"
+      title="${l.label}">
+      ${l.flag} ${l.code.toUpperCase()}
+    </button>`;
+  }).join('');
+}
+
+function renderEmptyLangState(doc, langCode) {
+  const lang = LANGS.find(l=>l.code===langCode);
+  const bodies = doc.bodies||{};
+  const hasSrc = Object.keys(bodies).length > 0;
+  return `<div style="text-align:center;padding:40px 20px;color:var(--text3);">
+    <div style="font-size:40px;margin-bottom:12px">🌐</div>
+    <p>${t('no_lang_ver')}</p>
+    <div style="display:flex;gap:10px;justify-content:center;margin-top:16px;flex-wrap:wrap;">
+      ${hasSrc?`<button class="btn" onclick="translateDocLang('${doc.id}','${langCode}')">🤖 ${t('translate_btn')}</button>`:''}
+      <button class="btn btn-primary" onclick="editInLang('${doc.id}','${langCode}')">${t('write_this_lang')}</button>
+    </div>
+  </div>`;
+}
+
+async function switchViewLang(docId, langCode) {
+  currentViewLang = langCode;
+  const doc = docs.find(d=>d.id===docId);
+  if(!doc) return;
+  const bodies = doc.bodies||{};
+  document.getElementById('lang-ver-bar').innerHTML = `<span>🌐 ${t('lang_ver')}:</span>${buildLangVerBtns(doc)}`;
+  const wrap = document.getElementById('doc-body-content');
+  if(bodies[langCode]) {
+    wrap.innerHTML = parseMarkdown(bodies[langCode]);
+  } else {
+    wrap.innerHTML = renderEmptyLangState(doc, langCode);
+  }
+}
+
+async function translateDocLang(docId, targetLang) {
+  const doc = docs.find(d=>d.id===docId);
+  if(!doc) return;
+  const bodies = doc.bodies||{};
+  const srcLang = Object.keys(bodies)[0];
+  const srcBody = bodies[srcLang];
+  if(!srcBody) return;
+
+  const wrap = document.getElementById('doc-body-content');
+  wrap.innerHTML = `<div class="translate-loading"><span class="spin">⏳</span> ${t('translating')}</div>`;
+
+  const targetLabel = LANGS.find(l=>l.code===targetLang)?.label || targetLang;
+  try {
+    const resp = await fetch('https://api.anthropic.com/v1/messages', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({
+        model:'claude-sonnet-4-20250514', max_tokens:2000,
+        system:`You are a professional translator. Translate the following wiki document content into ${targetLabel}. Preserve all markdown formatting (##, ###, **, *, -, >, etc.) exactly. Return ONLY the translated content with no explanation.`,
+        messages:[{role:'user', content: srcBody}]
+      })
+    });
+    const data = await resp.json();
+    const translated = data.content?.map(c=>c.text||'').join('') || '';
+    if(translated) {
+      if(!doc.bodies) doc.bodies = {};
+      doc.bodies[targetLang] = translated;
+      doc._translatedLangs = doc._translatedLangs || {};
+      doc._translatedLangs[targetLang] = true;
+      await saveDocToStore(doc);
+      wrap.innerHTML = `<div style="font-size:12px;color:var(--text3);margin-bottom:10px;padding:6px 10px;background:var(--accent-soft);border-radius:3px;">🤖 ${t('translated')}</div>` + parseMarkdown(translated);
+      document.getElementById('lang-ver-bar').innerHTML = `<span>🌐 ${t('lang_ver')}:</span>${buildLangVerBtns(doc)}`;
+    }
+  } catch(e) {
+    wrap.innerHTML = `<p style="color:var(--accent)">❌ 번역 실패: ${e.message}</p>`;
+  }
+}
+
+function editInLang(docId, langCode) {
+  currentEditLang = langCode;
+  showPage('edit', docId);
+}
+
+function buildInfoBox(doc) {
+  if(!doc.infoBox || !Object.keys(doc.infoBox).length) return '';
+  return `<div class="info-box">
+    <div class="info-box-header">${esc(doc.title)}</div>
+    ${Object.entries(doc.infoBox).map(([k,v])=>`
+      <div class="info-box-row">
+        <div class="info-box-key">${esc(k)}</div>
+        <div class="info-box-val">${esc(v)}</div>
+      </div>`).join('')}
+  </div>`;
+}
+
+// ══════════════════════════════════════════════════════
+// EDIT
+// ══════════════════════════════════════════════════════
+function newDoc() {
+  if(!currentUser){ showToast(t('need_login')); openAuthModal(); return; }
+  currentEditId = null;
+  currentEditLang = currentLang;
+  showPage('edit', null);
+}
+
+function renderEdit(id) {
+  const isNew = !id;
+  const doc = id ? docs.find(d=>d.id===id) : null;
+  currentEditId = id||null;
+  if(!currentEditLang) currentEditLang = currentLang;
+
+  const cats = [...new Set([...docs.map(d=>d.category), '일반','기술','문화','과학','역사','안내'].filter(Boolean))];
+  const bodies = doc?.bodies||{};
+  const editBody = bodies[currentEditLang]||'';
+  const ibRows = doc?.infoBox ? Object.entries(doc.infoBox) : [];
+
+  document.getElementById('page-edit').innerHTML = `
+    <div class="edit-hdr">
+      <div class="doc-nav"><a onclick="showPage('list')">${t('home')}</a> › <span>${isNew?t('new_doc_title'):(t('edit_doc_title')+': '+esc(doc.title))}</span></div>
+      <h2 style="font-family:var(--font-serif);font-size:20px;font-weight:700;margin-top:8px">${isNew?'✏️ '+t('new_doc_title'):'✏️ '+t('edit_doc_title')}</h2>
+    </div>
+    <div class="field-group">
+      <label class="field-label">${t('title_label')} *</label>
+      <input class="field-input" id="edit-title" value="${esc(doc?.title||'')}">
+    </div>
+    <div style="display:flex;gap:14px">
+      <div class="field-group" style="flex:1">
+        <label class="field-label">${t('category_label')}</label>
+        <select class="field-select field-input" id="edit-cat">
+          ${cats.map(c=>`<option ${doc?.category===c?'selected':''}>${c}</option>`).join('')}
+          <option value="__new__">+ 직접 입력</option>
+        </select>
+      </div>
+      <div class="field-group" style="flex:2">
+        <label class="field-label">${t('tags_label')}</label>
+        <input class="field-input" id="edit-tags" value="${esc((doc?.tags||[]).join(', '))}">
+      </div>
+    </div>
+    <div class="field-group">
+      <label class="field-label">${t('info_box')} <span style="color:var(--text3);font-weight:400">(선택)</span></label>
+      <div class="infobox-editor" id="ib-editor">
+        ${ibRows.map(([k,v],i)=>`
+          <div class="ibrow" id="ibr${i}">
+            <input placeholder="항목" value="${esc(k)}">
+            <input placeholder="내용" value="${esc(v)}">
+            <button class="ibrow-del" onclick="this.closest('.ibrow').remove()">✕</button>
+          </div>`).join('')}
+        <button class="ib-add-btn" onclick="addIbRow()">+ 행 추가</button>
+      </div>
+    </div>
+    <div class="field-group">
+      <label class="field-label">${t('content_label')} *</label>
+      <div class="lang-edit-tabs" id="lang-edit-tabs">
+        ${LANGS.map(l=>`<button class="let-btn ${l.code===currentEditLang?'active':''} ${bodies[l.code]?'filled':''}"
+          onclick="switchEditLang('${id||'__new__'}','${l.code}')">${l.flag} ${l.code.toUpperCase()}</button>`).join('')}
+      </div>
+      <div class="editor-toolbar">
+        <button class="tb-btn" onclick="ins('## ','')">H2</button>
+        <button class="tb-btn" onclick="ins('### ','')">H3</button>
+        <button class="tb-btn" onclick="ins('**','**')"><b>B</b></button>
+        <button class="tb-btn" onclick="ins('*','*')"><i>I</i></button>
+        <button class="tb-btn" onclick="ins('\`','\`')">&lt;&gt;</button>
+        <button class="tb-btn" onclick="ins('- ','')">목록</button>
+        <button class="tb-btn" onclick="ins('> ','')">인용</button>
+        <button class="tb-btn" onclick="togglePreview()">${t('preview')}</button>
+        <button class="tb-btn" style="margin-left:auto;background:var(--accent);color:#fff;border-color:var(--accent)" onclick="saveDoc()">${t('save')}</button>
+      </div>
+      <textarea class="field-textarea" id="edit-body" placeholder="## 소개&#10;마크다운으로 작성하세요...">${esc(editBody)}</textarea>
+    </div>
+    <div class="preview-panel" id="preview-panel">
+      <h3>📄 ${t('preview')}</h3>
+      <div class="doc-body" id="preview-content"></div>
+    </div>
+    <div class="edit-footer">
+      <button class="btn btn-primary" onclick="saveDoc()">${t('save')}</button>
+      <button class="btn" onclick="${id?`showPage('view','${id}')`:"showPage('list')"}">${t('cancel')}</button>
+      ${!isNew?`<button class="btn btn-danger" style="margin-left:auto" onclick="confirmDelete('${id}')">🗑 ${t('delete')}</button>`:''}
+    </div>
+  `;
+  // cat change
+  document.getElementById('edit-cat').addEventListener('change', function(){
+    if(this.value==='__new__'){
+      const v=prompt('카테고리:');
+      if(v){const o=document.createElement('option');o.value=v;o.textContent=v;o.selected=true;this.insertBefore(o,this.lastElementChild);this.value=v;}
+      else this.value=cats[0];
+    }
+  });
+  // save pending edit when switching lang
+  _pendingBodies = { ...bodies };
+  _pendingBodies[currentEditLang] = editBody;
+}
+
+let _pendingBodies = {};
+
+function switchEditLang(id, langCode) {
+  // save current textarea to pending
+  const ta = document.getElementById('edit-body');
+  if(ta) _pendingBodies[currentEditLang] = ta.value;
+  currentEditLang = langCode;
+  const doc = id!=='__new__' ? docs.find(d=>d.id===id) : null;
+  const bodies = { ...(doc?.bodies||{}), ..._pendingBodies };
+  if(ta) ta.value = bodies[langCode]||'';
+  document.querySelectorAll('.let-btn').forEach(b=>{
+    const code = b.onclick.toString().match(/'([a-z]+)'\)$/)?.[1];
+    b.classList.toggle('active', code===langCode);
+    b.classList.toggle('filled', !!(bodies[code]));
+  });
+}
+
+function addIbRow() {
+  const ed = document.getElementById('ib-editor');
+  const idx = ed.querySelectorAll('.ibrow').length;
+  const row = document.createElement('div');
+  row.className='ibrow'; row.id='ibr'+idx;
+  row.innerHTML=`<input placeholder="항목"><input placeholder="내용"><button class="ibrow-del" onclick="this.closest('.ibrow').remove()">✕</button>`;
+  ed.insertBefore(row, ed.lastElementChild);
+}
+
+function ins(before, after) {
+  const ta=document.getElementById('edit-body');
+  const s=ta.selectionStart,e=ta.selectionEnd,sel=ta.value.substring(s,e);
+  ta.value=ta.value.substring(0,s)+before+sel+after+ta.value.substring(e);
+  ta.selectionStart=s+before.length; ta.selectionEnd=s+before.length+sel.length;
+  ta.focus();
+}
+
+function togglePreview() {
+  const p=document.getElementById('preview-panel');
+  p.classList.toggle('active');
+  if(p.classList.contains('active'))
+    document.getElementById('preview-content').innerHTML=parseMarkdown(document.getElementById('edit-body').value);
+}
+
+async function saveDoc() {
+  if(!currentUser){ showToast(t('need_login')); openAuthModal(); return; }
+  const title=document.getElementById('edit-title').value.trim();
+  const bodyNow=document.getElementById('edit-body').value.trim();
+  const cat=document.getElementById('edit-cat').value;
+  const tags=document.getElementById('edit-tags').value.split(',').map(s=>s.trim()).filter(Boolean);
+  if(!title){ showToast(t('need_title')); return; }
+  if(!bodyNow){ showToast(t('need_content')); return; }
+
+  // collect infoBox
+  const infoBox={};
+  document.querySelectorAll('.ibrow').forEach(row=>{
+    const ins=row.querySelectorAll('input');
+    if(ins[0]?.value.trim()) infoBox[ins[0].value.trim()]=ins[1]?.value.trim()||'';
+  });
+
+  // save pending
+  _pendingBodies[currentEditLang]=bodyNow;
+  const bodies = { ..._pendingBodies };
+
+  if(currentEditId) {
+    const idx=docs.findIndex(d=>d.id===currentEditId);
+    docs[idx]={ ...docs[idx], title, category:cat, tags, infoBox, bodies, updated:Date.now(), authorName:currentUser.displayName||currentUser.email };
+    await saveDocToStore(docs[idx]);
+    addRecent(docs[idx],'편집');
+    showToast(t('doc_saved'));
+    showPage('view',currentEditId);
+  } else {
+    const id='doc-'+Date.now();
+    const doc={ id, title, category:cat, tags, infoBox, bodies, created:Date.now(), updated:Date.now(), authorId:currentUser.uid, authorName:currentUser.displayName||currentUser.email };
+    docs.unshift(doc);
+    await saveDocToStore(doc);
+    addRecent(doc,'생성');
+    showToast(t('doc_created'));
+    showPage('view',id);
+  }
+}
+
+async function saveDocToStore(doc) {
+  lsSave(LS_DOCS, docs);
+  if(fb && fbReady) {
+    try { await fsSetDoc('wiki_documents', doc.id, doc); }
+    catch(e){ console.warn('Firestore write failed, saved locally:', e); }
+  }
+}
+
+// ══════════════════════════════════════════════════════
+// DELETE
+// ══════════════════════════════════════════════════════
+let pendingDelId=null;
+function confirmDelete(id){
+  pendingDelId=id;
+  document.getElementById('confirm-modal').classList.add('open');
+  document.getElementById('confirm-del-btn').onclick=async()=>{
+    docs=docs.filter(d=>d.id!==pendingDelId);
+    lsSave(LS_DOCS,docs);
+    if(fb&&fbReady) try{ await fsDelDoc('wiki_documents',pendingDelId); }catch{}
+    closeModal('confirm-modal');
+    showPage('list');
+    showToast(t('doc_deleted'));
+  };
+}
+function closeModal(id){ document.getElementById(id).classList.remove('open'); }
+
+// ══════════════════════════════════════════════════════
+// RECENT
+// ══════════════════════════════════════════════════════
+function renderRecent() {
+  const list=lsLoad(LS_RECENT);
+  const el=document.getElementById('recent-list');
+  if(!list.length){ el.innerHTML=`<div style="padding:40px;text-align:center;color:var(--text3)">${t('no_recent')}</div>`; return; }
+  el.innerHTML=list.map(r=>{
+    const doc=docs.find(d=>d.id===r.id);
+    return `<div class="recent-item" onclick="${doc?`showPage('view','${r.id}')`:``}">
+      <div class="r-dot"></div>
+      <div style="flex:1">
+        <div class="recent-title">${esc(r.title)}</div>
+        <div class="recent-meta">${r.action} · ${timeAgo(r.time)}</div>
+      </div>
+      ${!doc?`<span style="font-size:12px;color:var(--text3)">${t('deleted_label')}</span>`:''}
+    </div>`;
+  }).join('');
+}
+
+// ══════════════════════════════════════════════════════
+// SEARCH
+// ══════════════════════════════════════════════════════
+const searchEl=document.getElementById('search-input');
+const searchRes=document.getElementById('search-results');
+searchEl.placeholder=t('search_placeholder');
+
+searchEl.addEventListener('input',()=>{
+  const q=searchEl.value.trim().toLowerCase();
+  if(!q){ searchRes.style.display='none'; return; }
+  const results=docs.filter(d=>{
+    const bodies=d.bodies||{};
+    return d.title.toLowerCase().includes(q)||
+      Object.values(bodies).some(b=>(b||'').toLowerCase().includes(q))||
+      (d.tags||[]).some(tg=>tg.toLowerCase().includes(q));
+  }).slice(0,8);
+  if(!results.length){
+    searchRes.innerHTML=`<div class="sr-item"><div class="sr-title" style="color:var(--text3)">검색 결과 없음</div></div>`;
+  } else {
+    searchRes.innerHTML=results.map(d=>`
+      <div class="sr-item" onclick="selectSearch('${d.id}')">
+        <div class="sr-title">${hl(esc(d.title),q)}</div>
+        <div class="sr-cat">📁 ${esc(d.category||'')} · ${(d.tags||[]).map(t2=>'#'+t2).join(' ')}</div>
+      </div>`).join('');
+  }
+  searchRes.style.display='block';
+});
+
+function hl(text,q){
+  return text.replace(new RegExp(`(${q.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')})`, 'gi'),
+    '<mark style="background:rgba(192,57,43,.15);color:var(--accent);border-radius:2px">$1</mark>');
+}
+function selectSearch(id){ searchRes.style.display='none'; searchEl.value=''; showPage('view',id); }
+function doSearch(){
+  const q=searchEl.value.trim();
+  if(!q) return;
+  currentCat='전체'; showPage('list');
+  setTimeout(()=>{
+    document.querySelectorAll('.doc-card').forEach(c=>{
+      const t2=c.querySelector('.doc-card-title').textContent.toLowerCase();
+      const p=c.querySelector('.doc-card-preview').textContent.toLowerCase();
+      c.style.display=(t2.includes(q.toLowerCase())||p.includes(q.toLowerCase()))?'':'none';
+    });
+  },100);
+}
+document.addEventListener('click',e=>{if(!e.target.closest('#search-wrap')) searchRes.style.display='none';});
+
+function filterTagSearch(tag){
+  currentCat='전체'; showPage('list');
+  setTimeout(()=>{
+    document.querySelectorAll('.doc-card').forEach(c=>{
+      const meta=c.querySelector('.doc-card-meta')?.textContent||'';
+      c.style.display=meta.includes('#'+tag)?'':'none';
+    });
+  },100);
+}
+
+// ══════════════════════════════════════════════════════
+// AUTH
+// ══════════════════════════════════════════════════════
+let authTab='login';
+function openAuthModal(){ document.getElementById('auth-modal').classList.add('open'); }
+function switchAuthTab(tab){
+  authTab=tab;
+  document.getElementById('tab-login').classList.toggle('active',tab==='login');
+  document.getElementById('tab-signup').classList.toggle('active',tab==='signup');
+  document.getElementById('auth-submit-btn').textContent=tab==='login'?t('login_tab'):t('signup_tab');
+  document.getElementById('auth-err').classList.remove('show');
+}
+async function signInGoogle(){
+  if(!fb){ showToast('Firebase 미연결'); return; }
+  try{
+    await fb.signInWithPopup(fb.auth, fb.googleProvider);
+    closeModal('auth-modal');
+    showToast('✅ Google 로그인 성공!');
+    loadAllDocs();
+  }catch(e){ showAuthErr(e.message); }
+}
+async function doAuth(){
+  if(!fb){ showToast('Firebase 미연결'); return; }
+  const email=document.getElementById('auth-email').value.trim();
+  const pw=document.getElementById('auth-pw').value;
+  if(!email||!pw){ showAuthErr('이메일과 비밀번호를 입력해주세요.'); return; }
+  try{
+    if(authTab==='login') await fb.signInWithEmailAndPassword(fb.auth,email,pw);
+    else await fb.createUserWithEmailAndPassword(fb.auth,email,pw);
+    closeModal('auth-modal');
+    showToast('✅ '+(authTab==='login'?'로그인':'회원가입')+'되었습니다!');
+    loadAllDocs();
+  }catch(e){ showAuthErr(e.message); }
+}
+function showAuthErr(msg){
+  const el=document.getElementById('auth-err');
+  el.textContent=msg; el.classList.add('show');
+}
+async function doSignOut(){
+  if(!fb) return;
+  await fb.signOut(fb.auth);
+  showToast('로그아웃되었습니다.');
+}
+
+// ══════════════════════════════════════════════════════
+// AI PANEL
+// ══════════════════════════════════════════════════════
+function toggleAI(){ aiOpen=!aiOpen; document.getElementById('ai-panel').classList.toggle('open',aiOpen); }
+
+const AI_PROMPTS = {
+  summarize: ()=>`현재 문서를 간결하게 요약해줘. 현재 보기 언어: ${currentLang}`,
+  write: ()=>`${currentEditId||currentViewLang?'현재 문서 주제로':'새로운 위키 문서 내용을'} 마크다운 형식으로 작성해줘.`,
+  related: ()=>`현재 문서와 관련된 항목이나 주제를 추천해줘.`,
+  translate: ()=>`현재 문서 내용을 ${LANGS.find(l=>l.code===currentLang)?.label||'현재 언어'}로 번역해줘.`,
+};
+
+function aiQuick(type){ document.getElementById('ai-input').value=AI_PROMPTS[type]?.()|| type; sendAI(); }
+
+async function sendAI(){
+  const input=document.getElementById('ai-input');
+  const msg=input.value.trim(); if(!msg) return;
+  input.value='';
+  const msgs=document.getElementById('ai-messages');
+  const uEl=document.createElement('div'); uEl.className='ai-msg user'; uEl.textContent=msg; msgs.appendChild(uEl);
+  const lEl=document.createElement('div'); lEl.className='ai-msg ai'; lEl.innerHTML='<span class="spin">⏳</span>'; msgs.appendChild(lEl);
+  msgs.scrollTop=msgs.scrollHeight;
+
+  let ctx=`당신은 다국어 위키 문서 작성 AI 도우미입니다. 현재 UI 언어: ${LANGS.find(l=>l.code===currentLang)?.label||'한국어'}. 해당 언어로 답변해주세요.`;
+  if(currentDocId && currentPage==='view'){
+    const doc=docs.find(d=>d.id===currentDocId);
+    if(doc){ ctx+=`\n\n현재 문서:\n제목: ${doc.title}\n카테고리: ${doc.category||''}\n내용 (${currentViewLang}):\n${(doc.bodies||{})[currentViewLang||'ko']?.substring(0,800)||''}`; }
+  }
+  try{
+    const resp=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,system:ctx,messages:[{role:'user',content:msg}]})});
+    const data=await resp.json();
+    lEl.innerHTML=(data.content?.map(c=>c.text||'').join('')||'응답 없음').replace(/\n/g,'<br>');
+  }catch(e){ lEl.innerHTML='❌ AI 연결 실패'; }
+  msgs.scrollTop=msgs.scrollHeight;
+}
+
+// ══════════════════════════════════════════════════════
+// MARKDOWN PARSER
+// ══════════════════════════════════════════════════════
+function parseMarkdown(md) {
+  const headers=[...md.matchAll(/^## (.+)$/gm)].map(m=>m[1]);
+  let toc='';
+  if(headers.length>1){
+    toc=`<div class="toc"><div class="toc-title">📑 목차</div><ol>${headers.map((h,i)=>`<li><a href="#mh${i}">${esc(h)}</a></li>`).join('')}</ol></div>`;
+  }
+  let i=0;
+  let html=md
+    .replace(/^## (.+)$/gm,(_,h)=>`<h2 id="mh${i++}">${esc(h)}</h2>`)
+    .replace(/^### (.+)$/gm,(_,h)=>`<h3>${esc(h)}</h3>`)
+    .replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>')
+    .replace(/\*(.+?)\*/g,'<em>$1</em>')
+    .replace(/`([^`]+)`/g,'<code>$1</code>')
+    .replace(/^> (.+)$/gm,'<blockquote>$1</blockquote>')
+    .replace(/^- (.+)$/gm,'<li>$1</li>')
+    .replace(/(<li>[\s\S]+?<\/li>)/g,'<ul>$1</ul>')
+    .replace(/\n\n/g,'</p><p>');
+  html='<p>'+html+'</p>';
+  html=html.replace(/<p>(<h[23])/g,'$1').replace(/(<\/h[23]>)<\/p>/g,'$1');
+  html=html.replace(/<p>(<ul>)/g,'$1').replace(/(<\/ul>)<\/p>/g,'$1');
+  html=html.replace(/<p>(<blockquote>)/g,'$1').replace(/(<\/blockquote>)<\/p>/g,'$1');
+  html=html.replace(/<p>\s*<\/p>/g,'');
+  return toc+html;
+}
+
+// ══════════════════════════════════════════════════════
+// UTILS
+// ══════════════════════════════════════════════════════
+function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function timeAgo(ts){
+  if(!ts) return '';
+  const d=Date.now()-Number(ts), m=60000, h=3600000, dy=86400000;
+  if(d<m) return t('just_now');
+  if(d<h) return Math.floor(d/m)+t('min_ago');
+  if(d<dy) return Math.floor(d/h)+t('hour_ago');
+  return Math.floor(d/dy)+t('day_ago');
+}
+function dateStr(ts){ if(!ts) return ''; return new Date(Number(ts)).toLocaleDateString(); }
+
+let toastTimer;
+function showToast(msg){
+  const el=document.getElementById('toast');
+  el.textContent=msg; el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer=setTimeout(()=>el.classList.remove('show'),2600);
+}
+
+// ══════════════════════════════════════════════════════
+// INIT
+// ══════════════════════════════════════════════════════
+applyLang(currentLang);
+loadAllDocs();
+
+// Wait for Firebase and reload if not ready
+setTimeout(()=>{
+  if(!fbReady){
+    console.warn('Firebase not ready — using local storage only');
+    if(docs.length===0){ docs=getSampleDocs(); lsSave(LS_DOCS,docs); renderList(); updateSidebar(); }
+  }
+}, 3000);
+</script>
+</body>
+</html>
