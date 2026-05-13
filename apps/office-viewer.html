@@ -1,0 +1,1272 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Office Viewer — Mannamplace</title>
+
+<!-- PDF.js -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<!-- SheetJS (XLSX) -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<!-- Mammoth (DOCX) -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
+
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@300;400;500&display=swap');
+
+:root {
+  --bg:        #0a0a0b;
+  --surface:   #111113;
+  --surface2:  #18181c;
+  --border:    #2a2a30;
+  --accent:    #ff5c1a;
+  --accent2:   #ff8c52;
+  --text:      #f0f0f2;
+  --muted:     #6b6b75;
+  --success:   #3ddc84;
+  --radius:    10px;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  height: 100%;
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'DM Mono', monospace;
+  overflow: hidden;
+}
+
+/* ── LAYOUT ── */
+.app {
+  display: grid;
+  grid-template-rows: 56px 1fr;
+  grid-template-columns: 260px 1fr;
+  height: 100vh;
+}
+
+/* ── TOPBAR ── */
+.topbar {
+  grid-column: 1 / -1;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  padding: 0 20px;
+  gap: 16px;
+  position: relative;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+}
+
+.logo-mark {
+  width: 30px; height: 30px;
+  background: var(--accent);
+  clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; font-weight: 800; color: #fff;
+  font-family: 'Syne', sans-serif;
+  flex-shrink: 0;
+}
+
+.logo-text {
+  font-family: 'Syne', sans-serif;
+  font-weight: 700;
+  font-size: 15px;
+  color: var(--text);
+  letter-spacing: -0.3px;
+}
+.logo-text span { color: var(--accent); }
+
+.topbar-divider {
+  width: 1px; height: 24px;
+  background: var(--border);
+}
+
+.topbar-title {
+  font-family: 'Syne', sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--muted);
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.topbar-actions {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 14px;
+  border-radius: 6px;
+  font-family: 'DM Mono', monospace;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  border: none;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+.btn-ghost {
+  background: transparent;
+  color: var(--muted);
+  border: 1px solid var(--border);
+}
+.btn-ghost:hover { border-color: var(--accent); color: var(--accent); }
+
+.btn-primary {
+  background: var(--accent);
+  color: #fff;
+}
+.btn-primary:hover { background: var(--accent2); }
+
+.btn-sm { padding: 5px 10px; font-size: 11px; }
+
+/* ── SIDEBAR ── */
+.sidebar {
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.sidebar-section {
+  padding: 16px 16px 8px;
+}
+
+.sidebar-label {
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 10px;
+}
+
+/* 파일 업로드 드롭존 */
+.drop-zone {
+  border: 1.5px dashed var(--border);
+  border-radius: var(--radius);
+  padding: 20px 12px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  background: var(--surface2);
+  position: relative;
+}
+.drop-zone:hover, .drop-zone.drag-over {
+  border-color: var(--accent);
+  background: rgba(255,92,26,0.06);
+}
+.drop-zone input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+
+.drop-icon {
+  font-size: 24px;
+  margin-bottom: 8px;
+  display: block;
+}
+.drop-text {
+  font-size: 11px;
+  color: var(--muted);
+  line-height: 1.5;
+}
+.drop-text strong { color: var(--accent); font-weight: 500; }
+
+/* 지원 포맷 배지 */
+.format-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  padding: 10px 16px 16px;
+}
+.badge {
+  padding: 3px 8px;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.5px;
+  border: 1px solid var(--border);
+  color: var(--muted);
+}
+.badge.active { border-color: var(--accent); color: var(--accent); background: rgba(255,92,26,0.08); }
+
+/* 최근 파일 */
+.file-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0 8px 16px;
+}
+.file-list::-webkit-scrollbar { width: 3px; }
+.file-list::-webkit-scrollbar-track { background: transparent; }
+.file-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+.file-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 10px;
+  border-radius: 7px;
+  cursor: pointer;
+  transition: background 0.12s;
+  border: 1px solid transparent;
+}
+.file-item:hover { background: var(--surface2); }
+.file-item.active { background: rgba(255,92,26,0.1); border-color: rgba(255,92,26,0.25); }
+
+.file-icon {
+  width: 32px; height: 32px;
+  border-radius: 6px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px;
+  font-weight: 700;
+  flex-shrink: 0;
+  letter-spacing: -0.5px;
+}
+.icon-pdf  { background: rgba(239,68,68,0.15);  color: #ef4444; }
+.icon-xlsx { background: rgba(34,197,94,0.15);  color: #22c55e; }
+.icon-docx { background: rgba(59,130,246,0.15); color: #3b82f6; }
+.icon-pptx { background: rgba(249,115,22,0.15); color: #f97316; }
+.icon-unknown { background: rgba(107,114,128,0.15); color: #6b7280; }
+
+.file-info { flex: 1; min-width: 0; }
+.file-name {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.file-meta { font-size: 10px; color: var(--muted); margin-top: 2px; }
+
+.file-remove {
+  background: none; border: none;
+  color: var(--muted); cursor: pointer;
+  font-size: 14px; padding: 2px 4px;
+  border-radius: 4px;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+.file-item:hover .file-remove { opacity: 1; }
+.file-remove:hover { color: #ef4444; background: rgba(239,68,68,0.1); }
+
+/* ── MAIN VIEWER ── */
+.viewer {
+  display: flex;
+  flex-direction: column;
+  background: var(--bg);
+  overflow: hidden;
+}
+
+/* 툴바 */
+.viewer-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.toolbar-filename {
+  font-family: 'Syne', sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.page-nav {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  color: var(--muted);
+}
+.page-nav button {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  color: var(--text);
+  width: 26px; height: 26px;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 13px;
+  transition: all 0.12s;
+  display: flex; align-items: center; justify-content: center;
+}
+.page-nav button:hover { border-color: var(--accent); color: var(--accent); }
+.page-nav button:disabled { opacity: 0.3; cursor: not-allowed; }
+
+.zoom-controls {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.zoom-controls button {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  color: var(--text);
+  width: 26px; height: 26px;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.12s;
+  display: flex; align-items: center; justify-content: center;
+}
+.zoom-controls button:hover { border-color: var(--accent); color: var(--accent); }
+.zoom-value {
+  font-size: 11px; color: var(--muted);
+  min-width: 36px; text-align: center;
+}
+
+/* 변환 버튼 드롭다운 */
+.convert-wrap { position: relative; }
+.convert-dropdown {
+  display: none;
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 6px;
+  min-width: 160px;
+  z-index: 100;
+  box-shadow: 0 12px 40px rgba(0,0,0,0.5);
+}
+.convert-dropdown.open { display: block; }
+.convert-item {
+  display: flex; align-items: center; gap: 8px;
+  padding: 8px 10px;
+  border-radius: 5px;
+  font-size: 12px;
+  color: var(--text);
+  cursor: pointer;
+  transition: background 0.12s;
+}
+.convert-item:hover { background: rgba(255,92,26,0.1); color: var(--accent); }
+.convert-sep {
+  height: 1px; background: var(--border);
+  margin: 4px 0;
+}
+
+/* 뷰어 컨텐츠 영역 */
+.viewer-content {
+  flex: 1;
+  overflow: auto;
+  padding: 24px;
+  display: flex;
+  justify-content: center;
+}
+.viewer-content::-webkit-scrollbar { width: 5px; height: 5px; }
+.viewer-content::-webkit-scrollbar-track { background: transparent; }
+.viewer-content::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+/* 빈 상태 */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  gap: 16px;
+  text-align: center;
+}
+.empty-icon {
+  width: 80px; height: 80px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 32px;
+}
+.empty-title {
+  font-family: 'Syne', sans-serif;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text);
+}
+.empty-sub { font-size: 12px; color: var(--muted); line-height: 1.6; }
+
+/* PDF 캔버스 */
+#pdf-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+}
+#pdf-container canvas {
+  border-radius: 4px;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.4);
+  max-width: 100%;
+  height: auto;
+}
+
+/* DOCX 렌더 */
+#docx-container {
+  background: #fff;
+  color: #111;
+  padding: 48px 56px;
+  border-radius: 4px;
+  max-width: 800px;
+  width: 100%;
+  min-height: 400px;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.4);
+  font-family: 'Times New Roman', serif;
+  font-size: 14px;
+  line-height: 1.8;
+}
+#docx-container h1,#docx-container h2,#docx-container h3 { margin: 16px 0 8px; }
+#docx-container p { margin-bottom: 8px; }
+#docx-container table { border-collapse: collapse; width: 100%; margin: 12px 0; }
+#docx-container td, #docx-container th { border: 1px solid #ccc; padding: 6px 10px; font-size: 13px; }
+
+/* XLSX 테이블 */
+#xlsx-container {
+  width: 100%;
+  overflow: auto;
+}
+.xlsx-sheet-tabs {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+}
+.sheet-tab {
+  padding: 5px 12px;
+  border-radius: 5px;
+  font-size: 11px;
+  font-weight: 500;
+  cursor: pointer;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--muted);
+  transition: all 0.12s;
+}
+.sheet-tab.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+.xlsx-table-wrap { overflow: auto; border-radius: 8px; border: 1px solid var(--border); }
+.xlsx-table {
+  border-collapse: collapse;
+  font-size: 12px;
+  white-space: nowrap;
+}
+.xlsx-table th {
+  background: var(--surface);
+  padding: 8px 14px;
+  text-align: left;
+  border: 1px solid var(--border);
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 500;
+  position: sticky; top: 0; z-index: 1;
+}
+.xlsx-table td {
+  padding: 7px 14px;
+  border: 1px solid var(--border);
+  color: var(--text);
+}
+.xlsx-table tr:hover td { background: rgba(255,255,255,0.03); }
+.row-num {
+  color: var(--muted) !important;
+  font-size: 10px !important;
+  background: var(--surface) !important;
+  text-align: right !important;
+  user-select: none;
+}
+
+/* PPTX 안내 */
+#pptx-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  padding: 40px;
+  text-align: center;
+}
+
+/* 로딩 */
+.loading-overlay {
+  display: none;
+  position: fixed; inset: 0;
+  background: rgba(10,10,11,0.8);
+  z-index: 999;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 16px;
+}
+.loading-overlay.show { display: flex; }
+.spinner {
+  width: 40px; height: 40px;
+  border: 3px solid var(--border);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.loading-text { font-size: 13px; color: var(--muted); }
+
+/* 토스트 */
+.toast-wrap {
+  position: fixed;
+  bottom: 24px; right: 24px;
+  display: flex; flex-direction: column; gap: 8px;
+  z-index: 9999;
+}
+.toast {
+  padding: 12px 18px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 12px;
+  color: var(--text);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+  animation: toastIn 0.25s ease;
+  display: flex; align-items: center; gap: 8px;
+}
+.toast.success { border-color: var(--success); }
+.toast.error { border-color: #ef4444; }
+@keyframes toastIn {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* 확장명 변경 모달 */
+.modal-overlay{
+  display:none;
+  position:fixed; inset:0;
+  background: rgba(0,0,0,0.62);
+  z-index: 9998;
+  align-items:center;
+  justify-content:center;
+  padding: 18px;
+}
+.modal-overlay.show{ display:flex; }
+.modal{
+  width: min(520px, 100%);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  box-shadow: 0 18px 60px rgba(0,0,0,0.6);
+  overflow:hidden;
+}
+.modal-head{
+  padding: 14px 16px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap: 10px;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface2);
+}
+.modal-title{
+  font-family:'Syne',sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: -0.2px;
+}
+.modal-close{
+  background:none;
+  border: 1px solid var(--border);
+  color: var(--muted);
+  width: 30px; height: 30px;
+  border-radius: 8px;
+  cursor:pointer;
+  transition: all 0.12s;
+}
+.modal-close:hover{ border-color: var(--accent); color: var(--accent); }
+.modal-body{ padding: 14px 16px 16px; }
+.field{ margin-top: 10px; }
+.field-label{
+  font-size: 10px;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 6px;
+}
+.row{
+  display:flex;
+  gap: 8px;
+  align-items:center;
+  flex-wrap:wrap;
+}
+.inp, .sel{
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 9px 10px;
+  border-radius: 8px;
+  font-size: 12px;
+  outline: none;
+  font-family: 'DM Mono', monospace;
+}
+.inp:focus, .sel:focus{ border-color: var(--accent); }
+.hint{
+  margin-top: 8px;
+  font-size: 11px;
+  color: var(--muted);
+  line-height: 1.6;
+}
+.modal-actions{
+  display:flex;
+  gap: 8px;
+  justify-content:flex-end;
+  margin-top: 14px;
+}
+
+/* 광고 배너 */
+.ad-banner {
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+  padding: 8px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 11px;
+  color: var(--muted);
+  flex-shrink: 0;
+}
+.ad-label {
+  font-size: 9px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  border: 1px solid var(--border);
+  padding: 2px 5px;
+  border-radius: 3px;
+}
+.ad-content {
+  flex: 1; text-align: center;
+  color: var(--muted);
+}
+.ad-points-btn {
+  background: none; border: 1px solid var(--accent);
+  color: var(--accent); padding: 4px 10px;
+  border-radius: 5px; font-size: 10px;
+  font-family: 'DM Mono', monospace;
+  cursor: pointer; transition: all 0.12s;
+}
+.ad-points-btn:hover { background: var(--accent); color: #fff; }
+
+/* 반응형 */
+@media (max-width: 768px) {
+  .app { grid-template-columns: 1fr; }
+  .sidebar { display: none; }
+}
+</style>
+</head>
+<body>
+
+<div class="app" id="app">
+
+  <!-- 로딩 -->
+  <div class="loading-overlay" id="loading">
+    <div class="spinner"></div>
+    <div class="loading-text">파일 불러오는 중...</div>
+  </div>
+
+  <!-- 토스트 -->
+  <div class="toast-wrap" id="toast-wrap"></div>
+
+  <!-- 확장명 변경 모달 -->
+  <div class="modal-overlay" id="rename-modal" role="dialog" aria-modal="true" aria-labelledby="rename-title">
+    <div class="modal">
+      <div class="modal-head">
+        <div class="modal-title" id="rename-title">확장명 변경</div>
+        <button class="modal-close" type="button" onclick="closeRenameModal()" aria-label="닫기">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="field">
+          <div class="field-label">선택된 파일</div>
+          <div id="rename-current" style="font-size:12px;color:var(--text);word-break:break-all">—</div>
+        </div>
+
+        <div class="field">
+          <div class="field-label">새 확장자</div>
+          <div class="row">
+            <select class="sel" id="rename-ext-select" onchange="syncRenameExtFromSelect()">
+              <option value="">선택…</option>
+              <option value="pdf">pdf</option>
+              <option value="docx">docx</option>
+              <option value="xlsx">xlsx</option>
+              <option value="pptx">pptx</option>
+              <option value="hwp">hwp</option>
+              <option value="txt">txt</option>
+              <option value="md">md</option>
+              <option value="csv">csv</option>
+              <option value="json">json</option>
+              <option value="zip">zip</option>
+            </select>
+            <input class="inp" id="rename-ext-input" placeholder="직접 입력 (예: pdf)" inputmode="text" autocomplete="off" spellcheck="false" style="min-width:180px" oninput="syncRenameExtFromInput()">
+          </div>
+          <div class="hint">
+            이 기능은 <b>파일 내용은 그대로</b> 두고 <b>확장자만 바꿔서 다운로드</b>합니다. (실제 포맷 변환 아님)
+          </div>
+        </div>
+
+        <div class="field">
+          <div class="field-label">다운로드 파일명 미리보기</div>
+          <div id="rename-preview" style="font-size:12px;color:var(--accent);word-break:break-all">—</div>
+        </div>
+
+        <div class="modal-actions">
+          <button class="btn btn-ghost" type="button" onclick="closeRenameModal()">취소</button>
+          <button class="btn btn-primary" type="button" onclick="downloadRenamed()">다운로드</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOPBAR -->
+  <header class="topbar">
+    <a class="logo" href="#">
+      <div class="logo-mark">M</div>
+      <span class="logo-text">Mannam<span>place</span></span>
+    </a>
+    <div class="topbar-divider"></div>
+    <span class="topbar-title">Office Viewer</span>
+    <div class="topbar-actions">
+      <button class="btn btn-ghost btn-sm" onclick="showToast('로그인 기능은 준비 중이에요.', 'info')">🔑 로그인</button>
+      <button class="btn btn-ghost btn-sm" onclick="showToast('양식 공유 커뮤니티는 준비 중이에요.', 'info')">🌐 양식 공유</button>
+    </div>
+  </header>
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-section">
+      <div class="sidebar-label">파일 열기</div>
+      <div class="drop-zone" id="drop-zone">
+        <input type="file" id="file-input" accept=".pdf,.docx,.xlsx,.xls,.pptx,.ppt" multiple>
+        <span class="drop-icon">📂</span>
+        <div class="drop-text">
+          <strong>클릭하거나 드래그</strong>하여<br>파일을 불러오세요
+        </div>
+      </div>
+    </div>
+
+    <div class="format-badges">
+      <span class="badge active">PDF</span>
+      <span class="badge active">XLSX</span>
+      <span class="badge active">DOCX</span>
+      <span class="badge">PPTX</span>
+      <span class="badge">HWP</span>
+    </div>
+
+    <div class="sidebar-section" style="padding-bottom:8px">
+      <div class="sidebar-label">열린 파일</div>
+    </div>
+    <div class="file-list" id="file-list">
+      <div style="padding:12px 10px;font-size:11px;color:var(--muted);text-align:center">
+        아직 열린 파일이 없어요
+      </div>
+    </div>
+  </aside>
+
+  <!-- VIEWER -->
+  <main class="viewer">
+    <!-- 툴바 -->
+    <div class="viewer-toolbar" id="viewer-toolbar" style="display:none">
+      <div class="toolbar-filename" id="toolbar-filename">—</div>
+
+      <div class="page-nav" id="page-nav" style="display:none">
+        <button id="prev-page" onclick="changePage(-1)">‹</button>
+        <span id="page-info">1 / 1</span>
+        <button id="next-page" onclick="changePage(1)">›</button>
+      </div>
+
+      <div class="zoom-controls" id="zoom-controls" style="display:none">
+        <button onclick="changeZoom(-0.2)">−</button>
+        <span class="zoom-value" id="zoom-value">100%</span>
+        <button onclick="changeZoom(0.2)">+</button>
+      </div>
+
+      <div class="convert-wrap">
+        <button class="btn btn-ghost btn-sm" id="convert-btn" onclick="toggleConvert()">⇄ 변환</button>
+        <div class="convert-dropdown" id="convert-dropdown">
+          <div class="convert-item" onclick="doConvert('pdf')">📄 PDF로 변환</div>
+          <div class="convert-item" onclick="doConvert('docx')">📝 DOCX로 변환</div>
+          <div class="convert-item" onclick="doConvert('xlsx')">📊 XLSX로 변환</div>
+          <div class="convert-sep"></div>
+          <div class="convert-item" onclick="openRenameModal()">✎ 확장명 변경(다운로드)</div>
+          <div class="convert-sep"></div>
+          <div class="convert-item" style="color:var(--muted);cursor:default;font-size:11px">
+            🔜 더 많은 포맷 추가 예정
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 컨텐츠 -->
+    <div class="viewer-content" id="viewer-content">
+      <div class="empty-state" id="empty-state">
+        <div class="empty-icon">🗂️</div>
+        <div class="empty-title">파일을 선택하세요</div>
+        <div class="empty-sub">
+          PDF, DOCX, XLSX 파일을 좌측에서<br>
+          드래그하거나 클릭하여 불러올 수 있어요
+        </div>
+        <button class="btn btn-primary" onclick="document.getElementById('file-input').click()">
+          📂 파일 열기
+        </button>
+      </div>
+
+      <div id="pdf-container" style="display:none"></div>
+      <div id="docx-container" style="display:none"></div>
+      <div id="xlsx-container" style="display:none"></div>
+      <div id="pptx-container" style="display:none">
+        <div class="empty-icon">📊</div>
+        <div class="empty-title">PPTX 뷰어 준비 중</div>
+        <div class="empty-sub">PowerPoint 뷰어는 곧 업데이트될 예정이에요</div>
+      </div>
+    </div>
+
+    <!-- 광고 배너 -->
+    <div class="ad-banner">
+      <span class="ad-label">AD</span>
+      <span class="ad-content">광고 영역 — Adfit / AdSense 연동 예정</span>
+      <button class="ad-points-btn" onclick="showToast('포인트로 광고를 제거할 수 있어요. (준비 중)', 'info')">
+        ✦ 포인트로 제거
+      </button>
+    </div>
+  </main>
+
+</div>
+
+<script>
+// ── PDF.js 워커 설정 ──
+pdfjsLib.GlobalWorkerOptions.workerSrc =
+  'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+// ── 상태 ──
+let files = [];
+let currentFile = null;
+let pdfDoc = null;
+let currentPage = 1;
+let totalPages = 1;
+let zoom = 1.0;
+let xlsxWorkbook = null;
+let currentSheet = 0;
+
+// ── 유틸 ──
+function showLoading(show) {
+  document.getElementById('loading').classList.toggle('show', show);
+}
+
+function showToast(msg, type = 'info') {
+  const wrap = document.getElementById('toast-wrap');
+  const t = document.createElement('div');
+  t.className = `toast ${type}`;
+  const icons = { success: '✓', error: '✕', info: 'ℹ' };
+  t.innerHTML = `<span>${icons[type] || 'ℹ'}</span> ${msg}`;
+  wrap.appendChild(t);
+  setTimeout(() => t.remove(), 3000);
+}
+
+function formatSize(bytes) {
+  if (bytes < 1024) return bytes + 'B';
+  if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + 'KB';
+  return (bytes / 1024 / 1024).toFixed(1) + 'MB';
+}
+
+function getExt(name) {
+  return name.split('.').pop().toLowerCase();
+}
+
+function getIconClass(ext) {
+  const map = { pdf:'icon-pdf', xlsx:'icon-xlsx', xls:'icon-xlsx',
+                docx:'icon-docx', doc:'icon-docx',
+                pptx:'icon-pptx', ppt:'icon-pptx' };
+  return map[ext] || 'icon-unknown';
+}
+
+// ── 파일 목록 렌더 ──
+function renderFileList() {
+  const el = document.getElementById('file-list');
+  if (files.length === 0) {
+    el.innerHTML = `<div style="padding:12px 10px;font-size:11px;color:var(--muted);text-align:center">아직 열린 파일이 없어요</div>`;
+    return;
+  }
+  el.innerHTML = files.map((f, i) => {
+    const ext = getExt(f.name);
+    const active = currentFile && currentFile.name === f.name ? 'active' : '';
+    return `
+      <div class="file-item ${active}" onclick="openFile(${i})">
+        <div class="file-icon ${getIconClass(ext)}">${ext.toUpperCase()}</div>
+        <div class="file-info">
+          <div class="file-name">${f.name}</div>
+          <div class="file-meta">${formatSize(f.size)}</div>
+        </div>
+        <button class="file-remove" onclick="event.stopPropagation();removeFile(${i})">✕</button>
+      </div>
+    `;
+  }).join('');
+}
+
+function removeFile(i) {
+  const removed = files[i];
+  files.splice(i, 1);
+  if (currentFile && currentFile.name === removed.name) {
+    currentFile = null;
+    showEmptyState();
+  }
+  renderFileList();
+}
+
+// ── 파일 입력 ──
+document.getElementById('file-input').addEventListener('change', e => {
+  addFiles(Array.from(e.target.files));
+});
+
+const dropZone = document.getElementById('drop-zone');
+dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('drag-over'); });
+dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
+dropZone.addEventListener('drop', e => {
+  e.preventDefault();
+  dropZone.classList.remove('drag-over');
+  addFiles(Array.from(e.dataTransfer.files));
+});
+
+// 전체 뷰어 드래그 앤 드롭
+document.addEventListener('dragover', e => e.preventDefault());
+document.addEventListener('drop', e => {
+  e.preventDefault();
+  addFiles(Array.from(e.dataTransfer.files));
+});
+
+function addFiles(newFiles) {
+  const supported = ['.pdf','.docx','.doc','.xlsx','.xls','.pptx','.ppt'];
+  newFiles.forEach(f => {
+    const ext = '.' + getExt(f.name);
+    if (!supported.includes(ext)) {
+      showToast(`지원하지 않는 형식이에요: ${f.name}`, 'error');
+      return;
+    }
+    if (!files.find(x => x.name === f.name)) files.push(f);
+  });
+  renderFileList();
+  if (newFiles.length > 0 && files.length > 0) {
+    openFile(files.length - 1);
+  }
+}
+
+// ── 파일 열기 ──
+async function openFile(i) {
+  currentFile = files[i];
+  renderFileList();
+  const ext = getExt(currentFile.name);
+
+  document.getElementById('toolbar-filename').textContent = currentFile.name;
+  document.getElementById('viewer-toolbar').style.display = 'flex';
+  document.getElementById('empty-state').style.display = 'none';
+  document.getElementById('pdf-container').style.display = 'none';
+  document.getElementById('docx-container').style.display = 'none';
+  document.getElementById('xlsx-container').style.display = 'none';
+  document.getElementById('pptx-container').style.display = 'none';
+  document.getElementById('page-nav').style.display = 'none';
+  document.getElementById('zoom-controls').style.display = 'none';
+
+  showLoading(true);
+
+  try {
+    if (ext === 'pdf') await renderPDF(currentFile);
+    else if (ext === 'docx' || ext === 'doc') await renderDOCX(currentFile);
+    else if (ext === 'xlsx' || ext === 'xls') await renderXLSX(currentFile);
+    else if (ext === 'pptx' || ext === 'ppt') renderPPTX();
+    else showToast('지원하지 않는 포맷이에요.', 'error');
+  } catch(e) {
+    showToast('파일을 불러오는 중 오류가 발생했어요.', 'error');
+    console.error(e);
+  } finally {
+    showLoading(false);
+  }
+}
+
+function showEmptyState() {
+  document.getElementById('viewer-toolbar').style.display = 'none';
+  document.getElementById('empty-state').style.display = 'flex';
+  document.getElementById('pdf-container').style.display = 'none';
+  document.getElementById('docx-container').style.display = 'none';
+  document.getElementById('xlsx-container').style.display = 'none';
+  document.getElementById('pptx-container').style.display = 'none';
+}
+
+// ── PDF 렌더 ──
+async function renderPDF(file) {
+  const arrayBuffer = await file.arrayBuffer();
+  pdfDoc = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+  totalPages = pdfDoc.numPages;
+  currentPage = 1;
+  zoom = 1.0;
+
+  document.getElementById('page-nav').style.display = 'flex';
+  document.getElementById('zoom-controls').style.display = 'flex';
+  document.getElementById('pdf-container').style.display = 'flex';
+
+  await renderPDFPages();
+  showToast(`PDF 로드 완료 — ${totalPages}페이지`, 'success');
+}
+
+async function renderPDFPages() {
+  const container = document.getElementById('pdf-container');
+  container.innerHTML = '';
+
+  document.getElementById('page-info').textContent = `${currentPage} / ${totalPages}`;
+  document.getElementById('prev-page').disabled = currentPage <= 1;
+  document.getElementById('next-page').disabled = currentPage >= totalPages;
+  document.getElementById('zoom-value').textContent = Math.round(zoom * 100) + '%';
+
+  // 현재 페이지만 렌더 (성능)
+  const page = await pdfDoc.getPage(currentPage);
+  const viewport = page.getViewport({ scale: zoom * 1.5 });
+  const canvas = document.createElement('canvas');
+  canvas.width = viewport.width;
+  canvas.height = viewport.height;
+  const ctx = canvas.getContext('2d');
+  await page.render({ canvasContext: ctx, viewport }).promise;
+  container.appendChild(canvas);
+
+  // 나머지 페이지 미리 로드 (백그라운드)
+  for (let p = 1; p <= Math.min(totalPages, 3); p++) {
+    if (p === currentPage) continue;
+    const pg = await pdfDoc.getPage(p);
+    const vp = pg.getViewport({ scale: zoom * 1.5 });
+    const c = document.createElement('canvas');
+    c.width = vp.width; c.height = vp.height;
+    c.style.opacity = '0.4';
+    await pg.render({ canvasContext: c.getContext('2d'), viewport: vp }).promise;
+    container.appendChild(c);
+  }
+}
+
+async function changePage(delta) {
+  const next = currentPage + delta;
+  if (next < 1 || next > totalPages) return;
+  currentPage = next;
+  showLoading(true);
+  await renderPDFPages();
+  showLoading(false);
+  document.getElementById('viewer-content').scrollTop = 0;
+}
+
+async function changeZoom(delta) {
+  zoom = Math.max(0.4, Math.min(3.0, zoom + delta));
+  showLoading(true);
+  await renderPDFPages();
+  showLoading(false);
+}
+
+// ── DOCX 렌더 ──
+async function renderDOCX(file) {
+  const arrayBuffer = await file.arrayBuffer();
+  const result = await mammoth.convertToHtml({ arrayBuffer });
+  const container = document.getElementById('docx-container');
+  container.innerHTML = result.value;
+  container.style.display = 'block';
+  showToast('DOCX 로드 완료', 'success');
+}
+
+// ── XLSX 렌더 ──
+async function renderXLSX(file) {
+  const arrayBuffer = await file.arrayBuffer();
+  xlsxWorkbook = XLSX.read(arrayBuffer, { type: 'array' });
+  currentSheet = 0;
+  renderSheet(0);
+  showToast(`XLSX 로드 완료 — ${xlsxWorkbook.SheetNames.length}개 시트`, 'success');
+}
+
+function renderSheet(idx) {
+  currentSheet = idx;
+  const container = document.getElementById('xlsx-container');
+  container.style.display = 'block';
+
+  const sheetNames = xlsxWorkbook.SheetNames;
+  const tabs = sheetNames.map((n, i) =>
+    `<div class="sheet-tab ${i===idx?'active':''}" onclick="renderSheet(${i})">${n}</div>`
+  ).join('');
+
+  const ws = xlsxWorkbook.Sheets[sheetNames[idx]];
+  const data = XLSX.utils.sheet_to_json(ws, { header: 1, defval: '' });
+
+  if (!data.length) {
+    container.innerHTML = `<div class="xlsx-sheet-tabs">${tabs}</div><div style="padding:40px;text-align:center;color:var(--muted);font-size:12px">빈 시트입니다</div>`;
+    return;
+  }
+
+  const maxCols = Math.max(...data.map(r => r.length));
+  const colLetters = Array.from({length: maxCols}, (_, i) =>
+    String.fromCharCode(65 + (i % 26))
+  );
+
+  const thead = `<tr><th class="row-num">#</th>${colLetters.map(l=>`<th>${l}</th>`).join('')}</tr>`;
+  const tbody = data.map((row, ri) =>
+    `<tr><td class="row-num">${ri+1}</td>${colLetters.map((_,ci)=>`<td>${row[ci] ?? ''}</td>`).join('')}</tr>`
+  ).join('');
+
+  container.innerHTML = `
+    <div class="xlsx-sheet-tabs">${tabs}</div>
+    <div class="xlsx-table-wrap">
+      <table class="xlsx-table">
+        <thead>${thead}</thead>
+        <tbody>${tbody}</tbody>
+      </table>
+    </div>
+  `;
+}
+
+// ── PPTX ──
+function renderPPTX() {
+  document.getElementById('pptx-container').style.display = 'flex';
+  showToast('PPTX 뷰어는 곧 지원될 예정이에요', 'info');
+}
+
+// ── 변환 ──
+function toggleConvert() {
+  const d = document.getElementById('convert-dropdown');
+  d.classList.toggle('open');
+  document.addEventListener('click', function handler(e) {
+    if (!e.target.closest('.convert-wrap')) {
+      d.classList.remove('open');
+      document.removeEventListener('click', handler);
+    }
+  }, { capture: true });
+}
+
+function doConvert(targetExt) {
+  document.getElementById('convert-dropdown').classList.remove('open');
+  if (!currentFile) return;
+  const ext = getExt(currentFile.name);
+  if (ext === targetExt) {
+    showToast('이미 같은 형식이에요.', 'info');
+    return;
+  }
+  // XLSX → CSV 직접 변환 (실제 구현)
+  if ((ext === 'xlsx' || ext === 'xls') && targetExt === 'pdf') {
+    showToast('PDF 변환은 서버 연동 후 지원될 예정이에요 (Cloudflare Workers)', 'info');
+    return;
+  }
+  showToast(`${ext.toUpperCase()} → ${targetExt.toUpperCase()} 변환은 서버 연동 후 지원될 예정이에요`, 'info');
+}
+
+// ── 확장명 변경(다운로드) ──
+function sanitizeExt(extRaw) {
+  let ext = (extRaw || '').trim().toLowerCase();
+  if (ext.startsWith('.')) ext = ext.slice(1);
+  // 영숫자 + 일부 기호(+-_) 허용
+  ext = ext.replace(/[^a-z0-9+_-]/g, '');
+  if (!ext) return '';
+  return ext.slice(0, 12);
+}
+
+function splitName(name) {
+  const lastDot = name.lastIndexOf('.');
+  if (lastDot <= 0) return { base: name, ext: '' };
+  return { base: name.slice(0, lastDot), ext: name.slice(lastDot + 1) };
+}
+
+function updateRenamePreview() {
+  const cur = currentFile ? currentFile.name : '';
+  const { base, ext: oldExt } = splitName(cur || 'file');
+  const chosen = sanitizeExt(document.getElementById('rename-ext-input').value);
+  const next = chosen ? `${base}.${chosen}` : `${base}.${oldExt || 'ext'}`;
+  document.getElementById('rename-preview').textContent = next;
+}
+
+function openRenameModal() {
+  document.getElementById('convert-dropdown').classList.remove('open');
+  if (!currentFile) {
+    showToast('먼저 파일을 열어주세요.', 'info');
+    return;
+  }
+  const modal = document.getElementById('rename-modal');
+  const { ext } = splitName(currentFile.name);
+  document.getElementById('rename-current').textContent = currentFile.name;
+  document.getElementById('rename-ext-select').value = ext || '';
+  document.getElementById('rename-ext-input').value = ext || '';
+  updateRenamePreview();
+  modal.classList.add('show');
+  // 포커스
+  setTimeout(() => document.getElementById('rename-ext-input').focus(), 0);
+}
+
+function closeRenameModal() {
+  document.getElementById('rename-modal').classList.remove('show');
+}
+
+function syncRenameExtFromSelect() {
+  const v = document.getElementById('rename-ext-select').value;
+  document.getElementById('rename-ext-input').value = v || '';
+  updateRenamePreview();
+}
+
+function syncRenameExtFromInput() {
+  const v = sanitizeExt(document.getElementById('rename-ext-input').value);
+  // 입력 중에도 값 정리
+  if (document.getElementById('rename-ext-input').value !== v) {
+    document.getElementById('rename-ext-input').value = v;
+  }
+  document.getElementById('rename-ext-select').value = v || '';
+  updateRenamePreview();
+}
+
+async function downloadRenamed() {
+  if (!currentFile) return;
+  const nextExt = sanitizeExt(document.getElementById('rename-ext-input').value);
+  if (!nextExt) {
+    showToast('확장자를 입력하거나 선택해주세요.', 'error');
+    return;
+  }
+
+  const { base } = splitName(currentFile.name);
+  const nextName = `${base}.${nextExt}`;
+
+  try {
+    showLoading(true);
+    const ab = await currentFile.arrayBuffer();
+    const blob = new Blob([ab], { type: currentFile.type || 'application/octet-stream' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = nextName;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1500);
+    closeRenameModal();
+    showToast(`다운로드 준비 완료: ${nextName}`, 'success');
+  } catch (e) {
+    console.error(e);
+    showToast('다운로드 준비 중 오류가 발생했어요.', 'error');
+  } finally {
+    showLoading(false);
+  }
+}
+
+// ── 키보드 단축키 ──
+document.addEventListener('keydown', e => {
+  if (!currentFile) return;
+  if (e.key === 'ArrowRight' || e.key === 'ArrowDown') changePage(1);
+  if (e.key === 'ArrowLeft'  || e.key === 'ArrowUp')   changePage(-1);
+  if (e.key === '+' || e.key === '=') changeZoom(0.2);
+  if (e.key === '-') changeZoom(-0.2);
+  if (e.key === 'Escape') closeRenameModal();
+});
+</script>
+</body>
+</html>
