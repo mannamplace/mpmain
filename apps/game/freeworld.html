@@ -1,0 +1,542 @@
+<div style="padding: 1rem 0;">
+<h2 class="sr-only">마인크래프트 스타일 생존 시뮬레이션 게임</h2>
+
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  
+  #game-container { 
+    background: var(--color-background-primary); 
+    border: 0.5px solid var(--color-border-tertiary); 
+    border-radius: var(--border-radius-lg); 
+    padding: 1rem;
+    font-family: var(--font-sans);
+  }
+  
+  .game-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 0.5px solid var(--color-border-tertiary);
+  }
+  
+  .stat-bar {
+    background: var(--color-background-secondary);
+    border-radius: var(--border-radius-md);
+    padding: 0.5rem 0.75rem;
+    font-size: 13px;
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+  
+  .stat-item { 
+    display: flex; 
+    align-items: center; 
+    gap: 4px; 
+  }
+  
+  .stat-label { 
+    color: var(--color-text-secondary); 
+  }
+  
+  .stat-value { 
+    font-weight: 500; 
+    color: var(--color-text-primary); 
+  }
+  
+  .world-view {
+    background: linear-gradient(to bottom, #87CEEB 0%, #E0F6FF 40%, #90EE90 60%, #228B22 100%);
+    border: 0.5px solid var(--color-border-tertiary);
+    border-radius: var(--border-radius-md);
+    height: 300px;
+    position: relative;
+    overflow: hidden;
+    margin-bottom: 1rem;
+  }
+  
+  .player {
+    position: absolute;
+    bottom: 80px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 32px;
+    height: 48px;
+    background: #FFA07A;
+    border: 2px solid #333;
+    border-radius: 4px;
+  }
+  
+  .ground {
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+    height: 80px;
+    background: #8B4513;
+    border-top: 2px solid #654321;
+  }
+  
+  .resource {
+    position: absolute;
+    width: 24px;
+    height: 24px;
+    border-radius: 4px;
+    border: 2px solid #333;
+    cursor: pointer;
+    transition: transform 0.1s;
+  }
+  
+  .resource:hover { transform: scale(1.2); }
+  
+  .action-panel {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+  }
+  
+  .action-btn {
+    background: var(--color-background-secondary);
+    border: 0.5px solid var(--color-border-secondary);
+    border-radius: var(--border-radius-md);
+    padding: 0.75rem;
+    cursor: pointer;
+    transition: all 0.15s;
+    font-size: 13px;
+    color: var(--color-text-primary);
+    font-family: var(--font-sans);
+  }
+  
+  .action-btn:hover {
+    background: var(--color-background-tertiary);
+    border-color: var(--color-border-primary);
+  }
+  
+  .action-btn:active { transform: scale(0.98); }
+  
+  .action-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+  
+  .inventory {
+    background: var(--color-background-secondary);
+    border: 0.5px solid var(--color-border-tertiary);
+    border-radius: var(--border-radius-md);
+    padding: 1rem;
+    margin-bottom: 1rem;
+  }
+  
+  .inventory-title {
+    font-weight: 500;
+    margin-bottom: 0.75rem;
+    font-size: 14px;
+    color: var(--color-text-primary);
+  }
+  
+  .inventory-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+    gap: 0.5rem;
+  }
+  
+  .inventory-item {
+    background: var(--color-background-primary);
+    border: 0.5px solid var(--color-border-tertiary);
+    border-radius: var(--border-radius-md);
+    padding: 0.5rem;
+    text-align: center;
+    font-size: 12px;
+  }
+  
+  .item-icon {
+    font-size: 20px;
+    margin-bottom: 4px;
+  }
+  
+  .item-count {
+    font-weight: 500;
+    color: var(--color-text-primary);
+  }
+  
+  .crafting-panel {
+    background: var(--color-background-secondary);
+    border: 0.5px solid var(--color-border-tertiary);
+    border-radius: var(--border-radius-md);
+    padding: 1rem;
+    margin-bottom: 1rem;
+  }
+  
+  .recipe-list {
+    display: grid;
+    gap: 0.5rem;
+  }
+  
+  .recipe {
+    background: var(--color-background-primary);
+    border: 0.5px solid var(--color-border-tertiary);
+    border-radius: var(--border-radius-md);
+    padding: 0.75rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 13px;
+  }
+  
+  .recipe-info { flex: 1; }
+  
+  .recipe-name {
+    font-weight: 500;
+    margin-bottom: 4px;
+    color: var(--color-text-primary);
+  }
+  
+  .recipe-reqs {
+    color: var(--color-text-secondary);
+    font-size: 12px;
+  }
+  
+  .craft-btn {
+    padding: 0.5rem 1rem;
+    background: transparent;
+    border: 0.5px solid var(--color-border-secondary);
+    border-radius: var(--border-radius-md);
+    cursor: pointer;
+    font-size: 13px;
+    font-family: var(--font-sans);
+    color: var(--color-text-primary);
+    transition: all 0.15s;
+  }
+  
+  .craft-btn:hover {
+    background: var(--color-background-secondary);
+  }
+  
+  .craft-btn:active { transform: scale(0.98); }
+  
+  .craft-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+  
+  .log {
+    background: var(--color-background-secondary);
+    border: 0.5px solid var(--color-border-tertiary);
+    border-radius: var(--border-radius-md);
+    padding: 1rem;
+    max-height: 120px;
+    overflow-y: auto;
+  }
+  
+  .log-entry {
+    font-size: 12px;
+    color: var(--color-text-secondary);
+    margin-bottom: 4px;
+  }
+  
+  .log-entry:last-child { margin-bottom: 0; }
+</style>
+
+<div id="game-container">
+  <div class="game-header">
+    <div style="font-weight: 500; font-size: 15px;">마인크래프트 생존</div>
+    <div id="season-display" style="font-size: 13px; color: var(--color-text-secondary);">봄 - 1일차</div>
+  </div>
+  
+  <div class="stat-bar">
+    <div class="stat-item">
+      <span class="stat-label">❤️ 체력:</span>
+      <span class="stat-value" id="health">100</span>
+    </div>
+    <div class="stat-item">
+      <span class="stat-label">🍖 배고픔:</span>
+      <span class="stat-value" id="hunger">100</span>
+    </div>
+    <div class="stat-item">
+      <span class="stat-label">🌡️ 온도:</span>
+      <span class="stat-value" id="temperature">20°C</span>
+    </div>
+    <div class="stat-item">
+      <span class="stat-label">⚡ 속도:</span>
+      <span class="stat-value" id="speed">100%</span>
+    </div>
+  </div>
+  
+  <div class="world-view" id="world">
+    <div class="player"></div>
+    <div class="ground"></div>
+  </div>
+  
+  <div class="action-panel">
+    <button class="action-btn" onclick="gatherResource()">⛏️ 조약돌 줍기</button>
+    <button class="action-btn" onclick="mine()">⛏️ 채광하기</button>
+    <button class="action-btn" onclick="hunt()">🗡️ 사냥하기</button>
+    <button class="action-btn" onclick="fish()">🎣 낚시하기</button>
+    <button class="action-btn" onclick="farm()">🌾 농사짓기</button>
+    <button class="action-btn" onclick="rest()">💤 휴식하기</button>
+  </div>
+  
+  <div class="inventory">
+    <div class="inventory-title">인벤토리</div>
+    <div class="inventory-grid" id="inventory-grid"></div>
+  </div>
+  
+  <div class="crafting-panel">
+    <div class="inventory-title">제작</div>
+    <div class="recipe-list" id="recipe-list"></div>
+  </div>
+  
+  <div class="log" id="log"></div>
+</div>
+
+<script>
+const gameState = {
+  day: 1,
+  season: 0, // 0=봄, 1=여름, 2=가을, 3=겨울
+  health: 100,
+  hunger: 100,
+  temperature: 20,
+  inventory: {
+    '조약돌': 0,
+    '나무': 0,
+    '박힌돌': 0,
+    '청동광석': 0,
+    '철광석': 0,
+    '금광석': 0,
+    '석탄': 0,
+    '고기': 0,
+    '가죽': 0,
+    '생선': 0,
+    '밀': 0,
+    '소금': 0
+  },
+  tools: {
+    pickaxe: '맨손', // 맨손, 돌, 청동, 철
+    sword: '맨손',
+    axe: '맨손'
+  }
+};
+
+const seasons = ['봄', '여름', '가을', '겨울'];
+const seasonTemps = [20, 30, 15, 5];
+
+const recipes = [
+  { name: '제작대', requires: { '나무': 4, '조약돌': 2 }, makes: '제작대', tool: false },
+  { name: '돌 곡괭이', requires: { '조약돌': 3, '나무': 2 }, makes: 'pickaxe', level: '돌' },
+  { name: '돌 검', requires: { '조약돌': 2, '나무': 1 }, makes: 'sword', level: '돌' },
+  { name: '돌 도끼', requires: { '조약돌': 3, '나무': 2 }, makes: 'axe', level: '돌' },
+  { name: '청동 곡괭이', requires: { '청동광석': 3, '나무': 2, '석탄': 1 }, makes: 'pickaxe', level: '청동' },
+  { name: '청동 검', requires: { '청동광석': 2, '나무': 1, '석탄': 1 }, makes: 'sword', level: '청동' },
+  { name: '철 곡괭이', requires: { '철광석': 3, '나무': 2, '석탄': 2 }, makes: 'pickaxe', level: '철' },
+  { name: '철 검', requires: { '철광석': 2, '나무': 1, '석탄': 2 }, makes: 'sword', level: '철' },
+  { name: '가죽 투구', requires: { '가죽': 5 }, makes: 'helmet', level: '가죽' },
+  { name: '가죽 갑옷', requires: { '가죽': 8 }, makes: 'armor', level: '가죽' }
+];
+
+function log(message) {
+  const logEl = document.getElementById('log');
+  const entry = document.createElement('div');
+  entry.className = 'log-entry';
+  entry.textContent = `[${seasons[gameState.season]} ${gameState.day}일] ${message}`;
+  logEl.insertBefore(entry, logEl.firstChild);
+  if (logEl.children.length > 10) {
+    logEl.removeChild(logEl.lastChild);
+  }
+}
+
+function updateUI() {
+  document.getElementById('health').textContent = Math.round(gameState.health);
+  document.getElementById('hunger').textContent = Math.round(gameState.hunger);
+  document.getElementById('temperature').textContent = Math.round(gameState.temperature) + '°C';
+  
+  const tempDiff = Math.abs(gameState.temperature - 20);
+  const speedPenalty = Math.min(tempDiff * 2, 40);
+  const speed = Math.max(60, 100 - speedPenalty);
+  document.getElementById('speed').textContent = Math.round(speed) + '%';
+  
+  document.getElementById('season-display').textContent = `${seasons[gameState.season]} - ${gameState.day}일차`;
+  
+  const grid = document.getElementById('inventory-grid');
+  grid.innerHTML = '';
+  
+  const icons = {
+    '조약돌': '🪨',
+    '나무': '🪵',
+    '박힌돌': '⛰️',
+    '청동광석': '🟫',
+    '철광석': '⚫',
+    '금광석': '🟡',
+    '석탄': '⬛',
+    '고기': '🥩',
+    '가죽': '🟤',
+    '생선': '🐟',
+    '밀': '🌾',
+    '소금': '🧂'
+  };
+  
+  for (const [item, count] of Object.entries(gameState.inventory)) {
+    if (count > 0) {
+      const div = document.createElement('div');
+      div.className = 'inventory-item';
+      div.innerHTML = `<div class="item-icon">${icons[item] || '📦'}</div><div style="font-size: 11px; color: var(--color-text-secondary);">${item}</div><div class="item-count">×${count}</div>`;
+      grid.appendChild(div);
+    }
+  }
+  
+  updateRecipes();
+}
+
+function updateRecipes() {
+  const list = document.getElementById('recipe-list');
+  list.innerHTML = '';
+  
+  recipes.forEach(recipe => {
+    const div = document.createElement('div');
+    div.className = 'recipe';
+    
+    const canCraft = Object.entries(recipe.requires).every(([item, needed]) => 
+      gameState.inventory[item] >= needed
+    );
+    
+    const reqText = Object.entries(recipe.requires)
+      .map(([item, count]) => `${item} ×${count}`)
+      .join(', ');
+    
+    div.innerHTML = `
+      <div class="recipe-info">
+        <div class="recipe-name">${recipe.name}</div>
+        <div class="recipe-reqs">${reqText}</div>
+      </div>
+      <button class="craft-btn" onclick="craft('${recipe.name}')" ${!canCraft ? 'disabled' : ''}>제작</button>
+    `;
+    
+    list.appendChild(div);
+  });
+}
+
+function craft(recipeName) {
+  const recipe = recipes.find(r => r.name === recipeName);
+  if (!recipe) return;
+  
+  const canCraft = Object.entries(recipe.requires).every(([item, needed]) => 
+    gameState.inventory[item] >= needed
+  );
+  
+  if (!canCraft) {
+    log('재료가 부족합니다!');
+    return;
+  }
+  
+  Object.entries(recipe.requires).forEach(([item, count]) => {
+    gameState.inventory[item] -= count;
+  });
+  
+  if (recipe.tool) {
+    gameState.tools[recipe.makes] = recipe.level;
+    log(`${recipe.name}을(를) 제작했습니다! (도구 등급: ${recipe.level})`);
+  } else {
+    log(`${recipe.name}을(를) 제작했습니다!`);
+  }
+  
+  updateUI();
+}
+
+function gatherResource() {
+  const amount = Math.floor(Math.random() * 3) + 1;
+  gameState.inventory['조약돌'] += amount;
+  consumeHunger(2);
+  log(`조약돌 ${amount}개를 주웠습니다.`);
+  updateUI();
+}
+
+function mine() {
+  const pickLevel = gameState.tools.pickaxe;
+  
+  if (pickLevel === '맨손') {
+    log('곡괭이가 필요합니다!');
+    return;
+  }
+  
+  let ores = ['박힌돌', '석탄'];
+  if (pickLevel === '돌' || pickLevel === '청동' || pickLevel === '철') {
+    ores.push('청동광석', '소금');
+  }
+  if (pickLevel === '청동' || pickLevel === '철') {
+    ores.push('철광석');
+  }
+  if (pickLevel === '철') {
+    ores.push('금광석');
+  }
+  
+  const ore = ores[Math.floor(Math.random() * ores.length)];
+  const amount = Math.floor(Math.random() * 2) + 1;
+  gameState.inventory[ore] += amount;
+  consumeHunger(5);
+  log(`${ore} ${amount}개를 캤습니다.`);
+  updateUI();
+}
+
+function hunt() {
+  const swordLevel = gameState.tools.sword;
+  const baseAmount = swordLevel === '맨손' ? 1 : swordLevel === '돌' ? 2 : swordLevel === '청동' ? 3 : 4;
+  
+  const meat = Math.floor(Math.random() * baseAmount) + 1;
+  const leather = Math.floor(Math.random() * 2);
+  
+  gameState.inventory['고기'] += meat;
+  gameState.inventory['가죽'] += leather;
+  consumeHunger(8);
+  
+  log(`사냥 성공! 고기 ${meat}개, 가죽 ${leather}개를 얻었습니다.`);
+  updateUI();
+}
+
+function fish() {
+  const amount = Math.floor(Math.random() * 3) + 1;
+  gameState.inventory['생선'] += amount;
+  consumeHunger(3);
+  log(`생선 ${amount}마리를 잡았습니다.`);
+  updateUI();
+}
+
+function farm() {
+  const amount = Math.floor(Math.random() * 5) + 2;
+  gameState.inventory['밀'] += amount;
+  consumeHunger(4);
+  log(`밀 ${amount}개를 수확했습니다.`);
+  updateUI();
+}
+
+function rest() {
+  gameState.health = Math.min(100, gameState.health + 20);
+  gameState.hunger = Math.max(0, gameState.hunger - 10);
+  advanceDay();
+  log('휴식을 취했습니다. 하루가 지나갔습니다.');
+  updateUI();
+}
+
+function consumeHunger(amount) {
+  gameState.hunger -= amount;
+  if (gameState.hunger <= 0) {
+    gameState.hunger = 0;
+    gameState.health -= 5;
+    log('⚠️ 배가 고파서 체력이 감소했습니다!');
+  }
+}
+
+function advanceDay() {
+  gameState.day++;
+  if (gameState.day > 30) {
+    gameState.day = 1;
+    gameState.season = (gameState.season + 1) % 4;
+    log(`계절이 ${seasons[gameState.season]}(으)로 바뀌었습니다!`);
+  }
+  
+  gameState.temperature = seasonTemps[gameState.season] + (Math.random() * 10 - 5);
+}
+
+updateUI();
+log('게임 시작! 조약돌을 주워 돌 곡괭이를 만들어보세요.');
+</script>
+</div>

@@ -1,0 +1,1021 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>DREAM DESCENT 💤</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Exo+2:wght@300;400;600&display=swap');
+
+:root {
+  --bg:       #06040f;
+  --lane-c:   #0d0a1e;
+  --lane-w:   340px;
+  --blue:     #38bdf8;
+  --blue-dim: #0c3d55;
+  --red:      #f43f5e;
+  --red-dim:  #4a0d1a;
+  --gold:     #facc15;
+  --purple:   #a78bfa;
+  --white:    #f0eaff;
+  --sleep-c:  #60d4f4;
+  --power-c:  #f97316;
+  --gutter:   18px;
+}
+
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+
+html, body {
+  width: 100%; height: 100%;
+  background: var(--bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Exo 2', sans-serif;
+  overflow: hidden;
+  color: var(--white);
+}
+
+/* ── SCREENS ─────────────────────────────────── */
+.screen {
+  position: fixed; inset: 0;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  z-index: 200;
+  background: var(--bg);
+  gap: 14px;
+  transition: opacity .4s;
+}
+.screen.hidden { opacity: 0; pointer-events: none; }
+
+.screen h1 {
+  font-family: 'Orbitron', monospace;
+  font-weight: 900;
+  font-size: clamp(1.8rem, 7vw, 3.2rem);
+  letter-spacing: 6px;
+  color: var(--gold);
+  text-shadow: 0 0 40px #facc1588, 0 0 80px #facc1544;
+  animation: pulse 2.5s ease-in-out infinite;
+}
+.screen .subtitle {
+  font-size: .95rem; color: var(--purple);
+  letter-spacing: 2px; text-transform: uppercase;
+}
+.screen .hint-grid {
+  display: grid; grid-template-columns: 1fr 1fr;
+  gap: 8px 20px; margin: 6px 0;
+  font-size: .82rem; color: #8b7fae;
+}
+.hint-grid span { white-space: nowrap; }
+.hint-grid b { color: var(--white); }
+
+.btn {
+  margin-top: 10px;
+  padding: 13px 44px;
+  font-family: 'Orbitron', monospace;
+  font-size: 1rem; font-weight: 700;
+  letter-spacing: 3px;
+  border: 2px solid var(--gold);
+  background: transparent;
+  color: var(--gold);
+  cursor: pointer;
+  clip-path: polygon(8px 0%, 100% 0%, calc(100% - 8px) 100%, 0% 100%);
+  transition: background .2s, color .2s, box-shadow .2s;
+}
+.btn:hover {
+  background: var(--gold);
+  color: #000;
+  box-shadow: 0 0 30px #facc1566;
+}
+
+@keyframes pulse { 0%,100%{text-shadow:0 0 30px #facc1588} 50%{text-shadow:0 0 70px #facc15cc,0 0 120px #facc1555} }
+
+/* ── GAME LAYOUT ─────────────────────────────── */
+#game-root {
+  position: relative;
+  width: var(--lane-w);
+  height: 100vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+/* HUD */
+#hud {
+  position: absolute; top: 0; left: 0; right: 0;
+  z-index: 10;
+  padding: 10px 14px 8px;
+  background: linear-gradient(180deg, rgba(6,4,15,.95) 70%, transparent);
+  display: flex; flex-direction: column; gap: 5px;
+}
+.hud-row { display: flex; align-items: center; gap: 8px; }
+.hud-label {
+  font-family: 'Orbitron', monospace;
+  font-size: .6rem; letter-spacing: 2px;
+  color: var(--purple); width: 52px; flex-shrink: 0;
+}
+.bar-track {
+  flex: 1; height: 9px; border-radius: 99px;
+  background: rgba(255,255,255,0.07);
+  border: 1px solid rgba(255,255,255,0.1);
+  overflow: hidden;
+}
+.bar-fill { height: 100%; border-radius: 99px; transition: width .2s; }
+#sleep-fill { background: linear-gradient(90deg, #38bdf8, #818cf8); }
+#power-fill { background: linear-gradient(90deg, #f97316, #facc15); }
+.hud-score {
+  font-family: 'Orbitron', monospace;
+  font-size: .75rem; color: var(--gold);
+  letter-spacing: 2px; text-align: right;
+}
+.hud-branch {
+  font-size: .68rem; letter-spacing: 1px;
+  text-align: center; padding: 1px 0;
+}
+
+/* CANVAS */
+#gc {
+  position: absolute; inset: 0;
+  width: 100%; height: 100%;
+}
+
+/* CONTROLS HINT */
+#ctrl-hint {
+  position: absolute; bottom: 10px; left: 0; right: 0;
+  text-align: center;
+  font-size: .65rem; color: #4a3d6a;
+  letter-spacing: 1px;
+  pointer-events: none;
+}
+
+/* MESSAGE TOAST */
+#toast {
+  position: absolute; bottom: 80px;
+  left: 50%; transform: translateX(-50%);
+  font-family: 'Orbitron', monospace;
+  font-size: .7rem; letter-spacing: 2px;
+  background: rgba(0,0,0,.7);
+  padding: 6px 18px; border-radius: 99px;
+  white-space: nowrap;
+  opacity: 0; transition: opacity .3s;
+  pointer-events: none; z-index: 20;
+}
+#toast.show { opacity: 1; }
+</style>
+</head>
+<body>
+
+<!-- TITLE SCREEN -->
+<div class="screen" id="title-screen">
+  <div style="font-size:3.5rem;line-height:1;animation:pulse 2s infinite">🌙</div>
+  <h1>DREAM DESCENT</h1>
+  <div class="subtitle">Sleep to survive · Fight the Dark-Eyed Boss</div>
+  <div class="hint-grid">
+    <span>🛏️ Land on <b>beds</b> → charge sleep</span>
+    <span>☁️ Jump on <b>clouds</b></span>
+    <span style="color:var(--blue)">🔵 <b>Blue lane</b> → bonus sleep</span>
+    <span style="color:var(--red)">🔴 <b>Red lane</b> → danger zone</span>
+    <span>⬅️ ➡️ or <b>A/D</b> → move</span>
+    <span>⬆️ / <b>Space</b> → jump</span>
+    <span>🎯 <b>X</b> or tap → boss attack</span>
+    <span>📏 Survive <b>5 000m</b> to fight</span>
+  </div>
+  <button class="btn" onclick="startGame()">START GAME</button>
+</div>
+
+<!-- OVERLAY (game over / win) -->
+<div class="screen hidden" id="overlay">
+  <div id="ov-emoji" style="font-size:3rem"></div>
+  <h1 id="ov-title" style="font-size:2rem"></h1>
+  <div id="ov-msg" style="color:var(--purple);font-size:.9rem;text-align:center;max-width:260px"></div>
+  <div id="ov-score" style="font-family:'Orbitron',monospace;color:var(--gold);font-size:1.1rem;margin-top:4px"></div>
+  <button class="btn" onclick="restartGame()" style="margin-top:18px">PLAY AGAIN</button>
+</div>
+
+<!-- GAME -->
+<div id="game-root" style="display:none">
+  <div id="hud">
+    <div class="hud-row">
+      <span class="hud-label">💤 SLEEP</span>
+      <div class="bar-track"><div class="bar-fill" id="sleep-fill" style="width:0%"></div></div>
+      <span class="hud-score" id="score-el">0m</span>
+    </div>
+    <div class="hud-row">
+      <span class="hud-label">⚡ POWER</span>
+      <div class="bar-track"><div class="bar-fill" id="power-fill" style="width:0%"></div></div>
+    </div>
+    <div class="hud-branch" id="branch-el"></div>
+  </div>
+  <canvas id="gc"></canvas>
+  <div id="toast"></div>
+  <div id="ctrl-hint">← → MOVE &nbsp;|&nbsp; ↑ JUMP &nbsp;|&nbsp; X ATTACK (boss)</div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════
+//  CONSTANTS
+// ═══════════════════════════════════════════════════════
+const CW = 340, CH_VIS = window.innerHeight;
+const LANE_COUNT = 3;        // left / center / right
+const LANE_W = CW / LANE_COUNT;   // ~113px each
+const LANE_CX = [LANE_W*.5, LANE_W*1.5, LANE_W*2.5];
+
+// Lanes: 0=left, 1=center, 2=right
+// Colour zones: 0,1 normal | after 1000m random blue/red overlays
+const GRAVITY = 0.48;
+const JUMP_V  = -12;
+const SCROLL_BASE = 3.5;
+
+// Player dims
+const PW = 34, PH = 46;
+
+// ═══════════════════════════════════════════════════════
+//  CANVAS SETUP
+// ═══════════════════════════════════════════════════════
+const canvas = document.getElementById('gc');
+const ctx    = canvas.getContext('2d');
+
+function resizeCanvas() {
+  canvas.width  = CW;
+  canvas.height = window.innerHeight;
+}
+resizeCanvas();
+window.addEventListener('resize', resizeCanvas);
+
+// ═══════════════════════════════════════════════════════
+//  STATE
+// ═══════════════════════════════════════════════════════
+let state, raf, keys = {};
+
+function createState() {
+  return {
+    running:   true,
+    phase:     'run',   // 'run' | 'boss'
+    distance:  0,
+    sleepBar:  30,
+    powerBar:  0,
+    score:     0,
+
+    player: {
+      lane:     1,        // 0..2
+      x:        LANE_CX[1],
+      y:        CH_VIS * 0.6,
+      vy:       0,
+      onSolid:  false,
+      invincible: 0,
+      sleeping: 0,
+      targetX:  LANE_CX[1],
+    },
+
+    // world objects (in world-Y space; player stays at screenY 60%)
+    // worldY increases downward; camera follows player world pos
+    camY:   0,     // world Y of top of screen
+    playerWorldY: 0,
+
+    platforms: [],   // { wx, wy, w, h, type:'bed'|'cloud'|'floor' }
+    obstacles:  [],  // { wx, wy, w, h, type, lane }
+    branches:   [],  // { wy, side:'left'|'right', color:'blue'|'red', length }
+    particles:  [],
+    zzz:        [],
+    stars:      initStars(),
+    bgStripes:  initBgStripes(),
+
+    spawnY:     -600,   // world Y of next spawn (negative = above player start)
+    bossSpawnAt: -5000, // world Y trigger for boss
+
+    boss: null,
+    bossHit: 0,
+    bossMaxHP: 7,
+
+    laneColor: [null, null, null],  // per lane: null|'blue'|'red'
+    laneColorTimer: 0,
+
+    msgTimer: 0,
+  };
+}
+
+function initStars() {
+  const arr = [];
+  for (let i = 0; i < 80; i++)
+    arr.push({ x: Math.random()*CW, parallax: 0.05 + Math.random()*0.25,
+               y: Math.random()*5000, r: Math.random()*1.4+0.4,
+               tw: Math.random()*Math.PI*2 });
+  return arr;
+}
+
+function initBgStripes() {
+  // decorative vertical lines
+  const arr = [];
+  for (let i = 0; i < 6; i++)
+    arr.push({ x: 30 + i * 55, alpha: 0.03 + Math.random()*0.04 });
+  return arr;
+}
+
+// ═══════════════════════════════════════════════════════
+//  INPUT
+// ═══════════════════════════════════════════════════════
+window.addEventListener('keydown', e => {
+  if (['Space','ArrowUp','ArrowLeft','ArrowRight','KeyA','KeyD','KeyX','Tab'].includes(e.code))
+    e.preventDefault();
+  keys[e.code] = true;
+  if (e.code === 'Space' || e.code === 'ArrowUp' || e.code === 'Tab') doJump();
+  if (e.code === 'KeyX') doPowerAtk();
+  if (e.code === 'ArrowLeft'  || e.code === 'KeyA') shiftLane(-1);
+  if (e.code === 'ArrowRight' || e.code === 'KeyD') shiftLane(+1);
+});
+window.addEventListener('keyup', e => keys[e.code] = false);
+
+// Touch/swipe
+let tx0 = null, ty0 = null;
+canvas.addEventListener('touchstart', e => {
+  tx0 = e.touches[0].clientX;
+  ty0 = e.touches[0].clientY;
+}, {passive:true});
+canvas.addEventListener('touchend', e => {
+  if (tx0 === null) return;
+  const dx = e.changedTouches[0].clientX - tx0;
+  const dy = e.changedTouches[0].clientY - ty0;
+  if (Math.abs(dy) > Math.abs(dx) && dy < -20) doJump();
+  else if (dx < -20) shiftLane(-1);
+  else if (dx >  20) shiftLane(+1);
+  else doPowerAtk();
+  tx0 = ty0 = null;
+}, {passive:true});
+
+function shiftLane(dir) {
+  if (!state || !state.running) return;
+  const p = state.player;
+  const nl = Math.max(0, Math.min(2, p.lane + dir));
+  if (nl !== p.lane) {
+    p.lane = nl;
+    p.targetX = LANE_CX[nl];
+  }
+}
+function doJump() {
+  if (!state || !state.running) return;
+  const p = state.player;
+  if (p.onSolid) { p.vy = JUMP_V; p.onSolid = false; addZzz(p.x, state.playerWorldY - 10); }
+}
+function doPowerAtk() {
+  if (!state || state.phase !== 'boss' || !state.boss || state.powerBar < 15) return;
+  state.powerBar = Math.max(0, state.powerBar - 20);
+  state.boss.hp -= 1;
+  state.bossHit = 18;
+  addParticles(CW/2, canvas.height*0.35, '#facc15', 25);
+  updatePowerFill();
+  toast('⚡ SLEEP STRIKE!');
+  if (state.boss.hp <= 0) { state.boss.dead = true; setTimeout(()=>gameOver(true),1200); }
+}
+
+// ═══════════════════════════════════════════════════════
+//  SPAWNING
+// ═══════════════════════════════════════════════════════
+function spawnChunk(wy) {
+  // A chunk: floor platform + optional obstacles/beds/clouds + branches
+  const s = state;
+
+  // FLOOR PLATFORM (every chunk has a walkable strip)
+  // 2 or 3 lanes filled
+  const floorLanes = shuffle([0,1,2]).slice(0, 2 + (Math.random()<0.5?1:0));
+  floorLanes.forEach(l => {
+    s.platforms.push({ wx: l*LANE_W, wy, w: LANE_W, h: 14, type:'floor', lane: l });
+  });
+
+  // BED
+  if (Math.random() < 0.38) {
+    const bl = floorLanes[Math.floor(Math.random()*floorLanes.length)];
+    s.platforms.push({ wx: bl*LANE_W + LANE_W*0.15, wy: wy - 2, w: LANE_W*0.7, h: 14, type:'bed', lane: bl });
+  }
+
+  // CLOUD (bonus platform above)
+  if (Math.random() < 0.3) {
+    const cl = Math.floor(Math.random()*3);
+    s.platforms.push({ wx: cl*LANE_W + 8, wy: wy - 90, w: LANE_W - 16, h: 16, type:'cloud', lane: cl });
+  }
+
+  // OBSTACLES on non-floor lanes
+  const obstacleLanes = [0,1,2].filter(l => !floorLanes.includes(l));
+  if (Math.random() < 0.55 && obstacleLanes.length > 0) {
+    const ol = obstacleLanes[Math.floor(Math.random()*obstacleLanes.length)];
+    const types = ['alarm','coffee','pillow','spikes'];
+    s.obstacles.push({ wx: ol*LANE_W + LANE_W*0.2, wy: wy - 10,
+      w: LANE_W*0.6, h: 26, type: types[Math.floor(Math.random()*types.length)], lane: ol });
+  }
+
+  // BRANCH DECORATION
+  if (Math.random() < 0.45 && s.distance > 400) {
+    const side  = Math.random() < 0.5 ? 'left' : 'right';
+    const color = Math.random() < 0.5 ? 'blue' : 'red';
+    s.branches.push({ wy: wy - 30, side, color, length: 60 + Math.random()*60, alpha: 1 });
+    // Lane color hint
+    const lane = side === 'left' ? 0 : 2;
+    s.laneColor[lane] = color;
+    s.laneColorTimer = 300;
+    toast(color === 'blue' ? '🔵 Blue path — sleep bonus!' : '🔴 Red path — danger ahead!');
+    // Place effect for that lane
+    if (color === 'blue') {
+      // Extra bed on blue lane
+      s.platforms.push({ wx: lane*LANE_W + LANE_W*0.1, wy: wy - 50, w: LANE_W*0.8, h: 14, type:'bed', lane });
+    } else {
+      // Extra obstacle on red lane
+      s.obstacles.push({ wx: lane*LANE_W + LANE_W*0.15, wy: wy - 60,
+        w: LANE_W*0.7, h: 28, type:'spikes', lane });
+    }
+  }
+}
+
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}
+  return a;
+}
+
+// ═══════════════════════════════════════════════════════
+//  UPDATE
+// ═══════════════════════════════════════════════════════
+function update() {
+  if (!state.running) return;
+  const s = state;
+  const p = s.player;
+  const CH = canvas.height;
+
+  const scrollSpeed = s.phase === 'boss' ? 0 : SCROLL_BASE + s.distance / 3000;
+
+  // Scroll world up (playerWorldY goes negative = downward into dreamland)
+  s.playerWorldY -= scrollSpeed;
+  s.camY = s.playerWorldY - CH * 0.6;  // camera: player at 60% from top
+  s.distance += scrollSpeed * 0.06;
+  s.score = s.distance;
+  updateScore();
+
+  // Spawn chunks ahead
+  while (s.spawnY > s.playerWorldY - CH) {
+    spawnChunk(s.spawnY);
+    s.spawnY -= 160 + Math.random()*80;
+  }
+
+  // Cull old platforms/obstacles behind camera bottom
+  const cullY = s.camY + CH + 200;
+  s.platforms  = s.platforms.filter(o => o.wy < cullY);
+  s.obstacles  = s.obstacles.filter(o => o.wy < cullY);
+  s.branches   = s.branches.filter(o => o.wy < cullY);
+
+  // Lane color timer
+  if (s.laneColorTimer > 0) {
+    s.laneColorTimer--;
+    if (s.laneColorTimer === 0) s.laneColor = [null, null, null];
+  }
+
+  // Player X lerp
+  p.x += (p.targetX - p.x) * 0.22;
+
+  // Player gravity
+  p.vy += GRAVITY;
+  p.onSolid = false;
+  p.sleeping = 0;
+
+  // Platform collision
+  const pScreenY = p.y; // player is fixed at 60% of screen
+  const pWorldY  = s.playerWorldY;
+
+  for (const pl of s.platforms) {
+    const psy = toScreenY(pl.wy, s.camY);
+    // AABB in screen coords
+    const px1 = p.x - PW/2, px2 = p.x + PW/2;
+    const py1 = pScreenY,    py2 = pScreenY + PH;
+    const ox1 = pl.wx,       ox2 = pl.wx + pl.w;
+    const oy1 = psy,         oy2 = psy + pl.h;
+
+    if (px2 > ox1 && px1 < ox2 && py2 > oy1 && py1 < oy2 && p.vy >= 0) {
+      // land on top
+      p.vy = 0;
+      s.playerWorldY -= (py2 - oy1); // push up
+      p.onSolid = true;
+
+      if (pl.type === 'bed') {
+        p.sleeping = 1;
+        s.sleepBar = Math.min(100, s.sleepBar + 0.55);
+        updateSleepFill();
+        if (Math.random() < 0.06) addZzz(p.x, s.playerWorldY - 20);
+      }
+    }
+  }
+
+  // Obstacle collision
+  if (p.invincible === 0) {
+    for (const ob of s.obstacles) {
+      const osy = toScreenY(ob.wy, s.camY);
+      if (p.x + PW/2 > ob.wx && p.x - PW/2 < ob.wx + ob.w &&
+          pScreenY + PH > osy && pScreenY < osy + ob.h) {
+        s.sleepBar = Math.max(0, s.sleepBar - (ob.type === 'spikes' ? 28 : 18));
+        updateSleepFill();
+        p.invincible = 55;
+        p.vy = JUMP_V * 0.7;
+        addParticles(p.x, pScreenY + PH/2, '#f43f5e', 12);
+        toast(ob.type === 'spikes' ? '😱 SPIKED! Sleep drained!' : '💢 Hit! Sleep reduced!');
+        if (s.sleepBar <= 0 && s.phase === 'run') gameOver(false);
+        break;
+      }
+    }
+  }
+  if (p.invincible > 0) p.invincible--;
+
+  // Passive sleep drain
+  if (!p.sleeping && p.onSolid) s.sleepBar = Math.max(0, s.sleepBar - 0.015);
+  else if (!p.onSolid && !p.sleeping) s.sleepBar = Math.max(0, s.sleepBar - 0.008);
+  updateSleepFill();
+
+  // Check sleep death in run phase
+  if (s.sleepBar <= 0 && s.phase === 'run') { gameOver(false); return; }
+
+  // Boss trigger
+  if (s.phase === 'run' && s.distance >= 5000) spawnBoss();
+
+  // Boss logic
+  if (s.phase === 'boss' && s.boss && !s.boss.dead) {
+    const b = s.boss;
+    b.frame++;
+    if (s.bossHit > 0) s.bossHit--;
+
+    // Boss bobbing
+    b.screenY = CH * 0.28 + Math.sin(b.frame * 0.07) * 12;
+
+    // Boss charge attack every 140 frames
+    if (b.frame % 140 === 0) {
+      b.charging = 18;
+      toast('😤 Boss charges!');
+    }
+    if (b.charging > 0) {
+      b.screenX += (p.x - b.screenX) * 0.15;
+      b.charging--;
+      if (Math.abs(b.screenX - p.x) < 36 && p.invincible === 0) {
+        s.powerBar = Math.max(0, s.powerBar - 22);
+        updatePowerFill();
+        p.invincible = 65;
+        addParticles(p.x, pScreenY, '#be123c', 14);
+        toast('😵 Dark-Eye SLAM! Power drained!');
+        if (s.powerBar <= 0) { gameOver(false); return; }
+      }
+    } else {
+      b.screenX += (CW/2 - b.screenX) * 0.04;
+    }
+
+    // Power drain (time pressure)
+    s.powerBar = Math.max(0, s.powerBar - 0.04);
+    updatePowerFill();
+    if (s.powerBar <= 0) { gameOver(false); return; }
+  }
+
+  // Particles & Zzz
+  s.particles = s.particles.filter(pt => {
+    pt.x += pt.vx; pt.y += pt.vy; pt.vy += 0.15; pt.life--;
+    return pt.life > 0;
+  });
+  s.zzz = s.zzz.filter(z => {
+    z.y -= 0.7; z.alpha -= 0.018; z.x += z.drift;
+    return z.alpha > 0;
+  });
+}
+
+function toScreenY(worldY, camY) {
+  return worldY - camY;
+}
+
+// ═══════════════════════════════════════════════════════
+//  BOSS SPAWN
+// ═══════════════════════════════════════════════════════
+function spawnBoss() {
+  state.phase = 'boss';
+  state.powerBar = Math.min(100, state.sleepBar);
+  updatePowerFill();
+  state.boss = {
+    screenX: CW/2, screenY: canvas.height*0.28,
+    w: 82, h: 90,
+    hp: state.bossMaxHP,
+    dead: false,
+    frame: 0,
+    charging: 0,
+  };
+  toast('💀 THE DARK-EYED BOSS appears! Press X to STRIKE!');
+  document.getElementById('ctrl-hint').textContent = 'X / TAP = SLEEP STRIKE  |  ← → DODGE';
+}
+
+// ═══════════════════════════════════════════════════════
+//  RENDER
+// ═══════════════════════════════════════════════════════
+function render() {
+  const s = state;
+  const CH = canvas.height;
+  const c  = ctx;
+  c.clearRect(0, 0, CW, CH);
+
+  // Sky gradient
+  const sg = c.createLinearGradient(0,0,0,CH);
+  sg.addColorStop(0,'#04020b');
+  sg.addColorStop(1,'#120830');
+  c.fillStyle = sg; c.fillRect(0,0,CW,CH);
+
+  // Vertical lane dividers
+  for (let i=1;i<LANE_COUNT;i++) {
+    c.strokeStyle = 'rgba(255,255,255,0.05)';
+    c.lineWidth = 1;
+    c.setLineDash([6,14]);
+    c.beginPath(); c.moveTo(i*LANE_W, 0); c.lineTo(i*LANE_W, CH); c.stroke();
+    c.setLineDash([]);
+  }
+
+  // Lane color overlays
+  s.laneColor.forEach((col, li) => {
+    if (!col) return;
+    const alpha = s.laneColorTimer / 300 * 0.12;
+    c.fillStyle = col === 'blue' ? `rgba(56,189,248,${alpha})` : `rgba(244,63,94,${alpha})`;
+    c.fillRect(li*LANE_W, 0, LANE_W, CH);
+  });
+
+  // BG stripes
+  s.bgStripes.forEach(st => {
+    c.strokeStyle = `rgba(167,139,250,${st.alpha})`;
+    c.lineWidth = 1;
+    c.beginPath(); c.moveTo(st.x, 0); c.lineTo(st.x, CH); c.stroke();
+  });
+
+  // Stars (parallax)
+  const t = Date.now()/1000;
+  s.stars.forEach(st => {
+    const sy = ((st.y + s.camY * st.parallax) % CH + CH) % CH;
+    const tw = 0.5 + 0.5*Math.sin(t*2+st.tw);
+    c.beginPath(); c.arc(st.x, sy, st.r*tw, 0, Math.PI*2);
+    c.fillStyle = `rgba(240,234,255,${tw*0.8})`; c.fill();
+  });
+
+  // Branches (decorative world objects)
+  s.branches.forEach(br => {
+    const sy = toScreenY(br.wy, s.camY);
+    if (sy < -80 || sy > CH+80) return;
+    const col = br.color === 'blue' ? '#38bdf8' : '#f43f5e';
+    c.strokeStyle = col;
+    c.lineWidth = 3;
+    c.globalAlpha = 0.5;
+    const sx = br.side === 'left' ? 0 : CW;
+    c.beginPath();
+    c.moveTo(sx, sy);
+    c.bezierCurveTo(
+      sx + (br.side==='left'?br.length:-br.length)*0.3, sy - 20,
+      sx + (br.side==='left'?br.length:-br.length)*0.7, sy - 10,
+      sx + (br.side==='left'?br.length:-br.length), sy
+    );
+    c.stroke();
+    // Arrow
+    const ax = sx + (br.side==='left'?br.length:-br.length);
+    c.fillStyle = col;
+    c.beginPath();
+    c.moveTo(ax + (br.side==='left'?8:-8), sy - 8);
+    c.lineTo(ax + (br.side==='left'?16:-16), sy);
+    c.lineTo(ax + (br.side==='left'?8:-8), sy + 8);
+    c.fill();
+    // Label
+    c.font = '600 10px Exo 2';
+    c.fillStyle = col;
+    c.textAlign = br.side === 'left' ? 'left' : 'right';
+    c.fillText(br.color === 'blue' ? '+ SLEEP' : '− LIFE',
+      br.side==='left' ? ax+22 : ax-22, sy+4);
+    c.textAlign = 'left';
+    c.globalAlpha = 1;
+  });
+
+  // Platforms
+  s.platforms.forEach(pl => {
+    const sy = toScreenY(pl.wy, s.camY);
+    if (sy < -30 || sy > CH+30) return;
+    drawPlatform(c, pl, sy);
+  });
+
+  // Obstacles
+  s.obstacles.forEach(ob => {
+    const sy = toScreenY(ob.wy, s.camY);
+    if (sy < -40 || sy > CH+40) return;
+    drawObstacle(c, ob, sy);
+  });
+
+  // Player
+  drawPlayer(c, s.player, s.player.y, s.playerWorldY);
+
+  // Boss
+  if (s.boss && !s.boss.dead) drawBoss(c, s.boss);
+
+  // Phase tint
+  if (s.phase === 'boss') {
+    c.fillStyle = 'rgba(244,63,94,0.07)';
+    c.fillRect(0,0,CW,CH);
+  }
+
+  // Particles
+  s.particles.forEach(pt => {
+    const a = pt.life/30;
+    c.beginPath(); c.arc(pt.x, pt.y, 5*a, 0, Math.PI*2);
+    c.fillStyle = pt.color; c.globalAlpha = a; c.fill();
+    c.globalAlpha = 1;
+  });
+
+  // Zzz
+  s.zzz.forEach(z => {
+    c.save();
+    c.globalAlpha = z.alpha;
+    c.font = `bold ${z.size}px Orbitron`;
+    c.fillStyle = '#60d4f4';
+    c.fillText('z', z.x, z.y);
+    c.restore();
+  });
+
+  // HUD branch indicator
+  const bc = s.laneColor;
+  const bEl = document.getElementById('branch-el');
+  if (bc[0] || bc[2]) {
+    const left  = bc[0] ? (bc[0]==='blue'?'🔵 +SLEEP':'🔴 −LIFE') : '';
+    const right = bc[2] ? (bc[2]==='blue'?'🔵 +SLEEP':'🔴 −LIFE') : '';
+    bEl.textContent = `${left}   ←  BRANCH  →   ${right}`;
+    bEl.style.color = '#a78bfa';
+  } else {
+    bEl.textContent = '';
+  }
+}
+
+// ── DRAW PLATFORM ──────────────────────────────
+function drawPlatform(c, pl, sy) {
+  if (pl.type === 'floor') {
+    const g = c.createLinearGradient(0, sy, 0, sy + pl.h);
+    g.addColorStop(0, '#2a1f55');
+    g.addColorStop(1, '#160d33');
+    c.fillStyle = g;
+    roundRect(c, pl.wx, sy, pl.w, pl.h, 4); c.fill();
+    c.strokeStyle = '#3d2b6e'; c.lineWidth = 1;
+    c.stroke();
+  } else if (pl.type === 'bed') {
+    // Frame
+    c.fillStyle = '#4c1d95';
+    roundRect(c, pl.wx, sy, pl.w, pl.h, 5); c.fill();
+    // Mattress
+    c.fillStyle = '#ddd6fe';
+    roundRect(c, pl.wx+4, sy+3, pl.w-8, pl.h-6, 3); c.fill();
+    // Pillow
+    c.fillStyle = '#ede9fe';
+    roundRect(c, pl.wx+6, sy+4, 18, pl.h-8, 3); c.fill();
+    // Zzz label
+    c.font = '10px Orbitron'; c.fillStyle = '#60d4f4';
+    c.fillText('💤', pl.wx + pl.w/2 - 6, sy - 3);
+  } else if (pl.type === 'cloud') {
+    c.globalAlpha = 0.22;
+    c.fillStyle = '#c7d2fe';
+    c.beginPath();
+    c.ellipse(pl.wx + pl.w/2, sy+pl.h/2, pl.w/2, pl.h/2, 0, 0, Math.PI*2);
+    c.fill();
+    c.globalAlpha = 0.28;
+    c.beginPath();
+    c.ellipse(pl.wx + pl.w*0.35, sy+2, pl.w*0.28, pl.h*0.6, 0, 0, Math.PI*2);
+    c.fill();
+    c.globalAlpha = 1;
+  }
+}
+
+// ── DRAW OBSTACLE ──────────────────────────────
+function drawObstacle(c, ob, sy) {
+  const icons = { alarm:'⏰', coffee:'☕', pillow:'💊', spikes:'🔺' };
+  const colors = { alarm:'#f97316', coffee:'#92400e', pillow:'#be185d', spikes:'#f43f5e' };
+  if (ob.type === 'spikes') {
+    c.fillStyle = '#f43f5e22';
+    roundRect(c, ob.wx, sy, ob.w, ob.h, 4); c.fill();
+    c.strokeStyle = '#f43f5e'; c.lineWidth = 1.5; c.stroke();
+    // Spike triangles
+    for (let i = 0; i < 3; i++) {
+      const sx = ob.wx + ob.w * (0.2 + i * 0.3);
+      c.fillStyle = '#f43f5e';
+      c.beginPath();
+      c.moveTo(sx, sy); c.lineTo(sx+8, sy+ob.h); c.lineTo(sx-8, sy+ob.h);
+      c.closePath(); c.fill();
+    }
+  } else {
+    c.font = `${ob.h}px serif`;
+    c.fillText(icons[ob.type]||'❌', ob.wx + ob.w*0.1, sy + ob.h);
+  }
+  // Red glow on obstacles
+  c.strokeStyle = colors[ob.type] || '#f43f5e';
+  c.lineWidth = 1; c.globalAlpha = 0.25;
+  roundRect(c, ob.wx-2, sy-2, ob.w+4, ob.h+4, 5); c.stroke();
+  c.globalAlpha = 1;
+}
+
+// ── DRAW PLAYER ────────────────────────────────
+function drawPlayer(c, p, screenY, worldY) {
+  c.save();
+  if (p.invincible > 0 && Math.floor(p.invincible/4)%2) c.globalAlpha = 0.3;
+
+  const px = p.x - PW/2;
+  const py = screenY;
+
+  // Shadow
+  c.fillStyle = 'rgba(0,0,0,0.25)';
+  c.beginPath(); c.ellipse(p.x, py+PH+4, PW*0.4, 5, 0, 0, Math.PI*2); c.fill();
+
+  // Body
+  c.fillStyle = p.sleeping ? '#818cf8' : '#a78bfa';
+  roundRect(c, px, py+16, PW, PH-16, 8); c.fill();
+
+  // Head
+  c.fillStyle = '#c4b5fd';
+  roundRect(c, px+4, py, PW-8, 20, 8); c.fill();
+
+  // Eyes
+  if (p.sleeping) {
+    c.strokeStyle='#4c1d95'; c.lineWidth=2;
+    c.beginPath(); c.arc(px+9, py+9, 3, Math.PI*.1, Math.PI*.9); c.stroke();
+    c.beginPath(); c.arc(px+PW-9, py+9, 3, Math.PI*.1, Math.PI*.9); c.stroke();
+    // Sleep pillow
+    c.fillStyle='#ddd6fe';
+    roundRect(c, px-6, py-5, PW+12, 11, 5); c.fill();
+  } else {
+    c.fillStyle='#4c1d95';
+    c.beginPath(); c.arc(px+9,  py+9, 3, 0, Math.PI*2); c.fill();
+    c.beginPath(); c.arc(px+PW-9, py+9, 3, 0, Math.PI*2); c.fill();
+    c.fillStyle='#fff';
+    c.beginPath(); c.arc(px+10, py+8, 1.2, 0, Math.PI*2); c.fill();
+    c.beginPath(); c.arc(px+PW-8, py+8, 1.2, 0, Math.PI*2); c.fill();
+  }
+
+  // Legs
+  const bob = p.onSolid && !p.sleeping ? Math.sin(Date.now()/90)*4 : 0;
+  c.fillStyle = '#7c3aed';
+  c.fillRect(px+5,  py+PH, 10, 8+bob);
+  c.fillRect(px+PW-15, py+PH, 10, 8-bob);
+
+  c.restore();
+}
+
+// ── DRAW BOSS ──────────────────────────────────
+function drawBoss(c, b) {
+  const bx = b.screenX - b.w/2;
+  const by = b.screenY;
+  const t = Date.now()/1000;
+
+  // Aura
+  c.globalAlpha = 0.12 + 0.05*Math.sin(t*3);
+  c.fillStyle = '#f43f5e';
+  c.beginPath(); c.ellipse(b.screenX, by+b.h/2, b.w*0.7, b.h*0.6, 0, 0, Math.PI*2); c.fill();
+  c.globalAlpha = 1;
+
+  // Shadow
+  c.fillStyle='rgba(0,0,0,0.4)';
+  c.beginPath(); c.ellipse(b.screenX, by+b.h+10, b.w*0.45, 8, 0, 0, Math.PI*2); c.fill();
+
+  // Body
+  c.fillStyle = '#1e0a0a';
+  roundRect(c, bx, by+24, b.w, b.h-24, 12); c.fill();
+
+  // Head
+  c.fillStyle = '#2d1010';
+  roundRect(c, bx+8, by, b.w-16, 34, 12); c.fill();
+
+  // DARK CIRCLES
+  c.fillStyle = '#0a0208';
+  c.beginPath(); c.ellipse(bx+22, by+20, 11, 7, -.3, 0, Math.PI*2); c.fill();
+  c.beginPath(); c.ellipse(bx+b.w-22, by+20, 11, 7, .3, 0, Math.PI*2); c.fill();
+
+  // Eyes (bloodshot)
+  c.fillStyle='#7f1d1d';
+  c.beginPath(); c.arc(bx+22, by+18, 6, 0, Math.PI*2); c.fill();
+  c.beginPath(); c.arc(bx+b.w-22, by+18, 6, 0, Math.PI*2); c.fill();
+  c.fillStyle='#fca5a5';
+  c.beginPath(); c.arc(bx+22, by+18, 2.5, 0, Math.PI*2); c.fill();
+  c.beginPath(); c.arc(bx+b.w-22, by+18, 2.5, 0, Math.PI*2); c.fill();
+
+  // Frown
+  c.strokeStyle='#7f1d1d'; c.lineWidth=2.5;
+  c.beginPath();
+  c.moveTo(bx+18, by+28);
+  c.quadraticCurveTo(b.screenX, by+38, bx+b.w-18, by+28);
+  c.stroke();
+
+  // Arms (animated)
+  const armOff = Math.sin(t*2)*0.2;
+  c.fillStyle='#1e0a0a';
+  c.save();
+  c.translate(bx+8, by+36); c.rotate(-0.8+armOff);
+  c.fillRect(-10,-5,26,11); c.restore();
+  c.save();
+  c.translate(bx+b.w-8, by+36); c.rotate(0.8-armOff);
+  c.fillRect(-16,-5,26,11); c.restore();
+
+  // HP pips
+  for (let i=0;i<state.bossMaxHP;i++) {
+    c.beginPath(); c.arc(bx+12+i*(b.w-24)/(state.bossMaxHP-1), by-14, 6, 0, Math.PI*2);
+    c.fillStyle = i < state.boss.hp ? '#f97316' : '#3f1c0a'; c.fill();
+  }
+  c.font = '600 11px Exo 2';
+  c.fillStyle = '#fca5a5'; c.textAlign = 'center';
+  c.fillText('DARK-EYED BOSS', b.screenX, by - 24);
+  c.textAlign = 'left';
+
+  // Hit flash
+  if (state.bossHit > 0) {
+    c.globalAlpha = 0.55;
+    c.fillStyle = '#facc15';
+    roundRect(c, bx, by, b.w, b.h, 12); c.fill();
+    c.globalAlpha = 1;
+  }
+}
+
+// ── UTILS ──────────────────────────────────────
+function roundRect(c,x,y,w,h,r){
+  c.beginPath();
+  c.moveTo(x+r,y); c.lineTo(x+w-r,y);
+  c.quadraticCurveTo(x+w,y,x+w,y+r);
+  c.lineTo(x+w,y+h-r);
+  c.quadraticCurveTo(x+w,y+h,x+w-r,y+h);
+  c.lineTo(x+r,y+h);
+  c.quadraticCurveTo(x,y+h,x,y+h-r);
+  c.lineTo(x,y+r);
+  c.quadraticCurveTo(x,y,x+r,y);
+  c.closePath();
+}
+
+function addParticles(x,y,color,n=12){
+  for(let i=0;i<n;i++){
+    const a=(Math.PI*2/n)*i, sp=2+Math.random()*3;
+    state.particles.push({x,y,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp-1,life:28,color});
+  }
+}
+function addZzz(x,y){
+  state.zzz.push({x,y,alpha:1,size:10+Math.random()*7,drift:(Math.random()-.5)*.6});
+}
+
+let toastTimer;
+function toast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg; el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=>el.classList.remove('show'), 2200);
+}
+
+function updateScore()    { document.getElementById('score-el').textContent = Math.floor(state.distance)+'m'; }
+function updateSleepFill(){ document.getElementById('sleep-fill').style.width = state.sleepBar+'%'; }
+function updatePowerFill(){ document.getElementById('power-fill').style.width = state.powerBar+'%'; }
+
+// ═══════════════════════════════════════════════════════
+//  GAME OVER / WIN
+// ═══════════════════════════════════════════════════════
+function gameOver(win) {
+  if (!state.running) return;
+  state.running = false;
+  cancelAnimationFrame(raf);
+  const ov = document.getElementById('overlay');
+  document.getElementById('ov-emoji').textContent = win ? '🏆' : '💤';
+  document.getElementById('ov-title').textContent = win ? 'VICTORY!' : 'SLEEP DEPRIVED';
+  document.getElementById('ov-msg').textContent = win
+    ? 'You defeated the Dark-Eyed Boss with the power of dreams!'
+    : 'Your sleep ran out... Rest more, dream deeper.';
+  document.getElementById('ov-score').textContent = Math.floor(state.distance)+'m descended';
+  ov.classList.remove('hidden');
+}
+
+// ═══════════════════════════════════════════════════════
+//  GAME LOOP
+// ═══════════════════════════════════════════════════════
+function loop() {
+  raf = requestAnimationFrame(loop);
+  update();
+  render();
+}
+
+function startGame() {
+  document.getElementById('title-screen').classList.add('hidden');
+  document.getElementById('game-root').style.display = 'block';
+  document.getElementById('overlay').classList.add('hidden');
+  state = createState();
+  updateSleepFill(); updatePowerFill(); updateScore();
+  // Pre-spawn first platforms so player has ground immediately
+  for (let i = 0; i < 10; i++) {
+    spawnChunk(state.spawnY);
+    state.spawnY -= 160 + Math.random()*80;
+  }
+  // Make sure center lane has a floor right under player
+  state.platforms.push({ wx: 0, wy: 20, w: CW, h: 16, type:'floor', lane: 1 });
+  toast('Land on 🛏️ beds to charge SLEEP — survive 5000m!');
+  loop();
+}
+
+function restartGame() {
+  cancelAnimationFrame(raf);
+  document.getElementById('overlay').classList.add('hidden');
+  state = createState();
+  updateSleepFill(); updatePowerFill(); updateScore();
+  for (let i = 0; i < 10; i++) {
+    spawnChunk(state.spawnY);
+    state.spawnY -= 160 + Math.random()*80;
+  }
+  state.platforms.push({ wx: 0, wy: 20, w: CW, h: 16, type:'floor', lane: 1 });
+  document.getElementById('ctrl-hint').textContent = '← → MOVE  |  ↑ JUMP  |  X ATTACK (boss)';
+  toast('Land on 🛏️ beds to charge SLEEP — survive 5000m!');
+  loop();
+}
+</script>
+</body>
+</html>
