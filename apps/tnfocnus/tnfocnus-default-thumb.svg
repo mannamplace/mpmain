@@ -1,0 +1,113 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" width="1200" height="630">
+  <defs>
+    <!-- Background gradient -->
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#001a5c"/>
+      <stop offset="60%" style="stop-color:#003399"/>
+      <stop offset="100%" style="stop-color:#00215e"/>
+    </linearGradient>
+
+    <!-- Gold accent gradient -->
+    <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#fbbf24"/>
+      <stop offset="100%" style="stop-color:#f59e0b"/>
+    </linearGradient>
+
+    <!-- Subtle noise overlay pattern -->
+    <filter id="noise">
+      <feTurbulence type="fractalNoise" baseFrequency="0.65" numOctaves="3" stitchTiles="stitch"/>
+      <feColorMatrix type="saturate" values="0"/>
+      <feBlend in="SourceGraphic" mode="overlay" result="blend"/>
+      <feComposite in="blend" in2="SourceGraphic" operator="in"/>
+    </filter>
+
+    <!-- Glow for T.N. badge -->
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="6" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+
+    <clipPath id="mainClip">
+      <rect width="1200" height="630"/>
+    </clipPath>
+  </defs>
+
+  <g clip-path="url(#mainClip)">
+    <!-- Base background -->
+    <rect width="1200" height="630" fill="url(#bgGrad)"/>
+
+    <!-- Grid lines - editorial feel -->
+    <g opacity="0.06" stroke="#ffffff" stroke-width="1">
+      <line x1="0" y1="105" x2="1200" y2="105"/>
+      <line x1="0" y1="210" x2="1200" y2="210"/>
+      <line x1="0" y1="315" x2="1200" y2="315"/>
+      <line x1="0" y1="420" x2="1200" y2="420"/>
+      <line x1="0" y1="525" x2="1200" y2="525"/>
+      <line x1="200" y1="0" x2="200" y2="630"/>
+      <line x1="400" y1="0" x2="400" y2="630"/>
+      <line x1="600" y1="0" x2="600" y2="630"/>
+      <line x1="800" y1="0" x2="800" y2="630"/>
+      <line x1="1000" y1="0" x2="1000" y2="630"/>
+    </g>
+
+    <!-- Large decorative circle top-right -->
+    <circle cx="1050" cy="80" r="280" fill="none" stroke="#ffffff" stroke-width="1" opacity="0.07"/>
+    <circle cx="1050" cy="80" r="200" fill="none" stroke="#fbbf24" stroke-width="0.8" opacity="0.12"/>
+    <circle cx="1050" cy="80" r="130" fill="none" stroke="#ffffff" stroke-width="0.5" opacity="0.05"/>
+
+    <!-- Bottom-left circle -->
+    <circle cx="120" cy="560" r="200" fill="none" stroke="#ffffff" stroke-width="0.8" opacity="0.05"/>
+
+    <!-- Diagonal accent bar -->
+    <polygon points="0,0 180,0 0,80" fill="#fbbf24" opacity="0.15"/>
+
+    <!-- Top accent bar -->
+    <rect x="0" y="0" width="1200" height="5" fill="url(#goldGrad)"/>
+
+    <!-- Left thick editorial stripe -->
+    <rect x="64" y="60" width="6" height="510" fill="#fbbf24" opacity="0.9"/>
+
+    <!-- Central large T.N. wordmark area -->
+    <!-- Background card for logo -->
+    <rect x="320" y="195" width="560" height="240" rx="4" fill="#ffffff" opacity="0.04"/>
+    <rect x="320" y="195" width="560" height="240" rx="4" fill="none" stroke="#ffffff" stroke-width="0.5" opacity="0.15"/>
+
+    <!-- T.N. badge - main logo block -->
+    <rect x="380" y="228" width="130" height="80" rx="3" fill="#ffffff"/>
+    <text x="445" y="287" font-family="'Georgia', 'Times New Roman', serif" font-size="52" font-weight="900" fill="#003399" text-anchor="middle" letter-spacing="-2">T.N.</text>
+
+    <!-- Separator line -->
+    <rect x="530" y="248" width="2" height="42" fill="#fbbf24" opacity="0.7"/>
+
+    <!-- focnus text -->
+    <text x="560" y="272" font-family="'Georgia', 'Times New Roman', serif" font-size="36" font-weight="700" fill="#ffffff" letter-spacing="2">focnus</text>
+    <text x="560" y="297" font-family="'Helvetica Neue', Arial, sans-serif" font-size="11" font-weight="400" fill="#93c5fd" letter-spacing="5">NEWS NETWORK</text>
+
+    <!-- Tagline -->
+    <text x="600" y="370" font-family="'Georgia', serif" font-size="15" font-weight="400" fill="#ffffff" opacity="0.55" text-anchor="middle" letter-spacing="3">NEWS FROM EVERYWHERE · FOR EVERYONE</text>
+
+    <!-- Bottom gold rule -->
+    <rect x="380" y="390" width="440" height="1.5" fill="url(#goldGrad)" opacity="0.6"/>
+
+    <!-- Globe / world lines decorative -->
+    <g transform="translate(960, 315)" opacity="0.13" stroke="#ffffff" stroke-width="1" fill="none">
+      <circle cx="0" cy="0" r="130"/>
+      <ellipse cx="0" cy="0" rx="60" ry="130"/>
+      <ellipse cx="0" cy="0" rx="110" ry="130"/>
+      <line x1="-130" y1="0" x2="130" y2="0"/>
+      <line x1="-130" y1="-42" x2="130" y2="-42"/>
+      <line x1="-130" y1="42" x2="130" y2="42"/>
+      <line x1="0" y1="-130" x2="0" y2="130"/>
+    </g>
+
+    <!-- Bottom bar -->
+    <rect x="0" y="590" width="1200" height="40" fill="#000000" opacity="0.35"/>
+    <text x="96" y="614" font-family="'Helvetica Neue', Arial, sans-serif" font-size="11" font-weight="400" fill="#ffffff" opacity="0.5" letter-spacing="2">MANNAMPLACE TNFOCNUS</text>
+    <text x="1104" y="614" font-family="'Helvetica Neue', Arial, sans-serif" font-size="11" fill="#fbbf24" opacity="0.7" text-anchor="end" letter-spacing="1">tnfocnus.mannamplace.com</text>
+
+    <!-- Top-left corner accent dots -->
+    <circle cx="44" cy="44" r="3" fill="#fbbf24" opacity="0.8"/>
+    <circle cx="56" cy="44" r="2" fill="#fbbf24" opacity="0.4"/>
+    <circle cx="44" cy="56" r="2" fill="#fbbf24" opacity="0.4"/>
+  </g>
+</svg>
