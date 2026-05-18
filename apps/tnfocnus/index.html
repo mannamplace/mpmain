@@ -57,6 +57,87 @@
         body { top: 0px !important; }
         #google_translate_element { display: none; }
         .active-tab { border-bottom: 3px solid #fbbf24; color: #fbbf24; }
+        #minimap-panel { font-family: 'Noto Sans KR', 'Noto Sans', sans-serif; }
+        #minimap-stage-wrap { touch-action: none; }
+        #minimap-stage { transform-origin: center center; transition: transform 0.15s ease-out; }
+        .minimap-ocean { background: radial-gradient(ellipse 120% 80% at 50% 45%, #1e40af 0%, #0f172a 72%, #020617 100%); }
+        #minimap-world-img { z-index: 0; object-position: center 42%; }
+        #minimap-influence-layer { z-index: 2; }
+        #minimap-markers { z-index: 4; }
+        .minimap-influence-ring {
+            position: absolute; left: 0; top: 0; pointer-events: none;
+            width: min(42%, 7.5rem); aspect-ratio: 1; border-radius: 50%;
+            border: 2px solid rgba(254, 202, 202, 0.9);
+            box-shadow: 0 0 0 1px rgba(220, 38, 38, 0.25) inset;
+            transform: translate(-50%, -50%) scale(0.12);
+            opacity: 0.95;
+            animation: minimap-influence-pulse 2.4s ease-out infinite;
+        }
+        .minimap-influence-ring.crisis {
+            border-color: rgba(163, 163, 163, 0.95);
+            box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.35) inset;
+        }
+        @keyframes minimap-influence-pulse {
+            0% { transform: translate(-50%, -50%) scale(0.12); opacity: 0.95; }
+            100% { transform: translate(-50%, -50%) scale(1.05); opacity: 0; }
+        }
+        .minimap-macro-pin,
+        .minimap-breaking-pin,
+        .minimap-crisis-pin {
+            background: transparent; border: none; padding: 0; margin: 0; font: inherit; color: inherit;
+        }
+        .minimap-macro-pin {
+            position: absolute; z-index: 4; transform: translate(-50%, -100%);
+            display: flex; flex-direction: column; align-items: center; cursor: pointer;
+            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.35));
+        }
+        .minimap-macro-pin .minimap-pin-head {
+            width: 22px; height: 22px; border-radius: 50%; background: #003399; border: 2px solid #bfdbfe;
+            display: flex; align-items: center; justify-content: center; color: #fff;
+        }
+        .minimap-macro-pin .minimap-pin-head i { width: 12px; height: 12px; }
+        .minimap-macro-pin .minimap-pin-stem { width: 0; height: 0; border-left: 5px solid transparent; border-right: 5px solid transparent; border-top: 9px solid #003399; margin-top: -1px; }
+        .minimap-macro-pin .minimap-pin-label {
+            margin-top: 2px; max-width: 4.5rem; font-size: 8px; font-weight: 900; color: #fff; text-align: center; line-height: 1.1;
+            text-shadow: 0 1px 2px #000;
+        }
+        .minimap-macro-pin:hover .minimap-pin-head { background: #1d4ed8; border-color: #fef08a; }
+        .minimap-sub-pin {
+            position: absolute; z-index: 5; transform: translate(-50%, -100%);
+            width: 14px; height: 14px; border-radius: 50%; background: #2563eb; border: 2px solid #e0f2fe;
+            cursor: pointer; box-shadow: 0 2px 6px rgba(0,0,0,0.35);
+        }
+        .minimap-sub-pin::after {
+            content: ''; position: absolute; left: 50%; bottom: -6px; transform: translateX(-50%);
+            width: 0; height: 0; border-left: 4px solid transparent; border-right: 4px solid transparent; border-top: 6px solid #2563eb;
+        }
+        .minimap-sub-pin:hover { background: #1d4ed8; border-color: #fff; }
+        .minimap-breaking-pin {
+            position: absolute; z-index: 6; transform: translate(-50%, -100%);
+            display: flex; flex-direction: column; align-items: center; cursor: pointer;
+            filter: drop-shadow(0 2px 5px rgba(0,0,0,0.45));
+            animation: minimap-breaking-pin-glow 1.8s ease-out infinite;
+        }
+        .minimap-breaking-pin .minimap-pin-head {
+            width: 26px; height: 26px; border-radius: 50%; background: #dc2626; border: 2px solid #fecaca;
+            display: flex; align-items: center; justify-content: center; color: #fff; font-size: 8px; font-weight: 900;
+        }
+        .minimap-breaking-pin .minimap-pin-stem { width: 0; height: 0; border-left: 6px solid transparent; border-right: 6px solid transparent; border-top: 10px solid #dc2626; margin-top: -1px; }
+        @keyframes minimap-breaking-pin-glow {
+            0%, 100% { filter: drop-shadow(0 2px 5px rgba(0,0,0,0.45)) drop-shadow(0 0 0 rgba(220,38,38,0)); }
+            50% { filter: drop-shadow(0 2px 5px rgba(0,0,0,0.45)) drop-shadow(0 0 10px rgba(220,38,38,0.65)); }
+        }
+        .minimap-crisis-pin {
+            position: absolute; z-index: 6; transform: translate(-50%, -100%);
+            display: flex; flex-direction: column; align-items: center; cursor: pointer;
+            filter: drop-shadow(0 2px 5px rgba(0,0,0,0.5));
+        }
+        .minimap-crisis-pin .minimap-pin-head {
+            width: 28px; height: 28px; border-radius: 50%; background: #0a0a0a; border: 2px solid #737373;
+            display: flex; align-items: center; justify-content: center; color: #fafafa;
+        }
+        .minimap-crisis-pin .minimap-pin-stem { width: 0; height: 0; border-left: 5px solid transparent; border-right: 5px solid transparent; border-top: 8px solid #0a0a0a; margin-top: -1px; }
+        .minimap-crisis-pin:hover .minimap-pin-head { border-color: #d4d4d4; }
     </style>
 </head>
 <script type="application/ld+json">
@@ -106,6 +187,9 @@
                     <option value="ru">🇷🇺 Русский</option>
                 </select>
 
+                <button type="button" id="minimap-open-btn" onclick="openMinimap()" class="inline-flex items-center justify-center w-9 h-9 rounded bg-blue-800/60 hover:bg-blue-700 border border-blue-400/30" title="지역 미니맵" aria-label="지역 미니맵">
+                    <i data-lucide="map" class="w-4 h-4"></i>
+                </button>
                 <button id="region-density-btn" onclick="toggleRegionDensity()" class="hidden sm:inline-flex text-[11px] font-bold bg-blue-800/60 hover:bg-blue-700 px-2 py-1 rounded">
                     지역: 간단
                 </button>
@@ -116,6 +200,10 @@
                 </div>
                 
                 <div id="user-ui" class="hidden items-center space-x-3">
+                    <button type="button" onclick="toggleNotifPanel()" id="notif-bell-btn" class="relative p-1.5 rounded hover:bg-blue-800/60" title="알림" aria-label="알림">
+                        <i data-lucide="bell" class="w-5 h-5"></i>
+                        <span id="notif-badge" class="hidden absolute -top-0.5 -right-0.5 min-w-[14px] h-[14px] px-0.5 rounded-full bg-red-500 text-[9px] font-black leading-[14px] text-center">0</span>
+                    </button>
                     <span id="user-badge" class="text-[10px] font-bold bg-yellow-400 text-blue-900 px-2 py-0.5 rounded italic"></span>
                     <button onclick="toggleAdmin()" id="admin-btn" class="hidden text-yellow-300"><i data-lucide="settings" class="w-5 h-5"></i></button>
                     <button onclick="handleLogout()" class="text-xs opacity-70 underline">로그아웃</button>
@@ -125,7 +213,8 @@
     </header>
 
     <!-- Mobile Region Navigation -->
-    <div class="lg:hidden border-t border-blue-400/30 px-4 py-2 overflow-x-auto bg-[#003399] text-white">
+    <div class="lg:hidden border-t border-blue-400/30 px-4 py-2 overflow-x-auto bg-[#003399] text-white flex items-center gap-2">
+        <button type="button" onclick="openMinimap()" class="shrink-0 inline-flex items-center gap-1 px-2 py-1 rounded bg-blue-800/80 text-[11px] font-black border border-blue-300/40" title="지역 미니맵">🗺 미니맵</button>
         <div id="mobile-nav" class="flex space-x-2 text-xs font-bold min-w-max"></div>
     </div>
 
@@ -136,6 +225,15 @@
             <span class="font-black bg-white text-red-600 px-2 py-0.5 text-[10px] mr-4 animate-pulse">속보</span>
             <div id="breaking-content" class="text-sm font-bold whitespace-nowrap overflow-hidden cursor-pointer"></div>
         </div>
+    </div>
+
+    <!-- 계정 알림 패널 -->
+    <div id="notif-panel" class="fixed top-14 right-3 z-[260] hidden w-[min(100vw-1.5rem,22rem)] max-h-[70vh] overflow-hidden rounded-xl border border-slate-200 bg-white shadow-2xl flex flex-col">
+        <div class="flex items-center justify-between px-3 py-2 border-b border-slate-200 bg-slate-50 shrink-0">
+            <h3 class="text-sm font-black text-slate-900">알림 · 속보 뉴스레터</h3>
+            <button type="button" onclick="toggleNotifPanel(false)" class="p-1 rounded hover:bg-slate-200" aria-label="닫기"><i data-lucide="x" class="w-4 h-4"></i></button>
+        </div>
+        <div id="notif-list" class="overflow-y-auto p-2 text-sm flex-1 min-h-[4rem]"></div>
     </div>
 
     <!-- Main Content Area -->
@@ -165,10 +263,11 @@
                         <div class="md:col-span-2 space-y-4">
                             <input type="text" id="post-title" placeholder="기사 제목을 입력하세요" class="w-full bg-white/5 border border-white/20 p-4 rounded text-xl outline-none focus:border-blue-500">
                             <textarea id="post-content" placeholder="기사 본문 내용을 작성하세요" class="w-full bg-white/5 border border-white/20 p-4 rounded h-[400px] outline-none focus:border-blue-500"></textarea>
-                            <div class="flex space-x-2">
-                                <button onclick="execCmd('bold')" class="bg-slate-700 px-3 py-1 rounded text-xs"><b>B</b></button>
-                                <button onclick="execCmd('fontSize', '5')" class="bg-slate-700 px-3 py-1 rounded text-xs">크게</button>
-                                <button onclick="execCmd('fontSize', '3')" class="bg-slate-700 px-3 py-1 rounded text-xs">보통</button>
+                            <div class="flex flex-wrap gap-2">
+                                <button type="button" onclick="execCmd('bold')" class="bg-slate-700 px-3 py-1 rounded text-xs"><b>B</b></button>
+                                <button type="button" onclick="execCmd('fontSize', '5')" class="bg-slate-700 px-3 py-1 rounded text-xs">크게</button>
+                                <button type="button" onclick="execCmd('fontSize', '3')" class="bg-slate-700 px-3 py-1 rounded text-xs">보통</button>
+                                <button type="button" onclick="insertInlineImageSlot()" class="bg-blue-800 px-3 py-1 rounded text-xs font-bold">본문에 이미지 삽입</button>
                             </div>
                         </div>
                         <div class="space-y-4">
@@ -192,6 +291,9 @@
                                     <label class="flex items-center space-x-2"><input type="checkbox" value="문화"> <span>문화</span></label>
                                     <label class="flex items-center space-x-2"><input type="checkbox" value="사설/칼럼"> <span>사설/칼럼</span></label>
                                     <label class="flex items-center space-x-2 text-red-400"><input type="checkbox" value="속보"> <span>속보</span></label>
+                                    <label class="flex items-center space-x-2 text-zinc-300"><input type="checkbox" value="전쟁"> <span>전쟁</span></label>
+                                    <label class="flex items-center space-x-2 text-zinc-300"><input type="checkbox" value="재난"> <span>재난</span></label>
+                                    <label class="flex items-center space-x-2 text-zinc-300"><input type="checkbox" value="경제위기"> <span>경제위기</span></label>
                                     <label class="flex items-center space-x-2 text-orange-400"><input type="checkbox" value="단독"> <span>단독</span></label>
                                     <label class="flex items-center space-x-2 text-yellow-400"><input type="checkbox" value="기획보도"> <span>기획보도</span></label>
                                 </div>
@@ -283,7 +385,7 @@
             <!-- 기존 계정 로그인 -->
             <div id="login-legacy">
                 <div class="text-xs text-blue-600 bg-blue-50 rounded-lg p-3 mb-4">
-                    TNfocnus의 전용 아이디/비밀번호로 로그인합니다.
+                    TNfocnus 전용 아이디/비밀번호로 로그인합니다.
                 </div>
                 <input type="text" id="li-id-legacy" placeholder="TNfocus 아이디" class="w-full border p-3 rounded-lg mb-3">
                 <input type="password" id="li-pw-legacy" placeholder="비밀번호" class="w-full border p-3 rounded-lg mb-4">
@@ -340,6 +442,43 @@
             <button onclick="handleSignup()" class="w-full bg-[#B84A00] text-white py-3 rounded-lg font-bold">가입 신청</button>
             <button onclick="hideModal('signup-modal')" class="w-full mt-4 text-xs text-gray-400 underline">닫기</button>
         </div>
+    </div>
+
+    <!-- 지역 미니맵: 우하단 플로팅 -->
+    <div id="minimap-dock" class="fixed bottom-3 right-3 sm:bottom-5 sm:right-5 z-[250] flex flex-col items-end gap-2 max-w-[calc(100vw-1.5rem)]" aria-live="polite">
+        <div id="minimap-flyout" class="hidden w-[min(100%,20rem)] rounded-xl border border-slate-200 bg-white shadow-2xl p-3 text-slate-900 text-sm"></div>
+        <div id="minimap-panel" class="hidden w-[min(100vw-1.5rem,22rem)] sm:w-[24rem] rounded-2xl border border-slate-200 bg-white shadow-2xl overflow-hidden flex flex-col">
+            <div class="flex items-center justify-between gap-2 px-3 py-2 bg-slate-900 text-white shrink-0">
+                <div class="min-w-0">
+                    <h2 id="minimap-panel-title" class="text-xs font-black tracking-tight truncate">지역 미니맵</h2>
+                    <p id="minimap-panel-hint" class="text-[9px] text-slate-400 leading-tight line-clamp-2">권역을 눌러 주요 기사와 필터를 선택하세요.</p>
+                </div>
+                <div class="flex items-center gap-0.5 shrink-0">
+                    <button type="button" onclick="minimapToggleMin()" id="minimap-btn-min" class="p-1.5 rounded hover:bg-white/10 text-slate-300" title="접기"><i data-lucide="minus" class="w-4 h-4"></i></button>
+                    <button type="button" onclick="closeMinimap()" class="p-1.5 rounded hover:bg-red-600/80" title="닫기" aria-label="닫기"><i data-lucide="x" class="w-4 h-4"></i></button>
+                </div>
+            </div>
+            <div class="flex items-center justify-between gap-2 px-2 py-1.5 bg-slate-100 border-b border-slate-200 shrink-0">
+                <button type="button" onclick="minimapZoomStep(-1)" class="flex-1 py-1 rounded bg-white border border-slate-300 text-xs font-black hover:bg-slate-50" title="축소">−</button>
+                <span id="minimap-zoom-label" class="text-[10px] font-bold text-slate-600 w-14 text-center">100%</span>
+                <button type="button" onclick="minimapZoomStep(1)" class="flex-1 py-1 rounded bg-white border border-slate-300 text-xs font-black hover:bg-slate-50" title="확대">+</button>
+                <button type="button" onclick="minimapZoomReset()" class="px-2 py-1 rounded bg-white border border-slate-300 text-[10px] font-bold hover:bg-slate-50" title="줌 초기화">1:1</button>
+            </div>
+            <div id="minimap-stage-wrap" class="relative minimap-ocean overflow-hidden shrink-0 h-[200px] sm:h-[220px]">
+                <div id="minimap-stage" class="absolute inset-0 w-full h-full">
+                    <img id="minimap-world-img" class="absolute inset-0 w-full h-full pointer-events-none opacity-[0.92] object-cover" style="object-position:center 40%; filter:saturate(0.85) brightness(0.95);" src="https://upload.wikimedia.org/wikipedia/commons/thumb/e/ec/World_map_blank_without_borders.svg/1280px-World_map_blank_without_borders.svg.png" alt="" crossorigin="anonymous" loading="lazy">
+                    <div id="minimap-influence-layer" class="absolute inset-0 w-full h-full pointer-events-none overflow-visible"></div>
+                    <div id="minimap-markers" class="absolute inset-0 w-full h-full overflow-visible"></div>
+                </div>
+            </div>
+            <div id="minimap-footer" class="px-2 py-1.5 bg-slate-50 border-t border-slate-200 text-[10px] text-slate-500 shrink-0 flex justify-between items-center">
+                <button type="button" onclick="minimapBackToRoot()" id="minimap-back-btn" class="hidden font-bold text-blue-800 hover:underline">← 권역 지도</button>
+                <span class="flex-1 text-right">지도 위 핀 · 영향 범위는 지도 링</span>
+            </div>
+        </div>
+        <button type="button" id="minimap-fab" onclick="openMinimap()" class="hidden w-14 h-14 rounded-full bg-[#003399] text-white shadow-2xl border-4 border-blue-300 flex items-center justify-center hover:bg-blue-800" title="미니맵 열기" aria-label="미니맵 열기">
+            <i data-lucide="map" class="w-7 h-7"></i>
+        </button>
     </div>
 
     <script>
@@ -440,6 +579,10 @@
                     isFirstLoad = false;
                 }
                 updateAdminLists();
+                try {
+                    const mp = document.getElementById('minimap-panel');
+                    if (mp && !mp.classList.contains('hidden')) refreshMinimapMarkers();
+                } catch (err) { /* ignore */ }
             });
         }
 
@@ -583,8 +726,9 @@
         }
 
         function renderDetail(id) {
-            const n = allNews.find(x => x.id === id);
-            if (!n) return;
+            const raw = allNews.find(x => x.id === id);
+            if (!raw) return;
+            const n = resolveArticleForUiLang(raw);
     
             const category = (n.cat && n.cat[0]) || 'news';
             const newPath = `/${encodeURIComponent(category)}/${n.globalNum}`;
@@ -619,7 +763,7 @@
                                 <button type="button" class="text-left font-bold text-gray-600 hover:text-blue-800 hover:underline cursor-pointer" onclick='goReporter(${JSON.stringify(n.authorId != null ? String(n.authorId) : String(n.author || ''))})'>T.N. ${n.author} 기자</button>
                                 ${(n.email && String(n.email).trim()) ? `<p class="text-xs text-gray-500">이메일 <a class="text-blue-700 font-semibold underline" href="mailto:${encodeURIComponent(String(n.email).trim())}">${escapeHtml(String(n.email).trim())}</a></p>` : ''}
                             </div>
-                            <span class="shrink-0">발행: ${n.date} (조회: ${n.views || 0}) · 기사번호 ${n.globalNum}</span>
+                            <span class="shrink-0">발행: ${n.date} (조회: ${n.views || 0}) · ${escapeHtml(getDict().articleNo || '기사번호')} <b class="text-blue-900">#${n.globalNum}</b>${n.translationOf ? ' · 원문 #' + n.translationOf : ''}${n.contentLang ? ' <span class="bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded text-[10px] ml-1 uppercase font-black">' + n.contentLang + '</span>' : ''}</span>
                         </div>
                     </header>
 
@@ -628,12 +772,13 @@
                 
                     <div class="prose prose-blue max-w-none text-xl leading-relaxed text-gray-800 flow-root" style="white-space: pre-wrap;">${processedContent}</div>
                 
-                    <div class="mt-20 pt-10 border-t flex justify-between items-center">
-                        <button onclick="goHome()" class="bg-gray-100 px-6 py-2 rounded-full text-sm font-bold hover:bg-gray-200 transition">목록으로</button>
+                    <section id="comments-mount" class="mt-16 pt-10 border-t border-gray-200"></section>
+                    <div class="mt-10 pt-10 border-t flex justify-between items-center">
+                        <button onclick="goHome()" class="bg-gray-100 px-6 py-2 rounded-full text-sm font-bold hover:bg-gray-200 transition">${escapeHtml(getDict().backHome || '목록으로')}</button>
                         <div class="flex gap-2">
-                            ${(user && (user.id === n.authorId || RANK_POWER[user.rank] >= 4)) ? 
-                                `<button onclick="editArticle('${n.id}')" class="bg-gray-800 text-white px-6 py-2 rounded-full text-sm font-bold hover:bg-black transition">수정</button>` : ''}
-                            <button onclick="shareLink()" class="bg-blue-50 text-blue-800 px-6 py-2 rounded-full text-sm font-bold hover:bg-blue-100 transition">공유</button>
+                            ${(user && (user.id === raw.authorId || RANK_POWER[user.rank] >= 4)) ? 
+                                `<button onclick="editArticle('${raw.id}')" class="bg-gray-800 text-white px-6 py-2 rounded-full text-sm font-bold hover:bg-black transition">수정</button>` : ''}
+                            <button onclick="shareLink()" class="bg-blue-50 text-blue-800 px-6 py-2 rounded-full text-sm font-bold hover:bg-blue-100 transition">${escapeHtml(getDict().share || '공유')}</button>
                         </div>
                     </div>
                 </article>
@@ -642,10 +787,11 @@
             window.scrollTo(0, 0);
             updateOG(n);
             lucide.createIcons();
+            mountComments(raw.id);
 
             if (window.db) {
-                window.fs.updateDoc(window.fs.doc(window.db, "articles", n.id), { 
-                    views: (n.views || 0) + 1 
+                window.fs.updateDoc(window.fs.doc(window.db, "articles", raw.id), { 
+                    views: (raw.views || 0) + 1 
                 });
             }
         }
@@ -659,18 +805,65 @@
         function renderCategory(cat) {
             const filtered = allNews.filter(n => n.cat && n.cat.includes(cat));
             const container = document.getElementById('main-view');
+            const d = getDict();
             container.innerHTML = `
-                <h2 class="text-2xl font-black mb-8 border-b-2 border-blue-900 pb-2">${cat}</h2>
+                <div class="mb-8 flex items-center justify-between flex-wrap gap-4">
+                    <h2 class="text-3xl font-black border-b-4 border-blue-900 pb-2">${cat}</h2>
+                    <div class="flex gap-2">
+                        <button id="sub-newsletter-btn" onclick="toggleNewsletterSubscription('${cat}')" 
+                            class="bg-blue-100 text-blue-800 px-4 py-2 rounded-lg text-sm font-bold hover:bg-blue-200 transition flex items-center">
+                            <i data-lucide="mail" class="w-4 h-4 mr-1"></i> <span id="sub-btn-text">${d.subscribeNewsletter}</span>
+                        </button>
+                        <button onclick="goHome()" class="text-sm font-bold text-blue-800 hover:underline">← ${d.backHome || '홈으로'}</button>
+                    </div>
+                </div>
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
                     ${filtered.map(n => `
                         <div class="cursor-pointer group" onclick="renderDetail('${n.id}')">
-                            <img src="${articleThumb(n.img)}" class="w-full aspect-video object-cover rounded-lg mb-4">
-                            <h3 class="font-bold group-hover:text-blue-700">${n.title}</h3>
+                            <img src="${articleThumb(n.img)}" class="w-full aspect-video object-cover rounded-lg mb-4 shadow-md group-hover:shadow-xl transition">
+                            <h3 class="font-bold group-hover:text-blue-700 leading-snug">${n.title}</h3>
+                            <p class="text-xs text-gray-400 mt-2">${n.date}</p>
                         </div>
                     `).join('')}
                 </div>
             `;
+            checkNewsletterSubscription(cat);
             lucide.createIcons();
+        }
+
+        async function checkNewsletterSubscription(cat) {
+            if (!user || !window.db) return;
+            const btn = document.getElementById('sub-newsletter-btn');
+            const txt = document.getElementById('sub-btn-text');
+            if (!btn || !txt) return;
+            
+            const ref = window.fs.doc(window.db, 'users', user.id, 'subscriptions', 'newsletter_' + cat);
+            const snap = await window.fs.getDoc(ref);
+            const d = getDict();
+            
+            if (snap.exists()) {
+                btn.classList.remove('bg-blue-100', 'text-blue-800');
+                btn.classList.add('bg-slate-200', 'text-slate-600');
+                txt.textContent = d.unsubscribeNewsletter;
+            }
+        }
+
+        async function toggleNewsletterSubscription(cat) {
+            if (!user) return alert('로그인이 필요합니다.');
+            const d = getDict();
+            const ref = window.fs.doc(window.db, 'users', user.id, 'subscriptions', 'newsletter_' + cat);
+            const snap = await window.fs.getDoc(ref);
+            
+            if (snap.exists()) {
+                await window.fs.deleteDoc(ref);
+                showToast(d.newsletterUnsubscribed);
+            } else {
+                await window.fs.setDoc(ref, {
+                    type: 'newsletter', category: cat, timestamp: window.fs.serverTimestamp()
+                });
+                showToast(d.newsletterSubscribed);
+            }
+            renderCategory(cat);
         }
 
         function reporterArticles(authorKey) {
@@ -731,7 +924,10 @@
         function toggleAdmin() { 
             const admin = document.getElementById('admin-view');
             admin.classList.toggle('hidden');
-            if(!admin.classList.contains('hidden')) switchAdminTab('write');
+            if(!admin.classList.contains('hidden')) {
+                buildAdminCategoryCheckboxes();
+                switchAdminTab('write');
+            }
         }
 
         function goHome() {
@@ -750,6 +946,21 @@
             ko: {
                 siteTitle: 'TNfocnus - Global News Network',
                 desc: '모두를 위한 뉴스, T.N. News',
+                minimapTitle: '지역 미니맵',
+                minimapHint: '파란 큰 원: 권역 · 빨간 원: 속보 · 검은 원: 전쟁·재난·경제위기',
+                minimapMacroAll: '권역 전체 기사',
+                minimapSubNav: '세부 지역별 기사',
+                minimapLocalAll: '이 지역 전체 기사',
+                minimapGoArticle: '원기사 보기',
+                minimapWeather: '날씨',
+                minimapWeatherErr: '날씨를 불러오지 못했습니다.',
+                minimapFeatured: '주요 기사',
+                minimapNoArticle: '표시할 기사가 없습니다.',
+                subscribeNewsletter: "뉴스레터 구독",
+                unsubscribeNewsletter: "구독 해지",
+                newsletterSubscribed: "뉴스레터 구독이 등록되었습니다.",
+                newsletterUnsubscribed: "구독이 해지되었습니다.",
+                categoryNewsletter: "카테고리 뉴스레터",
                 regionBtnSimple: '지역: 간단',
                 regionBtnFull: '지역: 전체',
                 topics: {
@@ -768,6 +979,21 @@
             en: {
                 siteTitle: 'TNfocnus - Global News Network',
                 desc: 'News from everywhere, for everyone.',
+                minimapTitle: 'Region minimap',
+                minimapHint: 'Blue: regions · Red: breaking · Black: war / disaster / crisis',
+                minimapMacroAll: 'All articles in region',
+                minimapSubNav: 'Browse sub-regions',
+                minimapLocalAll: 'All articles in this area',
+                minimapGoArticle: 'Open article',
+                minimapWeather: 'Weather',
+                minimapWeatherErr: 'Weather unavailable.',
+                minimapFeatured: 'Top story',
+                minimapNoArticle: 'No matching articles.',
+                subscribeNewsletter: "Subscribe Newsletter",
+                unsubscribeNewsletter: "Unsubscribe",
+                newsletterSubscribed: "Newsletter subscription registered.",
+                newsletterUnsubscribed: "Subscription cancelled.",
+                categoryNewsletter: "Category Newsletter",
                 regionBtnSimple: 'Regions: Simple',
                 regionBtnFull: 'Regions: Full',
                 topics: {
@@ -781,9 +1007,36 @@
                     '라틴아메리카':'Latin America','중앙아시아':'Central Asia','이스라엘':'Israel','파키스탄':'Pakistan',
                     '동유럽':'Eastern Europe','서유럽':'Western Europe','남유럽':'Southern Europe','북유럽':'Northern Europe',
                     '영국':'UK','프랑스':'France','독일':'Germany','이탈리아':'Italy'
-                }
+                },
+                login: 'Log in', register: 'Register', logout: 'Logout', comments: 'Comments',
+                commentPlaceholder: 'Write a comment…', postComment: 'Post', notifTitle: 'Alerts · Breaking digest',
+                notifEmpty: 'No alerts yet.', breakingSubscribe: 'Alert me for this breaking story',
+                backHome: 'Back', share: 'Share', articleNo: 'Article #'
             }
         };
+        Object.assign(I18N.ko, {
+            login: '로그인', register: '회원가입', logout: '로그아웃', comments: '댓글',
+            commentPlaceholder: '댓글을 입력하세요', postComment: '등록', notifTitle: '알림 · 속보 뉴스레터',
+            notifEmpty: '알림이 없습니다.', breakingSubscribe: '이 속보를 내 알림함·뉴스레터로 받기',
+            backHome: '목록으로', share: '공유', articleNo: '기사번호'
+        });
+        I18N['zh-CN'] = Object.assign({}, I18N.en, {
+            siteTitle: 'TNfocnus - 全球新闻网络', desc: '为所有人的新闻', regionBtnSimple: '地区：简略', regionBtnFull: '地区：全部',
+            topics: { '정치':'政治','경제':'经济','사회':'社会','외교통일':'外交','국방':'国防','문화':'文化','사설/칼럼':'社论','속보':'快讯','단독':'独家','기획보도':'专题' },
+            login: '登录', register: '注册', logout: '退出', comments: '评论', notifTitle: '通知 · 快讯简报',
+            subscribeNewsletter: "订阅新闻通讯", unsubscribeNewsletter: "取消订阅",
+            newsletterSubscribed: "新闻通讯订阅成功。", newsletterUnsubscribed: "订阅已取消。",
+            categoryNewsletter: "分类新闻通讯", articleNo: "文章编号"
+        });
+        I18N.ja = Object.assign({}, I18N.en, {
+            siteTitle: 'TNfocnus - グローバルニュース', regionBtnSimple: '地域：簡易', regionBtnFull: '地域：全体',
+            topics: { '정치':'政治','경제':'経済','사회':'社会','외교통일':'外交','국방':'国防','문화':'文化','사설/칼럼':'社説','속보':'速報','단독':'独占','기획보도':'特集' },
+            login: 'ログイン', register: '登録', logout: 'ログアウト', comments: 'コメント', notifTitle: '通知 · 速報',
+            subscribeNewsletter: "ニュースレター購読", unsubscribeNewsletter: "購読解除",
+            newsletterSubscribed: "ニュースレターの購読が登録されました。", newsletterUnsubscribed: "購読が解除されました。",
+            categoryNewsletter: "カテゴリーニュースレター", articleNo: "記事番号"
+        });
+        ['es','fr','de','ru','pt','ar','hi'].forEach(code => { if (!I18N[code]) I18N[code] = Object.assign({}, I18N.en); });
 
         const REGION_KEYS_SIMPLE = ['한국','미국','유럽','중국','일본','인도','중동','아프리카','남미'];
         const REGION_KEYS_FULL = [
@@ -792,8 +1045,893 @@
             '중앙아시아','중동','이스라엘','파키스탄','동남아','라틴아메리카','아프리카','남미'
         ];
 
+        function minimapLabelToCat(label) {
+            const t = String(label || '').trim();
+            const m = t.match(/^(.+?)\s*\([^)]*\)\s*$/);
+            return (m ? m[1].trim() : t);
+        }
+
+        function minimapPairsFromLines(raw) {
+            return raw.trim().split(/\n+/).map(line => {
+                const t = line.trim();
+                if (!t) return null;
+                const cat = minimapLabelToCat(t);
+                return [t, cat];
+            }).filter(Boolean);
+        }
+
+        const MINIMAP_AFRICA_RAW = `
+가나
+가봉
+감비아
+기니
+기니비사우
+나미비아
+나이지리아
+남수단
+남아프리카공화국
+니제르
+라이베리아
+레소토
+르완다
+리비아
+마다가스카르
+말라위
+말리
+모로코
+서사하라
+모리셔스
+모잠비크
+베냉(Benin)
+보츠와나(Botswana)
+부룬디(Burundi)
+부르키나파소(Burkina Faso)
+상투메프린시페(Sao Tome and Principe)
+세네갈(Senegal)
+소말리아(Somalia)
+소말릴랜드
+수단
+에스와티니
+시에라리온(Sierra Leone)
+알제리(Algeria)
+앙골라(Angola)
+에리트레아(Eritrea)
+에티오피아(Ethiopia)
+우간다(Uganda)
+이집트(Egypt)
+잠비아(Zambia)
+적도기니(Equatorial Guinea)
+중앙아프리카공화국(Central African Republic)
+지부티(Djibouti)
+짐바브웨(Zimbabwe)
+차드(Chad)
+카메룬(Cameroon)
+보베르데(Cabo Verde)
+케냐(Kenya)
+코모로(Comoros)
+코트디부아르(Cote d'Ivoire)
+콩고(Congo)
+콩고민주공화국(DR Congo)
+탄자니아(Tanzania)
+토고(Togo)
+튀니지(Tunisia)`;
+
+        const MINIMAP_SECTIONS = [
+            { title: '대한민국 · 북한 · 일본', items: [['대한민국', '한국'], ['북한', '북한'], ['일본', '일본']] },
+            { title: '중화권', items: [['중국', '중국'], ['대만', '대만']] },
+            { title: '아시아', items: [['몽골', '몽골']] },
+            { title: '미국', items: [['미국', '미국']] },
+            { title: '북중미', items: [['캐나다', '캐나다'], ['멕시코', '멕시코'], ['그린란드', '그린란드']] },
+            { title: '오세아니아', items: minimapPairsFromLines(`
+호주
+뉴질랜드
+피지
+파푸아뉴기니
+사모아
+통가
+바누아투
+솔로몬 제도
+나우루
+투발루
+키리바시
+팔라우
+미크로네시아
+마셜 제도`) },
+            { title: '러시아', items: [['러시아', '러시아']] },
+            { title: '동유럽', items: minimapPairsFromLines(`
+벨라루스
+우크라이나
+폴란드
+체코
+슬로바키아
+헝가리
+루마니아
+불가리아
+세르비아
+크로아티아
+보스니아 헤르체고비나
+알바니아
+마케도니아`) },
+            { title: '독일 · 프랑스 · 영국', items: [['독일', '독일'], ['프랑스', '프랑스'], ['영국', '영국']] },
+            { title: '서유럽', items: minimapPairsFromLines(`
+네덜란드
+벨기에
+룩셈부르크
+아일랜드
+스위스`) },
+            { title: '남유럽', items: minimapPairsFromLines(`
+오스트리아
+이탈리아
+스페인
+포르투갈
+그리스
+몰타
+산마리노
+안도라
+모나코`) },
+            { title: '북유럽', items: minimapPairsFromLines(`
+스웨덴
+노르웨이
+핀란드
+덴마크
+아이슬란드
+페로 제도`) },
+            { title: '중앙아시아', items: minimapPairsFromLines(`
+카자흐스탄
+우즈베키스탄
+키르기스스탄
+타지키스탄
+투르크메니스탄
+아프가니스탄`) },
+            { title: '서아시아', items: minimapPairsFromLines(`
+이스라엘
+사우디아라비아
+아랍에미리트
+카타르
+쿠웨이트
+오만
+예멘
+이라크
+이란
+요르단
+레바논
+시리아
+튀르키예`) },
+            { title: '남아시아', items: minimapPairsFromLines(`
+인도
+파키스탄
+방글라데시
+네팔
+스리랑카
+부탄
+몰디브`) },
+            { title: '동남아시아', items: minimapPairsFromLines(`
+베트남
+태국
+인도네시아
+말레이시아
+싱가포르
+필리핀
+캄보디아
+라오스
+미얀마
+브루나이
+동티모르`) },
+            { title: '라틴아메리카', items: minimapPairsFromLines(`
+브라질
+아르헨티나
+칠레
+콜롬비아
+페루
+쿠바
+파나마
+볼리비아
+우루과이
+파라과이
+베네수엘라
+에콰도르
+가이아나
+수리남
+기아나(프랑스)`) },
+            { title: '아프리카', items: minimapPairsFromLines(MINIMAP_AFRICA_RAW) }
+        ];
+
+        const MINIMAP_WEATHER_LL = {
+            한국: [37.57, 126.98], 북한: [39.03, 125.75], 일본: [35.68, 139.76], 중국: [39.9, 116.4], 대만: [25.03, 121.56], 몽골: [47.92, 106.92],
+            미국: [38.9, -77.03], 캐나다: [45.42, -75.7], 멕시코: [19.43, -99.13], 그린란드: [64.18, -51.74],
+            러시아: [55.75, 37.62], 유럽: [50.11, 8.68], 독일: [52.52, 13.41], 프랑스: [48.86, 2.35], 영국: [51.5, -0.12], 이탈리아: [41.9, 12.48],
+            동남아: [13.75, 100.5], 인도: [28.6, 77.2], 파키스탄: [33.69, 73.05], 중동: [24.71, 46.68], 이스라엘: [31.77, 35.21],
+            중앙아시아: [43.24, 76.95], 오세아니아: [-25.27, 133.78], 라틴아메리카: [-15.78, -47.93], 아프리카: [6.52, 3.38],
+            _default: [20, 20]
+        };
+
+        function minimapWeatherCoords(cat) {
+            const k = String(cat || '');
+            if (MINIMAP_WEATHER_LL[k]) return MINIMAP_WEATHER_LL[k];
+            return MINIMAP_WEATHER_LL._default;
+        }
+
+        function minimapSectionSubs(...titles) {
+            const seen = new Set();
+            const out = [];
+            for (const t of titles) {
+                const sec = MINIMAP_SECTIONS.find(s => s.title === t);
+                if (!sec) continue;
+                for (const [label, cat] of sec.items) {
+                    if (seen.has(cat)) continue;
+                    seen.add(cat);
+                    const [lat, lon] = minimapWeatherCoords(cat);
+                    out.push({ label, cat, lat, lon });
+                }
+            }
+            return out;
+        }
+
+        /** 위도·경도 → 세계지도(등적 투영) % 좌표 */
+        function latLonToMapPercent(lat, lon) {
+            const la = Number(lat);
+            const lo = Number(lon);
+            return {
+                x: Math.min(98, Math.max(2, ((lo + 180) / 360) * 100)),
+                y: Math.min(92, Math.max(6, ((90 - la) / 180) * 100))
+            };
+        }
+
+        function geoCatsToMapPercent(cats) {
+            const lats = [];
+            const lons = [];
+            (cats || []).forEach(c => {
+                const ll = MINIMAP_WEATHER_LL[c];
+                if (ll) { lats.push(ll[0]); lons.push(ll[1]); }
+            });
+            if (!lats.length) return latLonToMapPercent(20, 0);
+            const lat = lats.reduce((a, b) => a + b, 0) / lats.length;
+            const lon = lons.reduce((a, b) => a + b, 0) / lons.length;
+            return latLonToMapPercent(lat, lon);
+        }
+
+        const MAP_MACRO_REGIONS_RAW = [
+            { id: 'neb', label: '동북아', lat: 38, lon: 105, cats: ['한국', '북한', '일본', '중국', '대만', '몽골'], subs: minimapSectionSubs('대한민국 · 북한 · 일본', '중화권', '아시아') },
+            { id: 'sea', label: '동남아', lat: 5, lon: 115, cats: ['동남아'], subs: minimapSectionSubs('동남아시아') },
+            { id: 'sa', label: '남아시아', lat: 22, lon: 78, cats: ['인도', '파키스탄', '방글라데시', '네팔', '스리랑카', '부탄', '몰디브'], subs: minimapSectionSubs('남아시아') },
+            { id: 'swa', label: '서아·중동', lat: 28, lon: 45, cats: ['중동', '이스라엘', '튀르키예', '이라크', '이란', '사우디아라비아', '아랍에미리트', '카타르', '쿠웨이트', '오만', '예멘', '요르단', '레바논', '시리아'], subs: minimapSectionSubs('서아시아') },
+            { id: 'ca', label: '중앙아시아', lat: 43, lon: 68, cats: ['중앙아시아'], subs: minimapSectionSubs('중앙아시아') },
+            { id: 'eu', label: '유럽', lat: 50, lon: 10, cats: ['유럽', '동유럽', '서유럽', '남유럽', '북유럽', '영국', '프랑스', '독일', '이탈리아'], subs: minimapSectionSubs('동유럽', '독일 · 프랑스 · 영국', '서유럽', '남유럽', '북유럽').slice(0, 18) },
+            { id: 'ru', label: '러시아', lat: 60, lon: 90, cats: ['러시아'], subs: minimapSectionSubs('러시아') },
+            { id: 'na', label: '미국', lat: 39, lon: -98, cats: ['미국'], subs: minimapSectionSubs('미국') },
+            { id: 'nc', label: '북중미', lat: 45, lon: -100, cats: ['캐나다', '멕시코', '그린란드'], subs: minimapSectionSubs('북중미') },
+            { id: 'lat', label: '라틴아메리카', lat: -15, lon: -60, cats: ['라틴아메리카', '남미'], subs: minimapSectionSubs('라틴아메리카') },
+            { id: 'af', label: '아프리카', lat: 2, lon: 20, cats: ['아프리카'], subs: minimapSectionSubs('아프리카').slice(0, 14) },
+            { id: 'oce', label: '오세아니아', lat: -25, lon: 135, cats: ['오세아니아'], subs: minimapSectionSubs('오세아니아') }
+        ];
+        const MAP_MACRO_REGIONS = MAP_MACRO_REGIONS_RAW.map(m => {
+            const xy = latLonToMapPercent(m.lat, m.lon);
+            const subs = (m.subs || []).map(s => ({ ...s, ...latLonToMapPercent(s.lat, s.lon) }));
+            return { ...m, x: xy.x, y: xy.y, subs };
+        });
+
+        let minimapZoom = parseFloat(localStorage.getItem('tn_minimap_zoom') || '1') || 1;
+        let minimapMinimized = false;
+        let minimapMode = 'root';
+        let minimapMacroId = null;
+        let minimapSubLayout = [];
+
+        function minimapClampZoom(z) {
+            return Math.min(1.85, Math.max(0.55, z));
+        }
+
+        function minimapApplyZoom(focusX, focusY) {
+            minimapZoom = minimapClampZoom(minimapZoom);
+            localStorage.setItem('tn_minimap_zoom', String(minimapZoom));
+            const stage = document.getElementById('minimap-stage');
+            const lbl = document.getElementById('minimap-zoom-label');
+            if (stage) {
+                if (focusX !== undefined && focusY !== undefined) {
+                    stage.style.transformOrigin = `${focusX}% ${focusY}%`;
+                } else if (minimapZoom === 1) {
+                    stage.style.transformOrigin = 'center center';
+                }
+                stage.style.transform = 'scale(' + minimapZoom + ')';
+            }
+            if (lbl) lbl.textContent = Math.round(minimapZoom * 100) + '%';
+        }
+
+        function minimapFocusZoom(x, y, level) {
+            minimapZoom = level || 1.6;
+            minimapApplyZoom(x, y);
+        }
+
+        function minimapZoomStep(delta) {
+            minimapZoom = minimapClampZoom(minimapZoom + delta * 0.12);
+            minimapApplyZoom();
+        }
+
+        function minimapZoomReset() {
+            minimapZoom = 1;
+            minimapApplyZoom();
+        }
+
+        function minimapToggleMin() {
+            minimapMinimized = !minimapMinimized;
+            const panel = document.getElementById('minimap-panel');
+            const fab = document.getElementById('minimap-fab');
+            if (minimapMinimized) {
+                if (panel) panel.classList.add('hidden');
+                if (fab) fab.classList.remove('hidden');
+                hideMinimapFlyout();
+            } else {
+                if (fab) fab.classList.add('hidden');
+                if (panel) panel.classList.remove('hidden');
+            }
+            lucide.createIcons();
+        }
+
+        function hideMinimapFlyout() {
+            const f = document.getElementById('minimap-flyout');
+            if (f) { f.classList.add('hidden'); f.innerHTML = ''; }
+        }
+
+        function clearMinimapInfluence() {
+            const layer = document.getElementById('minimap-influence-layer');
+            if (layer) layer.innerHTML = '';
+        }
+
+        function macrosMatchingArticleCats(article) {
+            const cats = article && article.cat ? article.cat : [];
+            return MAP_MACRO_REGIONS.filter(m => m.cats.some(c => cats.includes(c)) || (m.subs || []).some(s => cats.includes(s.cat)));
+        }
+
+        /** 기사 태그에 맞는 권역 좌표 위에 겹치지 않게 살짝 퍼뜨림 (지도 % 좌표) */
+        function minimapMapCoordsForArticle(article, spreadIndex) {
+            const base = geoCatsToMapPercent(article && article.cat ? article.cat : []);
+            const i = spreadIndex || 0;
+            const ang = i * 1.08;
+            const r = 1.8 + i * 1.6;
+            return {
+                x: Math.min(96, Math.max(4, base.x + r * Math.cos(ang))),
+                y: Math.min(90, Math.max(8, base.y + r * Math.sin(ang)))
+            };
+        }
+
+        function drawMinimapInfluenceForArticle(article, opts) {
+            opts = opts || {};
+            const layer = document.getElementById('minimap-influence-layer');
+            if (!layer) return;
+            if (!opts.keepExisting) layer.innerHTML = '';
+            const hits = macrosMatchingArticleCats(article);
+            const places = hits.length
+                ? hits.map(h => latLonToMapPercent(h.lat, h.lon))
+                : [geoCatsToMapPercent(article && article.cat ? article.cat : [])];
+            places.forEach((p, idx) => {
+                for (let i = 0; i < 3; i++) {
+                    const ring = document.createElement('div');
+                    ring.className = 'minimap-influence-ring' + (opts.crisis ? ' crisis' : '');
+                    ring.style.left = p.x + '%';
+                    ring.style.top = p.y + '%';
+                    ring.style.animationDelay = ((idx * 0.28 + i * 0.42) % 2.2) + 's';
+                    layer.appendChild(ring);
+                }
+            });
+        }
+
+        function approvedNews() {
+            return allNews.filter(n => n.approved);
+        }
+
+        function featuredArticleForCats(cats) {
+            const list = approvedNews().filter(n => n.cat && cats.some(c => n.cat.includes(c)));
+            return list[0] || null;
+        }
+
+        function renderMacroArticleList(macroId) {
+            const m = MAP_MACRO_REGIONS.find(x => x.id === macroId);
+            if (!m) return;
+            const cats = m.cats;
+            const filtered = approvedNews().filter(n => n.cat && cats.some(c => n.cat.includes(c)));
+            const container = document.getElementById('main-view');
+            if (!container) return;
+            window.history.pushState({}, '', '/');
+            container.innerHTML = `
+                <div class="mb-6 flex items-center justify-between flex-wrap gap-2">
+                    <h2 class="text-2xl font-black border-b-2 border-blue-900 pb-2">${escapeHtml(m.label)} <span class="text-sm font-bold text-slate-500">(권역 전체)</span></h2>
+                    <button type="button" onclick="goHome()" class="text-sm font-bold text-blue-800 hover:underline">← 홈</button>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                    ${filtered.map(n => `
+                        <div class="cursor-pointer group" onclick="renderDetail('${n.id}')">
+                            <img src="${escapeHtml(articleThumb(n.img))}" class="w-full aspect-video object-cover rounded-lg mb-4" alt="">
+                            <h3 class="font-bold group-hover:text-blue-700">${escapeHtml(n.title)}</h3>
+                        </div>
+                    `).join('') || '<p class="text-slate-500 font-bold">기사가 없습니다.</p>'}
+                </div>`;
+            lucide.createIcons();
+            window.scrollTo(0, 0);
+        }
+
+        function renderCategoryApprovedOnly(cat) {
+            const filtered = approvedNews().filter(n => n.cat && n.cat.includes(cat));
+            const container = document.getElementById('main-view');
+            if (!container) return;
+            window.history.pushState({}, '', '/');
+            container.innerHTML = `
+                <div class="mb-6"><button type="button" onclick="goHome()" class="text-sm font-bold text-blue-800 hover:underline">← 홈</button></div>
+                <h2 class="text-2xl font-black mb-8 border-b-2 border-blue-900 pb-2">${escapeHtml(cat)}</h2>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                    ${filtered.map(n => `
+                        <div class="cursor-pointer group" onclick="renderDetail('${n.id}')">
+                            <img src="${escapeHtml(articleThumb(n.img))}" class="w-full aspect-video object-cover rounded-lg mb-4" alt="">
+                            <h3 class="font-bold group-hover:text-blue-700">${escapeHtml(n.title)}</h3>
+                        </div>
+                    `).join('') || '<p class="text-slate-500 font-bold">기사가 없습니다.</p>'}
+                </div>`;
+            lucide.createIcons();
+            window.scrollTo(0, 0);
+        }
+
+        function showMinimapFlyout(html) {
+            const f = document.getElementById('minimap-flyout');
+            if (!f) return;
+            f.innerHTML = html;
+            f.classList.remove('hidden');
+            lucide.createIcons();
+        }
+
+        function minimapFlyoutFeaturedBlock(article) {
+            if (!article) {
+                const d = getDict();
+                return '<p class="text-xs text-slate-500 font-bold">' + escapeHtml(d.minimapNoArticle) + '</p>';
+            }
+            return `
+                <div class="rounded-lg border border-slate-200 overflow-hidden">
+                    <img src="${escapeHtml(articleThumb(article.img))}" class="w-full h-28 object-cover" alt="">
+                    <p class="p-2 text-xs font-bold leading-snug line-clamp-3">${escapeHtml(article.title)}</p>
+                </div>`;
+        }
+
+        function openMacroRegionFlyout(macroId) {
+            clearMinimapInfluence();
+            minimapMacroId = macroId;
+            minimapMode = 'root';
+            const m = MAP_MACRO_REGIONS.find(x => x.id === macroId);
+            if (!m) return;
+            const d = getDict();
+            const feat = featuredArticleForCats(m.cats);
+            const html = `
+                <p class="text-[10px] font-black text-blue-900 uppercase mb-2">${escapeHtml(m.label)}</p>
+                <p class="text-[10px] font-bold text-slate-500 mb-1">${escapeHtml(d.minimapFeatured)}</p>
+                ${minimapFlyoutFeaturedBlock(feat)}
+                <div class="mt-3 space-y-2">
+                    <button type="button" class="w-full py-2 rounded-lg bg-[#003399] text-white text-xs font-black hover:bg-blue-800" onclick="renderMacroArticleList('${macroId}'); closeMinimap();">${escapeHtml(d.minimapMacroAll)}</button>
+                    <button type="button" class="w-full py-2 rounded-lg bg-white border-2 border-[#003399] text-[#003399] text-xs font-black hover:bg-blue-50" onclick="minimapEnterSubs('${macroId}')">${escapeHtml(d.minimapSubNav)}</button>
+                </div>`;
+            showMinimapFlyout(html);
+        }
+
+        function minimapEnterSubs(macroId) {
+            const m = MAP_MACRO_REGIONS.find(x => x.id === macroId);
+            if (!m || !(m.subs && m.subs.length)) return;
+            minimapMacroId = macroId;
+            minimapMode = 'subs';
+            minimapSubLayout = m.subs.map(sub => ({
+                ...sub,
+                ...latLonToMapPercent(sub.lat, sub.lon)
+            }));
+            const back = document.getElementById('minimap-back-btn');
+            if (back) back.classList.remove('hidden');
+            hideMinimapFlyout();
+            refreshMinimapMarkers();
+            
+            // 해당 권역으로 인위적 확대
+            minimapFocusZoom(m.x, m.y, 1.5);
+        }
+
+        function minimapBackToRoot() {
+            minimapMode = 'root';
+            minimapSubLayout = [];
+            const back = document.getElementById('minimap-back-btn');
+            if (back) back.classList.add('hidden');
+            hideMinimapFlyout();
+            clearMinimapInfluence();
+            refreshMinimapMarkers();
+            
+            // 전체 지도로 복귀
+            minimapZoomReset();
+        }
+
+        async function openSubLocalFlyout(sub) {
+            clearMinimapInfluence();
+            const d = getDict();
+            const feat = featuredArticleForCats([sub.cat]);
+            const weatherId = 'minimap-weather-slot';
+            const html = `
+                <p class="text-[10px] font-black text-blue-900 uppercase mb-2">${escapeHtml(sub.label)}</p>
+                <p class="text-[10px] font-bold text-slate-500 mb-1">${escapeHtml(d.minimapWeather)}</p>
+                <div id="${weatherId}" class="text-xs text-slate-600 mb-2 min-h-[2.5rem] rounded border border-slate-100 bg-slate-50 p-2">${escapeHtml(d.minimapWeather)}…</div>
+                <p class="text-[10px] font-bold text-slate-500 mb-1">${escapeHtml(d.minimapFeatured)}</p>
+                ${minimapFlyoutFeaturedBlock(feat)}
+                <div class="mt-3 space-y-2">
+                    <button type="button" class="w-full py-2 rounded-lg bg-[#003399] text-white text-xs font-black hover:bg-blue-800" onclick="renderCategoryApprovedOnly(${JSON.stringify(sub.cat)}); closeMinimap();">${escapeHtml(d.minimapLocalAll)}</button>
+                </div>`;
+            showMinimapFlyout(html);
+            minimapLoadWeather(sub.lat, sub.lon, weatherId);
+            
+            // 세부 지역 클릭 시 더 깊게 확대
+            const pos = latLonToMapPercent(sub.lat, sub.lon);
+            minimapFocusZoom(pos.x, pos.y, 1.8);
+        }
+
+        async function minimapLoadWeather(lat, lon, elId) {
+            const el = document.getElementById(elId);
+            const d = getDict();
+            if (!el) return;
+            try {
+                const u = 'https://api.open-meteo.com/v1/forecast?latitude=' + lat + '&longitude=' + lon + '&current_weather=true';
+                const res = await fetch(u);
+                if (!res.ok) throw new Error('fail');
+                const data = await res.json();
+                const w = data.current_weather;
+                if (!w) throw new Error('no data');
+                el.textContent = Math.round(w.temperature) + '°C · 풍속 ' + (w.windspeed || '-') + (w.weathercode != null ? ' · 코드 ' + w.weathercode : '');
+            } catch (e) {
+                el.textContent = d.minimapWeatherErr || 'Error';
+            }
+        }
+
+        function openBreakingFlyout(article) {
+            const d = getDict();
+            drawMinimapInfluenceForArticle(article, { crisis: false });
+            const html = `
+                <p class="text-[10px] font-black text-red-700 uppercase mb-2">속보</p>
+                ${minimapFlyoutFeaturedBlock(article)}
+                <button type="button" class="w-full mt-3 py-2 rounded-lg bg-red-600 text-white text-xs font-black hover:bg-red-700" onclick="renderDetail('${article.id}'); closeMinimap();">${escapeHtml(d.minimapGoArticle)}</button>
+                <button type="button" class="w-full mt-2 py-2 rounded-lg border-2 border-red-600 text-red-700 text-xs font-black hover:bg-red-50" onclick="subscribeBreakingAlert('${article.id}')">${escapeHtml(d.breakingSubscribe || '속보 알림 받기')}</button>
+                <p class="text-[9px] text-slate-500 mt-2 leading-tight">지도 위 붉은 링은 이 속보 태그와 맞는 권역의 영향 범위입니다.</p>`;
+            showMinimapFlyout(html);
+        }
+
+        function crisisIconForArticle(a) {
+            if (!a || !a.cat) return 'alert-circle';
+            if (a.cat.includes('전쟁')) return 'bomb';
+            if (a.cat.includes('재난')) return 'triangle-alert';
+            if (a.cat.includes('경제위기')) return 'trending-down';
+            return 'alert-circle';
+        }
+
+        function crisisArticles() {
+            return approvedNews().filter(n => n.cat && (n.cat.includes('전쟁') || n.cat.includes('재난') || n.cat.includes('경제위기')));
+        }
+
+        function breakingArticles() {
+            return approvedNews().filter(n => n.cat && n.cat.includes('속보'));
+        }
+
+        function refreshMinimapMarkers() {
+            const wrap = document.getElementById('minimap-markers');
+            if (!wrap) return;
+            const frag = document.createDocumentFragment();
+
+            if (minimapMode === 'subs' && minimapSubLayout.length) {
+                minimapSubLayout.forEach((sub) => {
+                    const b = document.createElement('button');
+                    b.type = 'button';
+                    b.className = 'minimap-sub-pin';
+                    b.style.left = sub.x + '%';
+                    b.style.top = sub.y + '%';
+                    b.title = sub.label;
+                    b.setAttribute('aria-label', sub.label);
+                    b.addEventListener('click', () => openSubLocalFlyout(sub));
+                    frag.appendChild(b);
+                });
+            } else {
+                MAP_MACRO_REGIONS.forEach((m) => {
+                    const wrap = document.createElement('button');
+                    wrap.type = 'button';
+                    wrap.className = 'minimap-macro-pin';
+                    wrap.style.left = m.x + '%';
+                    wrap.style.top = m.y + '%';
+                    wrap.title = m.label;
+                    wrap.addEventListener('click', () => openMacroRegionFlyout(m.id));
+                    const head = document.createElement('div');
+                    head.className = 'minimap-pin-head';
+                    const ic = document.createElement('i');
+                    ic.setAttribute('data-lucide', 'map-pin');
+                    ic.className = 'w-3 h-3';
+                    head.appendChild(ic);
+                    const stem = document.createElement('div');
+                    stem.className = 'minimap-pin-stem';
+                    const lab = document.createElement('div');
+                    lab.className = 'minimap-pin-label';
+                    lab.textContent = m.label;
+                    wrap.appendChild(head);
+                    wrap.appendChild(stem);
+                    wrap.appendChild(lab);
+                    frag.appendChild(wrap);
+                });
+                const br = breakingArticles();
+                br.slice(0, 5).forEach((a, i) => {
+                    const pos = minimapMapCoordsForArticle(a, i);
+                    const wrap = document.createElement('button');
+                    wrap.type = 'button';
+                    wrap.className = 'minimap-breaking-pin';
+                    wrap.style.left = pos.x + '%';
+                    wrap.style.top = pos.y + '%';
+                    wrap.title = a.title;
+                    wrap.addEventListener('click', () => openBreakingFlyout(a));
+                    const head = document.createElement('div');
+                    head.className = 'minimap-pin-head';
+                    head.textContent = '속';
+                    const stem = document.createElement('div');
+                    stem.className = 'minimap-pin-stem';
+                    wrap.appendChild(head);
+                    wrap.appendChild(stem);
+                    frag.appendChild(wrap);
+                });
+                const cr = crisisArticles();
+                cr.slice(0, 5).forEach((a, i) => {
+                    const pos = minimapMapCoordsForArticle(a, i);
+                    const wrap = document.createElement('button');
+                    wrap.type = 'button';
+                    wrap.className = 'minimap-crisis-pin';
+                    wrap.style.left = pos.x + '%';
+                    wrap.style.top = pos.y + '%';
+                    wrap.title = a.title;
+                    wrap.addEventListener('click', () => minimapOnCrisis(a.id));
+                    const head = document.createElement('div');
+                    head.className = 'minimap-pin-head';
+                    const ic = document.createElement('i');
+                    ic.setAttribute('data-lucide', crisisIconForArticle(a));
+                    ic.className = 'w-4 h-4';
+                    head.appendChild(ic);
+                    const stem = document.createElement('div');
+                    stem.className = 'minimap-pin-stem';
+                    wrap.appendChild(head);
+                    wrap.appendChild(stem);
+                    frag.appendChild(wrap);
+                });
+            }
+            wrap.innerHTML = '';
+            wrap.appendChild(frag);
+            lucide.createIcons();
+        }
+
+        function minimapOnSubClick(cat) {
+            const sub = minimapSubLayout.find(s => s.cat === cat);
+            if (sub) openSubLocalFlyout(sub);
+        }
+
+        function minimapOnCrisis(id) {
+            const a = allNews.find(n => n.id === id);
+            if (!a) return;
+            drawMinimapInfluenceForArticle(a, { crisis: true });
+            const d = getDict();
+            const html = `
+                <p class="text-[10px] font-black text-neutral-900 uppercase mb-2">위기 보도</p>
+                ${minimapFlyoutFeaturedBlock(a)}
+                <button type="button" class="w-full mt-3 py-2 rounded-lg bg-neutral-900 text-white text-xs font-black hover:bg-black" onclick="renderDetail('${a.id}'); closeMinimap();">${escapeHtml(d.minimapGoArticle)}</button>`;
+            showMinimapFlyout(html);
+        }
+
+        function openMinimap() {
+            minimapMinimized = false;
+            const panel = document.getElementById('minimap-panel');
+            const fab = document.getElementById('minimap-fab');
+            if (fab) fab.classList.add('hidden');
+            if (panel) panel.classList.remove('hidden');
+            const d = getDict();
+            const t = document.getElementById('minimap-panel-title');
+            const h = document.getElementById('minimap-panel-hint');
+            if (t) t.textContent = d.minimapTitle || '지역 미니맵';
+            if (h) h.textContent = d.minimapHint || '';
+            minimapBackToRoot();
+            minimapApplyZoom();
+            lucide.createIcons();
+        }
+
+        function closeMinimap() {
+            const panel = document.getElementById('minimap-panel');
+            const fab = document.getElementById('minimap-fab');
+            if (panel) panel.classList.add('hidden');
+            if (fab) fab.classList.add('hidden');
+            minimapMinimized = false;
+            hideMinimapFlyout();
+            minimapBackToRoot();
+        }
+
+        document.addEventListener('keydown', function (e) {
+            if (e.key !== 'Escape') return;
+            const panel = document.getElementById('minimap-panel');
+            const fly = document.getElementById('minimap-flyout');
+            if (fly && !fly.classList.contains('hidden')) {
+                hideMinimapFlyout();
+                return;
+            }
+            if (panel && !panel.classList.contains('hidden')) closeMinimap();
+        });
+
+        function pickFromMinimap(cat) {
+            if (!cat) return;
+            closeMinimap();
+            window.history.pushState({}, '', '/');
+            renderCategory(cat);
+            window.scrollTo(0, 0);
+        }
+
         function getDict() {
-            return I18N[uiLang] || I18N.en;
+            return I18N[uiLang] || I18N[uiLang && uiLang.split('-')[0]] || I18N.en;
+        }
+
+        function showToast(msg) { alert(msg); }
+
+        function resolveArticleForUiLang(article) {
+            if (!article || uiLang === 'ko') return article;
+            const tr = allNews.find(n => n.approved && n.translationOf === article.globalNum && n.contentLang === uiLang);
+            return tr || article;
+        }
+
+        let notifUnsub = null;
+        function toggleNotifPanel(force) {
+            const panel = document.getElementById('notif-panel');
+            if (!panel) return;
+            const open = force === false ? false : (force === true ? true : panel.classList.contains('hidden'));
+            if (open) {
+                panel.classList.remove('hidden');
+                renderNotifList();
+            } else panel.classList.add('hidden');
+            lucide.createIcons();
+        }
+
+        function renderNotifList() {
+            const list = document.getElementById('notif-list');
+            const d = getDict();
+            if (!list) return;
+            if (!user) {
+                list.innerHTML = '<p class="text-slate-500 text-xs p-2">로그인 후 속보 알림을 받을 수 있습니다.</p>';
+                return;
+            }
+            list.innerHTML = '<p class="text-slate-400 text-xs p-2">불러오는 중…</p>';
+        }
+
+        async function subscribeBreakingAlert(articleId) {
+            if (!user || !articleId) return alert('로그인이 필요합니다.');
+            const a = allNews.find(n => n.id === articleId);
+            if (!a) return;
+            const ref = window.fs.doc(window.db, 'users', user.id, 'notifications', 'breaking_' + articleId);
+            await window.fs.setDoc(ref, {
+                type: 'breaking_subscribe', articleId, title: a.title, globalNum: a.globalNum,
+                read: false, timestamp: window.fs.serverTimestamp()
+            });
+            showToast('속보 알림이 등록되었습니다. 알림함에서 확인하세요.');
+            toggleNotifPanel(true);
+        }
+
+        function listenUserNotifications() {
+            if (notifUnsub) notifUnsub();
+            if (!user || !window.db) return;
+            const qNotif = window.fs.query(window.fs.collection(window.db, 'users', user.id, 'notifications'), window.fs.orderBy('timestamp', 'desc'));
+            const qSub = window.fs.query(window.fs.collection(window.db, 'users', user.id, 'subscriptions'));
+            
+            notifUnsub = window.fs.onSnapshot(qNotif, async (snap) => {
+                const items = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+                const subSnap = await window.fs.getDoc(qSub);
+                const subs = subSnap.docs.map(d => d.data().category);
+                
+                const unread = items.filter(i => !i.read).length;
+                const badge = document.getElementById('notif-badge');
+                if (badge) {
+                    if (unread > 0) { badge.textContent = String(unread); badge.classList.remove('hidden'); }
+                    else badge.classList.add('hidden');
+                }
+                const list = document.getElementById('notif-list');
+                const d = getDict();
+                if (!list) return;
+
+                let html = '';
+                if (subs.length > 0) {
+                    html += `<div class="mb-4 p-2 bg-blue-50 rounded-lg border border-blue-100">
+                        <p class="text-[10px] font-black text-blue-800 uppercase mb-2 flex items-center"><i data-lucide="mail" class="w-3 h-3 mr-1"></i> ${d.categoryNewsletter}</p>
+                        <div class="flex flex-wrap gap-1">
+                            ${subs.map(s => `<span class="bg-white text-blue-700 px-2 py-0.5 rounded text-[10px] font-bold border border-blue-200 cursor-pointer" onclick="renderCategory('${s}'); toggleNotifPanel(false);">${s}</span>`).join('')}
+                        </div>
+                    </div>`;
+                }
+
+                if (!items.length && !subs.length) {
+                    list.innerHTML = '<p class="text-slate-500 text-xs p-2">' + escapeHtml(d.notifEmpty || '알림이 없습니다.') + '</p>';
+                    return;
+                }
+
+                html += items.slice(0, 30).map(it => `
+                    <button type="button" class="w-full text-left p-2 rounded-lg hover:bg-slate-50 border border-slate-100 mb-1 ${it.read ? 'opacity-70' : ''}"
+                        onclick="openNotifItem('${it.id}','${it.articleId || ''}')">
+                        <p class="text-[10px] font-black text-red-700 uppercase">${escapeHtml(it.type === 'breaking_subscribe' ? '속보' : '알림')}</p>
+                        <p class="text-xs font-bold line-clamp-2">${escapeHtml(it.title || '')}</p>
+                    </button>`).join('');
+                
+                list.innerHTML = html;
+                lucide.createIcons();
+            });
+        }
+
+        async function openNotifItem(notifId, articleId) {
+            if (notifId && user) {
+                try {
+                    await window.fs.updateDoc(window.fs.doc(window.db, 'users', user.id, 'notifications', notifId), { read: true });
+                } catch (e) { /* ignore */ }
+            }
+            toggleNotifPanel(false);
+            if (articleId) {
+                const a = allNews.find(n => n.id === articleId);
+                if (a) renderDetail(a.id);
+            }
+        }
+
+        let commentsUnsub = null;
+        function mountComments(articleId) {
+            const box = document.getElementById('comments-mount');
+            if (!box || !window.db) return;
+            if (commentsUnsub) commentsUnsub();
+            const d = getDict();
+            const q = window.fs.query(window.fs.collection(window.db, 'articles', articleId, 'comments'), window.fs.orderBy('timestamp', 'desc'));
+            commentsUnsub = window.fs.onSnapshot(q, (snap) => {
+                const rows = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                box.innerHTML = `
+                    <h3 class="text-lg font-black mb-4">${escapeHtml(d.comments || '댓글')}</h3>
+                    ${user ? `<div class="flex gap-2 mb-4">
+                        <input id="comment-input" type="text" maxlength="500" placeholder="${escapeHtml(d.commentPlaceholder || '')}" class="flex-1 border rounded-lg px-3 py-2 text-sm">
+                        <button type="button" onclick="submitComment('${articleId}')" class="shrink-0 bg-blue-900 text-white px-4 py-2 rounded-lg text-sm font-bold">${escapeHtml(d.postComment || '등록')}</button>
+                    </div>` : '<p class="text-sm text-gray-500 mb-4">로그인 후 댓글을 남길 수 있습니다.</p>'}
+                    <ul class="space-y-3">${rows.map(c => `
+                        <li class="border-b border-gray-100 pb-3">
+                            <p class="text-xs font-bold text-gray-600">${escapeHtml(c.author || '')}</p>
+                            <p class="text-sm text-gray-800 mt-1">${escapeHtml(c.text || '')}</p>
+                        </li>`).join('') || '<li class="text-sm text-gray-400">첫 댓글을 남겨보세요.</li>'}</ul>`;
+            });
+        }
+
+        async function submitComment(articleId) {
+            const input = document.getElementById('comment-input');
+            const text = (input && input.value || '').trim();
+            if (!user) return alert('로그인이 필요합니다.');
+            if (!text) return;
+            await window.fs.addDoc(window.fs.collection(window.db, 'articles', articleId, 'comments'), {
+                text, author: user.name, authorId: user.id, timestamp: window.fs.serverTimestamp()
+            });
+            if (input) input.value = '';
+        }
+
+        function insertInlineImageSlot() {
+            const ta = document.getElementById('post-content');
+            const imgTa = document.getElementById('post-inline-images');
+            if (!ta || !imgTa) return;
+            const lines = imgTa.value.split('\n').filter(l => l.trim());
+            const n = lines.length + 1;
+            const tag = '[img' + n + ']';
+            const start = ta.selectionStart || ta.value.length;
+            const before = ta.value.slice(0, start);
+            const after = ta.value.slice(start);
+            ta.value = before + (before.endsWith('\n') || !before ? '' : '\n') + tag + '\n' + after;
+            imgTa.value = (imgTa.value ? imgTa.value + '\n' : '') + 'https:// | center';
+            ta.focus();
+        }
+
+        function buildAdminCategoryCheckboxes() {
+            const wrap = document.getElementById('cat-checkboxes');
+            if (!wrap || wrap.dataset.built === '1') return;
+            const topics = ['정치','경제','사회','외교통일','국방','문화','사설/칼럼','속보','전쟁','재난','경제위기','단독','기획보도'];
+            const macros = ['한국','미국','유럽','중국','일본','인도','중동','아프리카','남미','캐나다','러시아','동남아','라틴아메리카','중앙아시아'];
+            let html = '<p class="col-span-2 text-[10px] font-bold text-yellow-300 mb-1">주제·속보</p>';
+            topics.forEach(t => { html += `<label class="flex items-center space-x-2"><input type="checkbox" value="${t}"> <span>${t}</span></label>`; });
+            html += '<p class="col-span-2 text-[10px] font-bold text-blue-300 mt-2 mb-1">권역 (간단)</p>';
+            macros.forEach(t => { html += `<label class="flex items-center space-x-2"><input type="checkbox" value="${t}"> <span>${t}</span></label>`; });
+            MINIMAP_SECTIONS.forEach(sec => {
+                html += `<details class="col-span-2 mt-1 border border-white/10 rounded"><summary class="cursor-pointer px-2 py-1 text-[10px] font-bold text-slate-300">${escapeHtml(sec.title)}</summary><div class="grid grid-cols-2 gap-1 p-2">`;
+                sec.items.forEach(([label, cat]) => {
+                    html += `<label class="flex items-center space-x-1 text-[10px]"><input type="checkbox" value="${escapeHtml(cat)}"> <span>${escapeHtml(label)}</span></label>`;
+                });
+                html += '</div></details>';
+            });
+            wrap.innerHTML = html;
+            wrap.dataset.built = '1';
         }
 
         function renderNav() {
@@ -858,6 +1996,15 @@
                 densBtn.textContent = (regionDensity === 'full') ? d.regionBtnFull : d.regionBtnSimple;
                 densBtn.classList.remove('hidden');
             }
+            const authUi = document.getElementById('auth-ui');
+            if (authUi && !authUi.classList.contains('hidden')) {
+                const loginBtn = authUi.querySelector('button');
+                const regBtn = authUi.querySelectorAll('button')[1];
+                if (loginBtn) loginBtn.textContent = d.login || 'Log in';
+                if (regBtn) regBtn.textContent = d.register || 'Register';
+            }
+            const logoutBtn = document.querySelector('#user-ui button[onclick="handleLogout()"]');
+            if (logoutBtn) logoutBtn.textContent = d.logout || '로그아웃';
         }
 
         function changeLang(code) {
@@ -979,6 +2126,7 @@
             if(RANK_POWER[user.rank] >= 3) {
                 document.getElementById('admin-btn').classList.remove('hidden');
             }
+            listenUserNotifications();
             lucide.createIcons();
         }
 
@@ -1003,6 +2151,8 @@
                author: user.name, authorId: user.id,
                email: email || '',
                date, views,
+               contentLang: 'ko',
+               translationOf: null,
                timestamp: window.fs.serverTimestamp(),
                approved: RANK_POWER[user.rank] >= 4
             };
@@ -1042,6 +2192,7 @@
         function switchAdminTab(id) {
             document.querySelectorAll('.admin-tab').forEach(t => t.classList.add('hidden'));
             document.getElementById('admin-tab-' + id).classList.remove('hidden');
+            if (id === 'write') buildAdminCategoryCheckboxes();
             if(id === 'approval') loadApprovals();
             if(id === 'users') loadUsers();
             if(id === 'settings') loadSettings();
@@ -1119,6 +2270,7 @@
             const sel = document.getElementById('lang-select');
             if (sel) sel.value = uiLang;
             renderNav();
+            if (typeof lucide !== 'undefined') lucide.createIcons();
         })();
 
         window.onload = init;

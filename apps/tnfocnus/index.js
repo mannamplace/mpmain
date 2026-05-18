@@ -3,6 +3,7 @@ import rawHtml from "./index.html";
 const FIREBASE_PROJECT_ID = "tnnews-502d4";
 const FIREBASE_API_KEY = "AIzaSyAzi4dSgnidJPVado54jTDH94Fyw1CVmx4";
 const SITE_URL = "https://tnfocnus.mannamplace.com";
+const DEFAULT_ARTICLE_THUMB = "https://i.ibb.co/mrhDt2F2/tnfocnus-default-thumb.jpg";
 
 export default {
   async fetch(request, env, ctx) {
@@ -65,7 +66,7 @@ ${urls.join('\n')}
 
       let title = "T.N. News";
       let description = "News to all";
-      let imageUrl = "https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=800";
+      let imageUrl = DEFAULT_ARTICLE_THUMB;
       let articleUrl = url.href;
 
       if (response.ok) {
@@ -83,7 +84,8 @@ ${urls.join('\n')}
             title = f.title?.stringValue || title;
             const rawContent = f.content?.stringValue || '';
             description = (f.desc?.stringValue || rawContent.substring(0, 150)).replace(/<[^>]*>/g, '').trim();
-            imageUrl = f.img?.stringValue || imageUrl;
+            const imgField = f.img?.stringValue?.trim();
+            imageUrl = imgField || DEFAULT_ARTICLE_THUMB;
           }
         }
       }

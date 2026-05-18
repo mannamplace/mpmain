@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mannamplace Account — 통합 계정/설정</title>
+  <meta name="description" content="Mannamplace 통합 로그인·계정 설정 허브(연동 상태, 보안, 프로필, 운영 권한)" />
+  <link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Noto+Sans+KR:wght@300;400;500;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box}
+    :root{
+      --org:#B84A00;--org2:#D45500;--org3:#FF6B1A;--org-dark:#8C3700;
+      --bg:#0F0A06;--bg2:#1A1008;--bg3:#241508;
+      --card:#160C04;--border:#3A1E08;--border2:#5C3010;
+      --text:#F5E6D8;--text2:#C4956A;--text3:#7A4A28;--white:#FFF8F2;
+      --blue:#4A9EFF;--green:#2ECC71;--red:#FF4444;--yellow:#FFD166;
+    }
+    body{background:var(--bg);color:var(--text);font-family:'Noto Sans KR',sans-serif;min-height:100vh;overflow-x:hidden}
+    .topbar{position:sticky;top:0;z-index:50;background:rgba(15,10,6,0.95);backdrop-filter:blur(14px);border-bottom:1px solid var(--border);height:54px;display:flex;align-items:center;gap:12px;padding:0 16px}
+    .logo{font-family:'Black Han Sans',sans-serif;font-size:16px;color:var(--white);text-decoration:none;white-space:nowrap}
+    .logo em{color:var(--org3);font-style:normal}
+    .sub{font-size:10px;color:var(--text3);font-family:'JetBrains Mono',monospace;letter-spacing:2px}
+    .wrap{max-width:1100px;margin:0 auto;padding:16px}
+    .hero{display:flex;gap:14px;align-items:flex-end;justify-content:space-between;flex-wrap:wrap;margin-top:10px;margin-bottom:12px}
+    .h-title{font-size:18px;font-weight:800;color:var(--white)}
+    .h-desc{font-size:12px;color:var(--text2);margin-top:4px;line-height:1.6}
+    .pill{font-size:10px;color:var(--org3);border:1px solid var(--org);background:rgba(184,74,0,0.12);padding:2px 8px;border-radius:999px;font-family:'JetBrains Mono',monospace}
+    .grid{display:grid;grid-template-columns:340px 1fr;gap:12px}
+    @media(max-width:920px){.grid{grid-template-columns:1fr}}
+    .card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:14px}
+    .card-h{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+    .card-t{font-size:12px;font-weight:800;color:var(--white);letter-spacing:0.2px}
+    .muted{color:var(--text3);font-size:11px}
+    .row{display:flex;gap:10px;flex-wrap:wrap}
+    .btn{border:none;border-radius:8px;padding:8px 12px;font-size:12px;font-weight:800;cursor:pointer;transition:.15s;font-family:'Noto Sans KR',sans-serif}
+    .btn.primary{background:var(--org);color:#fff}
+    .btn.primary:hover{background:var(--org2)}
+    .btn.ghost{background:transparent;border:1px solid var(--border2);color:var(--text2)}
+    .btn.ghost:hover{border-color:var(--org);color:var(--org3)}
+    .kv{display:grid;grid-template-columns:120px 1fr;gap:8px;font-size:12px}
+    .kv b{color:var(--text2);font-weight:700}
+    .box{background:var(--bg3);border:1px solid var(--border2);border-radius:10px;padding:10px}
+    .svc{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+    @media(max-width:920px){.svc{grid-template-columns:repeat(2,1fr)}}
+    @media(max-width:520px){.svc{grid-template-columns:1fr}}
+    .svc a{display:block;text-decoration:none;background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:10px;transition:.15s}
+    .svc a:hover{border-color:var(--org);transform:translateY(-1px)}
+    .svc .name{font-size:12px;font-weight:800;color:var(--white)}
+    .svc .meta{font-size:10px;color:var(--text3);margin-top:2px}
+    .tog{display:flex;align-items:center;gap:10px;justify-content:space-between}
+    .switch{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text2)}
+    .switch input{accent-color:var(--org3)}
+    .note{font-size:11px;color:var(--text3);line-height:1.6;margin-top:8px}
+    .table{width:100%;border-collapse:separate;border-spacing:0 8px}
+    .table td{padding:10px;background:var(--bg2);border:1px solid var(--border);font-size:11px;color:var(--text2)}
+    .table td:first-child{border-radius:10px 0 0 10px;width:140px;color:var(--text3)}
+    .table td:last-child{border-radius:0 10px 10px 0}
+    code{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--yellow)}
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <a class="logo" href="../mp/index.html">Mannam<em>place</em></a>
+    <span class="sub">ACCOUNT HUB</span>
+    <div style="margin-left:auto" class="row">
+      <button class="btn ghost" onclick="toggleMockLogin()">로그인 상태 토글</button>
+      <button class="btn primary" onclick="alert('SSO/OAuth 연동은 백엔드(Workers/서버) 연결 후 활성화됩니다.')">Login with Manamp</button>
+    </div>
+  </header>
+
+  <div class="wrap">
+    <div class="hero">
+      <div>
+        <div class="h-title">Mannamplace Account</div>
+        <div class="h-desc">
+          전 서브사이트의 로그인·프로필·보안·연동 상태를 한 곳에서 관리하는 통합 설정 허브.
+        </div>
+      </div>
+      <span class="pill" id="session-pill">SESSION: GUEST</span>
+    </div>
+
+    <div class="grid">
+      <section class="card">
+        <div class="card-h">
+          <div class="card-t">내 프로필</div>
+          <div class="muted">v0 UI (연동 준비)</div>
+        </div>
+        <div class="box kv" style="margin-bottom:10px">
+          <b>Mannamplace ID</b><span id="kv-id">—</span>
+          <b>프로필</b><span id="kv-prof">기본 프로필 1개</span>
+          <b>권한</b><span id="kv-role">일반회원</span>
+          <b>2FA</b><span id="kv-2fa">꺼짐</span>
+        </div>
+        <div class="row">
+          <button class="btn primary" onclick="alert('프로필 편집 UI는 준비 중입니다.')">프로필 편집</button>
+          <button class="btn ghost" onclick="alert('이메일/계정 추가 기능은 준비 중입니다.')">이메일/계정 추가</button>
+        </div>
+        <div class="note">
+          목표: “한 계정 밑에 여러 프로필/이메일”을 관리하고, 각 서비스에 동일 세션으로 접근.
+        </div>
+      </section>
+
+      <section class="card">
+        <div class="card-h">
+          <div class="card-t">서비스 연동 상태</div>
+          <div class="muted">전 서브사이트 동기화</div>
+        </div>
+
+        <table class="table" aria-label="연동 상태 표">
+          <tr><td>Community</td><td><span id="lk-core">연결 안 됨</span> · <code>apps/core</code></td></tr>
+          <tr><td>News</td><td><span id="lk-tn">연결 안 됨</span> · <code>apps/tnfocnus</code></td></tr>
+          <tr><td>Market</td><td><span id="lk-market">연결 안 됨</span> · <code>apps/market</code></td></tr>
+          <tr><td>Mail</td><td><span id="lk-mail">연결 안 됨</span> · <code>apps/mail</code></td></tr>
+          <tr><td>Messenger</td><td><span id="lk-msg">연결 안 됨</span> · <code>apps/messenger</code></td></tr>
+          <tr><td>Pay</td><td><span id="lk-pay">연결 안 됨</span> · <code>apps/pay</code></td></tr>
+        </table>
+
+        <div class="tog" style="margin-top:10px">
+          <div class="switch">
+            <input id="sync-toggle" type="checkbox" checked />
+            <label for="sync-toggle">서브사이트 세션 동기화(모의)</label>
+          </div>
+          <button class="btn ghost" onclick="alert('감사 로그/연동 토큰 관리는 백엔드 연결 후 활성화됩니다.')">연동 관리</button>
+        </div>
+
+        <div class="note">
+          실제 구현 시: OIDC/JWT 세션 + 서비스별 스코프 토큰 + 감사 로그(immutable)가 핵심.
+        </div>
+      </section>
+
+      <section class="card" style="grid-column:1 / -1">
+        <div class="card-h">
+          <div class="card-t">빠른 이동</div>
+          <div class="muted">포털/서비스 허브</div>
+        </div>
+        <div class="svc">
+          <a href="../mp/index.html"><div class="name">Mannamplace</div><div class="meta">메인 포털</div></a>
+          <a href="../core/index.html"><div class="name">Community Core</div><div class="meta">공론장 커뮤니티</div></a>
+          <a href="../tnfocnus/index.html"><div class="name">TNfocnus</div><div class="meta">뉴스</div></a>
+          <a href="../market/index.html"><div class="name">Market</div><div class="meta">커머스</div></a>
+          <a href="../messenger/index.html"><div class="name">Messenger</div><div class="meta">메신저</div></a>
+          <a href="../office/office-viewer.html"><div class="name">Office</div><div class="meta">뷰어/양식(준비)</div></a>
+          <a href="../game/index.html"><div class="name">Games</div><div class="meta">통합 게임 허브</div></a>
+          <a href="../move/index.html"><div class="name">Move</div><div class="meta">모빌리티</div></a>
+        </div>
+      </section>
+
+      <section class="card" style="grid-column:1 / -1">
+        <div class="card-h">
+          <div class="card-t">최고 운영진 패널(모의)</div>
+          <div class="muted">임명/면직 UI 스켈레톤</div>
+        </div>
+        <div class="box">
+          <div class="row" style="justify-content:space-between;align-items:flex-end">
+            <div>
+              <div style="font-size:12px;font-weight:800;color:var(--white)">서비스 운영진</div>
+              <div class="muted" style="margin-top:2px">서비스별 운영진을 임명/면직(권한·감사 로그는 백엔드 연동 시 활성화)</div>
+            </div>
+            <button class="btn primary" onclick="alert('운영진 임명 API는 백엔드 연결 후 활성화됩니다.')">운영진 임명</button>
+          </div>
+          <div style="height:10px"></div>
+          <table class="table">
+            <tr><td>Community</td><td>운영진: <code>—</code> · 상태: <span style="color:var(--text3)">미지정</span></td></tr>
+            <tr><td>TNfocnus</td><td>운영진: <code>—</code> · 상태: <span style="color:var(--text3)">미지정</span></td></tr>
+            <tr><td>Market</td><td>운영진: <code>—</code> · 상태: <span style="color:var(--text3)">미지정</span></td></tr>
+            <tr><td>Games</td><td>운영진: <code>—</code> · 상태: <span style="color:var(--text3)">미지정</span></td></tr>
+          </table>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <script>
+    function toggleMockLogin(){
+      const cur = JSON.parse(localStorage.getItem('mp_account_mock') || 'null');
+      if(cur){
+        localStorage.removeItem('mp_account_mock');
+      }else{
+        localStorage.setItem('mp_account_mock', JSON.stringify({
+          id: 'manamp_user',
+          role: '일반회원',
+          profiles: 1,
+          twofa: false,
+          linked: { core:false, tnfocnus:false, market:false, mail:false, messenger:false, pay:false }
+        }));
+      }
+      render();
+    }
+
+    function render(){
+      const s = JSON.parse(localStorage.getItem('mp_account_mock') || 'null');
+      const pill = document.getElementById('session-pill');
+      if(!s){
+        pill.textContent = 'SESSION: GUEST';
+        document.getElementById('kv-id').textContent = '—';
+        document.getElementById('kv-role').textContent = '게스트';
+        document.getElementById('kv-prof').textContent = '—';
+        document.getElementById('kv-2fa').textContent = '—';
+        ['core','tn','market','mail','msg','pay'].forEach(k => {
+          const el = document.getElementById('lk-' + k);
+          if(el) el.textContent = '연결 안 됨';
+        });
+        return;
+      }
+
+      pill.textContent = 'SESSION: LOGGED IN';
+      document.getElementById('kv-id').textContent = s.id;
+      document.getElementById('kv-role').textContent = s.role;
+      document.getElementById('kv-prof').textContent = `프로필 ${s.profiles}개`;
+      document.getElementById('kv-2fa').textContent = s.twofa ? '켜짐' : '꺼짐';
+
+      const map = { core:'core', tn:'tnfocnus', market:'market', mail:'mail', msg:'messenger', pay:'pay' };
+      Object.entries(map).forEach(([idKey, linkKey]) => {
+        const el = document.getElementById('lk-' + idKey);
+        if(!el) return;
+        const ok = !!s.linked?.[linkKey];
+        el.textContent = ok ? '연결됨' : '연결 안 됨';
+        el.style.color = ok ? 'var(--green)' : '';
+      });
+    }
+
+    render();
+  </script>
+</body>
+</html>
