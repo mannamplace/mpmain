@@ -4,7 +4,7 @@
 // 역할: Resend API를 통한 이메일 발송
 // ══════════════════════════════════════════
 
-const RESEND_API_KEY = env.RESEND.API.KEY; 
+const RESEND_API_KEY = env.RESEND_API_KEY; 
 const FROM_EMAIL = "noreply@mannamplace.com";
 const FROM_NAME = "Mannamplace";
 const SITE_URL = "https://mannamplace.com";
