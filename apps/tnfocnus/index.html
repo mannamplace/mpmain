@@ -482,1798 +482,2057 @@
     </div>
 
     <script>
-        // State Management
-        let user = null;
-        let allNews = [];
-        let siteConfig = { title: "T.N. News", adminPw: "1234" };
-        const RANK_POWER = { "최고운영진": 5, "기자 간부": 4, "기자": 3, "시민기자": 2, "일반회원": 1 };
+/**
+ * TNfocnus 개선 패치
+ * 기존 <script> 태그 내용을 이 파일 전체로 교체하세요.
+ *
+ * 개선사항:
+ * 1. 미니맵 좌표 정확도 (Mercator 투영 기반 보정)
+ * 2. 다국어 UI 완성 (ES/FR/DE/RU/PT/AR/HI)
+ * 3. 번역 시스템 (관리자 수동 요청 → Claude API → 별도 기사번호)
+ * 4. 뉴스레터/알림 시스템 완성
+ */
 
-        const DEFAULT_ARTICLE_THUMB = 'https://i.ibb.co/mrhDt2F2/tnfocnus-default-thumb.jpg';
+// ── 상태 ──────────────────────────────────────────────────────────
+let user = null;
+let allNews = [];
+let siteConfig = { title: "T.N. News", adminPw: "1234" };
+const RANK_POWER = { "최고운영진": 5, "기자 간부": 4, "기자": 3, "시민기자": 2, "일반회원": 1 };
+const DEFAULT_ARTICLE_THUMB = 'https://i.ibb.co/mrhDt2F2/tnfocnus-default-thumb.jpg';
 
-        function articleThumb(img) {
-            const s = (img == null ? '' : String(img)).trim();
-            return s ? s : DEFAULT_ARTICLE_THUMB;
-        }
+function articleThumb(img) {
+    const s = (img == null ? '' : String(img)).trim();
+    return s ? s : DEFAULT_ARTICLE_THUMB;
+}
 
-        function escapeHtml(str) {
-            if (str == null) return '';
-            return String(str)
-                .replace(/&/g, '&amp;')
-                .replace(/</g, '&lt;')
-                .replace(/>/g, '&gt;')
-                .replace(/"/g, '&quot;');
-        }
+function escapeHtml(str) {
+    if (str == null) return '';
+    return String(str)
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
 
-        function parseInlineImageLine(line) {
-            const trimmed = String(line || '').trim();
-            if (!trimmed) return { url: '', align: 'center' };
-            const m = trimmed.match(/\s*\|\s*(left|right|center|full)\s*$/i);
-            if (m) {
-                const align = m[1].toLowerCase();
-                const url = trimmed.slice(0, m.index).trim();
-                return { url, align: align === 'full' ? 'center' : align };
-            }
-            return { url: trimmed, align: 'center' };
-        }
+function parseInlineImageLine(line) {
+    const trimmed = String(line || '').trim();
+    if (!trimmed) return { url: '', align: 'center' };
+    const m = trimmed.match(/\s*\|\s*(left|right|center|full)\s*$/i);
+    if (m) {
+        const align = m[1].toLowerCase();
+        const url = trimmed.slice(0, m.index).trim();
+        return { url, align: align === 'full' ? 'center' : align };
+    }
+    return { url: trimmed, align: 'center' };
+}
 
-        function buildInlineFigureHtml(imgUrl, align) {
-            const safeUrl = escapeHtml(imgUrl);
-            let wrapClass = 'my-8 text-center clear-both';
-            let imgClass = 'max-w-full h-auto rounded-lg shadow-md mx-auto';
-            if (align === 'left') {
-                wrapClass = 'my-8 float-left mr-6 mb-4 max-w-[min(100%,24rem)] text-left';
-                imgClass = 'w-full h-auto rounded-lg shadow-md';
-            } else if (align === 'right') {
-                wrapClass = 'my-8 float-right ml-6 mb-4 max-w-[min(100%,24rem)] text-right';
-                imgClass = 'w-full h-auto rounded-lg shadow-md';
-            }
-            return `
-                <div class="${wrapClass}">
-                    <img src="${safeUrl}" alt="" class="${imgClass}">
-                    <p class="text-xs text-gray-400 mt-2 italic">사진: T.N. News</p>
-                </div>`;
-        }
+function buildInlineFigureHtml(imgUrl, align) {
+    const safeUrl = escapeHtml(imgUrl);
+    let wrapClass = 'my-8 text-center clear-both';
+    let imgClass = 'max-w-full h-auto rounded-lg shadow-md mx-auto';
+    if (align === 'left') {
+        wrapClass = 'my-8 float-left mr-6 mb-4 max-w-[min(100%,24rem)] text-left';
+        imgClass = 'w-full h-auto rounded-lg shadow-md';
+    } else if (align === 'right') {
+        wrapClass = 'my-8 float-right ml-6 mb-4 max-w-[min(100%,24rem)] text-right';
+        imgClass = 'w-full h-auto rounded-lg shadow-md';
+    }
+    return `<div class="${wrapClass}"><img src="${safeUrl}" alt="" class="${imgClass}"><p class="text-xs text-gray-400 mt-2 italic">사진: T.N. News</p></div>`;
+}
 
-        let isFirstLoad = true;
+let isFirstLoad = true;
 
-        function routeFromPath() {
-            const pathParts = window.location.pathname.split('/').filter(p => p);
-            if (pathParts[0] === 'reporter' && pathParts[1]) {
-                renderReporterArchive(decodeURIComponent(pathParts[1]));
-                return;
-            }
-            const numFromPath = pathParts.length >= 2 ? pathParts[1] : null;
-            const numFromQuery = new URLSearchParams(window.location.search).get('num');
-            const targetNum = numFromPath || numFromQuery;
-            if (targetNum) {
-                const found = allNews.find(n => String(n.globalNum) === String(targetNum));
-                if (found) renderDetail(found.id);
-                else renderHome();
-            } else {
-                renderHome();
-            }
-        }
+function routeFromPath() {
+    const pathParts = window.location.pathname.split('/').filter(p => p);
+    if (pathParts[0] === 'reporter' && pathParts[1]) {
+        renderReporterArchive(decodeURIComponent(pathParts[1]));
+        return;
+    }
+    const numFromPath = pathParts.length >= 2 ? pathParts[1] : null;
+    const numFromQuery = new URLSearchParams(window.location.search).get('num');
+    const targetNum = numFromPath || numFromQuery;
+    if (targetNum) {
+        const found = allNews.find(n => String(n.globalNum) === String(targetNum));
+        if (found) renderDetail(found.id);
+        else renderHome();
+    } else {
+        renderHome();
+    }
+}
 
-        async function init() {
-            // 로컬 스토리지에서 사용자 정보 복구
-            const savedUser = localStorage.getItem('tnuser');
-            if (savedUser) {
-                user = JSON.parse(savedUser);
-                loginSuccess();
-            }
+async function init() {
+    const savedUser = localStorage.getItem('tnuser');
+    if (savedUser) { user = JSON.parse(savedUser); loginSuccess(); }
 
-            // Firebase에서 siteConfig 불러오기
-            try {
-                const configSnap = await window.fs.getDoc(window.fs.doc(window.db, "settings", "global"));
-                if (configSnap.exists()) {
-                    siteConfig = configSnap.data();
-                }
-            } catch(e) { console.error("Config load error:", e); }
+    try {
+        const configSnap = await window.fs.getDoc(window.fs.doc(window.db, "settings", "global"));
+        if (configSnap.exists()) siteConfig = configSnap.data();
+    } catch(e) {}
 
-            const q = window.fs.query(window.fs.collection(window.db, "articles"), window.fs.orderBy("timestamp", "desc"));
-            window.fs.onSnapshot(q, (snap) => {
-                allNews = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-        
-                if (isFirstLoad) {
-                    routeFromPath();
-                    isFirstLoad = false;
-                }
-                updateAdminLists();
-                try {
-                    const mp = document.getElementById('minimap-panel');
-                    if (mp && !mp.classList.contains('hidden')) refreshMinimapMarkers();
-                } catch (err) { /* ignore */ }
-            });
-        }
+    const q = window.fs.query(window.fs.collection(window.db, "articles"), window.fs.orderBy("timestamp", "desc"));
+    window.fs.onSnapshot(q, (snap) => {
+        allNews = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+        if (isFirstLoad) { routeFromPath(); isFirstLoad = false; }
+        updateAdminLists();
+        try {
+            const mp = document.getElementById('minimap-panel');
+            if (mp && !mp.classList.contains('hidden')) refreshMinimapMarkers();
+        } catch (err) {}
+    });
+}
 
-        window.addEventListener('popstate', () => {
-            routeFromPath();
-        });
-        
-        function renderHome() {
-            const container = document.getElementById('main-view');
-            if (!container) return;
+window.addEventListener('popstate', () => routeFromPath());
 
-            const breaking = allNews.filter(n => n.cat && n.cat.includes('속보') && n.approved);
-            const approved = allNews.filter(n => n.approved);
+// ── 홈/카테고리/상세 렌더 ─────────────────────────────────────────
 
-            const ticker = document.getElementById('breaking-ticker');
-            if (ticker) {
-                if (breaking.length > 0) {
-                    ticker.classList.remove('hidden');
-                    const breakingContent = document.getElementById('breaking-content');
-                    if (breakingContent) {
-                        breakingContent.innerHTML = breaking[0].title;
-                        breakingContent.onclick = () => renderDetail(breaking[0].id);
-                    }
-                } else {
-                    ticker.classList.add('hidden');
-                }
-            }
-
-            if (approved.length === 0) {
-                container.innerHTML = '<div class="py-40 text-center text-gray-400 font-bold">발행된 뉴스가 없습니다.</div>';
-                return;
-            }
-
-            const mainNews = approved[0];
-            const sub1 = approved[1];
-            const sub2 = approved[2];
-            const sub3 = approved[3];
-
-            container.innerHTML = `
-                <section class="grid grid-cols-1 lg:grid-cols-12 gap-10 mb-16">
-                    <div class="lg:col-span-7 cursor-pointer group" onclick="renderDetail('${mainNews.id}')">
-                        <div class="overflow-hidden rounded-2xl shadow-2xl aspect-video bg-gray-200">
-                            <img src="${articleThumb(mainNews.img)}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700">
-                        </div>
-                    </div>
-                    <div class="lg:col-span-5 flex flex-col justify-center">
-                        <span class="text-blue-700 font-black text-xs uppercase tracking-widest mb-3">
-                            ${mainNews.cat ? mainNews.cat[0] : 'NEWS'}
-                        </span>
-                        <h1 class="text-4xl font-black mb-5 hover:text-blue-800 cursor-pointer leading-tight" onclick="renderDetail('${mainNews.id}')">
-                            ${mainNews.title}
-                        </h1>
-                        <p class="text-gray-600 text-lg leading-relaxed line-clamp-3 mb-6">
-                            ${mainNews.content ? mainNews.content.substring(0, 200) : ''}...
-                        </p>
-                        <div class="flex items-center text-sm font-bold text-gray-400">
-                            <button type="button" class="hover:text-blue-800 hover:underline text-left" onclick='goReporter(${JSON.stringify(mainNews.authorId != null ? String(mainNews.authorId) : String(mainNews.author || ''))})'>T.N. ${mainNews.author} 기자</button>
-                            <span class="mx-3">|</span>
-                            <span>${mainNews.date}</span>
-                        </div>
-                    </div>
-                </section>
-
-                <section class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 pb-16 border-b">
-                    ${sub1 ? `
-                        <div class="space-y-4 group cursor-pointer" onclick="renderDetail('${sub1.id}')">
-                            <div class="aspect-video bg-gray-100 rounded-xl overflow-hidden shadow-md">
-                                <img src="${articleThumb(sub1.img)}" class="w-full h-full object-cover group-hover:opacity-90 transition">
-                            </div>
-                            <h3 class="text-xl font-bold line-clamp-2 group-hover:text-blue-700">${sub1.title}</h3>
-                            <p class="text-sm text-gray-500 line-clamp-2">${sub1.content ? sub1.content.substring(0, 80) : ''}...</p>
-                        </div>
-                    ` : ''}
-                    ${sub2 ? `
-                        <div class="space-y-6">
-                            <div class="border-l-4 border-blue-900 pl-4 py-1">
-                                <h3 class="text-lg font-black cursor-pointer hover:text-blue-800" onclick="renderDetail('${sub2.id}')">${sub2.title}</h3>
-                            </div>
-                            <div class="space-y-4">
-                                <p class="text-xs font-bold text-gray-400">관련 기사</p>
-                                ${approved.slice(4, 6).map(n => `
-                                    <p class="text-sm hover:underline cursor-pointer line-clamp-1" onclick="renderDetail('${n.id}')">• ${n.title}</p>
-                                `).join('')}
-                            </div>
-                        </div>
-                    ` : ''}
-                    ${sub3 ? `
-                        <div class="space-y-6">
-                            <div class="border-l-4 border-slate-400 pl-4 py-1">
-                                <h3 class="text-lg font-black cursor-pointer hover:text-blue-800" onclick="renderDetail('${sub3.id}')">${sub3.title}</h3>
-                            </div>
-                            <div class="space-y-4">
-                                <p class="text-xs font-bold text-gray-400">관련 기사</p>
-                                ${approved.slice(6, 8).map(n => `
-                                    <p class="text-sm hover:underline cursor-pointer line-clamp-1" onclick="renderDetail('${n.id}')">• ${n.title}</p>
-                                `).join('')}
-                            </div>
-                        </div>
-                    ` : ''}
-                </section>
-
-                <section class="py-16 grid grid-cols-1 md:grid-cols-2 gap-12">
-                    ${['정치', '경제', '사회', '외교통일','문화'].map(c => renderCategoryPreview(c, approved)).join('')}
-                </section>
-            `;
-            lucide.createIcons();
-        }
-
-        function formatDateTime(timestamp) {
-            if (!timestamp) return '';
-            const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
-            const year = date.getFullYear();
-            const month = String(date.getMonth() + 1).padStart(2, '0');
-            const day = String(date.getDate()).padStart(2, '0');
-            const hours = String(date.getHours()).padStart(2, '0');
-            const minutes = String(date.getMinutes()).padStart(2, '0');
-            return `${year}-${month}-${day} ${hours}:${minutes}`;
-        }
-        
-        function renderCategoryPreview(cat, newsList) {
-            const list = newsList.filter(n => n.cat && n.cat.includes(cat));
-            if(list.length === 0) return '';
-            const top = list[0];
-            return `
+function renderHome() {
+    const container = document.getElementById('main-view');
+    if (!container) return;
+    const breaking = allNews.filter(n => n.cat && n.cat.includes('속보') && n.approved);
+    const approved = allNews.filter(n => n.approved);
+    const ticker = document.getElementById('breaking-ticker');
+    if (ticker) {
+        if (breaking.length > 0) {
+            ticker.classList.remove('hidden');
+            const bc = document.getElementById('breaking-content');
+            if (bc) { bc.innerHTML = breaking[0].title; bc.onclick = () => renderDetail(breaking[0].id); }
+        } else ticker.classList.add('hidden');
+    }
+    if (approved.length === 0) {
+        container.innerHTML = '<div class="py-40 text-center text-gray-400 font-bold">발행된 뉴스가 없습니다.</div>';
+        return;
+    }
+    const [mainNews, sub1, sub2, sub3] = approved;
+    container.innerHTML = `
+        <section class="grid grid-cols-1 lg:grid-cols-12 gap-10 mb-16">
+            <div class="lg:col-span-7 cursor-pointer group" onclick="renderDetail('${mainNews.id}')">
+                <div class="overflow-hidden rounded-2xl shadow-2xl aspect-video bg-gray-200">
+                    <img src="${articleThumb(mainNews.img)}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700">
+                </div>
+            </div>
+            <div class="lg:col-span-5 flex flex-col justify-center">
+                <span class="text-blue-700 font-black text-xs uppercase tracking-widest mb-3">${mainNews.cat ? mainNews.cat[0] : 'NEWS'}</span>
+                <h1 class="text-4xl font-black mb-5 hover:text-blue-800 cursor-pointer leading-tight" onclick="renderDetail('${mainNews.id}')">${mainNews.title}</h1>
+                <p class="text-gray-600 text-lg leading-relaxed line-clamp-3 mb-6">${mainNews.content ? mainNews.content.substring(0, 200) : ''}...</p>
+                <div class="flex items-center text-sm font-bold text-gray-400">
+                    <button type="button" class="hover:text-blue-800 hover:underline text-left" onclick='goReporter(${JSON.stringify(mainNews.authorId != null ? String(mainNews.authorId) : String(mainNews.author || ''))})'>T.N. ${mainNews.author} 기자</button>
+                    <span class="mx-3">|</span><span>${mainNews.date}</span>
+                </div>
+            </div>
+        </section>
+        <section class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 pb-16 border-b">
+            ${sub1 ? `<div class="space-y-4 group cursor-pointer" onclick="renderDetail('${sub1.id}')">
+                <div class="aspect-video bg-gray-100 rounded-xl overflow-hidden shadow-md">
+                    <img src="${articleThumb(sub1.img)}" class="w-full h-full object-cover group-hover:opacity-90 transition">
+                </div>
+                <h3 class="text-xl font-bold line-clamp-2 group-hover:text-blue-700">${sub1.title}</h3>
+                <p class="text-sm text-gray-500 line-clamp-2">${sub1.content ? sub1.content.substring(0, 80) : ''}...</p>
+            </div>` : ''}
+            ${sub2 ? `<div class="space-y-6">
+                <div class="border-l-4 border-blue-900 pl-4 py-1">
+                    <h3 class="text-lg font-black cursor-pointer hover:text-blue-800" onclick="renderDetail('${sub2.id}')">${sub2.title}</h3>
+                </div>
                 <div class="space-y-4">
-                    <h2 class="text-xl font-black border-b-2 border-black pb-2 flex justify-between items-center">
-                        ${cat} <button onclick="renderCategory('${cat}')" class="text-xs text-gray-400">전체보기 +</button>
-                    </h2>
-                    <div class="flex gap-4 cursor-pointer group" onclick="renderDetail('${top.id}')">
-                        <img src="${articleThumb(top.img)}" class="w-32 h-20 object-cover rounded shadow">
+                    <p class="text-xs font-bold text-gray-400">관련 기사</p>
+                    ${approved.slice(4, 6).map(n => `<p class="text-sm hover:underline cursor-pointer line-clamp-1" onclick="renderDetail('${n.id}')">• ${n.title}</p>`).join('')}
+                </div>
+            </div>` : ''}
+            ${sub3 ? `<div class="space-y-6">
+                <div class="border-l-4 border-slate-400 pl-4 py-1">
+                    <h3 class="text-lg font-black cursor-pointer hover:text-blue-800" onclick="renderDetail('${sub3.id}')">${sub3.title}</h3>
+                </div>
+                <div class="space-y-4">
+                    <p class="text-xs font-bold text-gray-400">관련 기사</p>
+                    ${approved.slice(6, 8).map(n => `<p class="text-sm hover:underline cursor-pointer line-clamp-1" onclick="renderDetail('${n.id}')">• ${n.title}</p>`).join('')}
+                </div>
+            </div>` : ''}
+        </section>
+        <section class="py-16 grid grid-cols-1 md:grid-cols-2 gap-12">
+            ${['정치','경제','사회','외교통일','문화'].map(c => renderCategoryPreview(c, approved)).join('')}
+        </section>`;
+    lucide.createIcons();
+}
+
+function renderCategoryPreview(cat, newsList) {
+    const list = newsList.filter(n => n.cat && n.cat.includes(cat));
+    if (list.length === 0) return '';
+    const top = list[0];
+    return `<div class="space-y-4">
+        <h2 class="text-xl font-black border-b-2 border-black pb-2 flex justify-between items-center">
+            ${cat} <button onclick="renderCategory('${cat}')" class="text-xs text-gray-400">전체보기 +</button>
+        </h2>
+        <div class="flex gap-4 cursor-pointer group" onclick="renderDetail('${top.id}')">
+            <img src="${articleThumb(top.img)}" class="w-32 h-20 object-cover rounded shadow">
+            <div>
+                <h4 class="font-bold text-md group-hover:text-blue-700 line-clamp-2">${top.title}</h4>
+                <p class="text-xs text-gray-500 mt-1">${top.date}</p>
+            </div>
+        </div>
+        <ul class="space-y-2">
+            ${list.slice(1, 3).map(n => `<li onclick="renderDetail('${n.id}')" class="text-sm hover:text-blue-600 cursor-pointer line-clamp-1">• ${n.title}</li>`).join('')}
+        </ul>
+    </div>`;
+}
+
+function renderDetail(id) {
+    const raw = allNews.find(x => x.id === id);
+    if (!raw) return;
+    const n = resolveArticleForUiLang(raw);
+    const category = (n.cat && n.cat[0]) || 'news';
+    window.history.pushState({ id: n.id }, '', `/${encodeURIComponent(category)}/${n.globalNum}`);
+
+    let processedContent = n.content;
+    if (n.inlineImages && Array.isArray(n.inlineImages)) {
+        n.inlineImages.forEach((line, idx) => {
+            const { url, align } = parseInlineImageLine(line);
+            if (!url) return;
+            processedContent = processedContent.replace(`[img${idx + 1}]`, buildInlineFigureHtml(url, align));
+        });
+    }
+
+    const radioHtml = (n.cat && n.cat.includes('라디오') && n.radioUrl) ?
+        `<div class="mb-8 bg-black rounded-2xl overflow-hidden aspect-video shadow-xl">
+            <iframe class="w-full h-full" src="https://www.youtube.com/embed/${getYTId(n.radioUrl)}" frameborder="0" allowfullscreen></iframe>
+        </div>` : '';
+
+    // 번역된 버전 탭 UI
+    const translations = allNews.filter(a => a.translationOf === raw.globalNum && a.approved);
+    const translationTabsHtml = translations.length > 0 ? `
+        <div class="flex flex-wrap gap-2 mb-4 p-3 bg-blue-50 rounded-lg border border-blue-100">
+            <span class="text-xs font-black text-blue-800">번역본:</span>
+            <button onclick="renderDetail('${raw.id}')" class="text-xs px-2 py-0.5 rounded bg-blue-900 text-white font-bold">🇰🇷 원문</button>
+            ${translations.map(t => {
+                const flagMap = { en:'🇺🇸','zh-CN':'🇨🇳', ja:'🇯🇵', es:'🇪🇸', fr:'🇫🇷', de:'🇩🇪', ru:'🇷🇺', ar:'🇸🇦', hi:'🇮🇳', pt:'🇧🇷' };
+                const flag = flagMap[t.contentLang] || '🌐';
+                return `<button onclick="renderDetail('${t.id}')" class="text-xs px-2 py-0.5 rounded bg-white border border-blue-300 text-blue-700 font-bold hover:bg-blue-50">${flag} ${(t.contentLang||'').toUpperCase()}</button>`;
+            }).join('')}
+        </div>` : '';
+
+    const d = getDict();
+    const container = document.getElementById('main-view');
+    container.innerHTML = `
+        <article class="max-w-3xl mx-auto py-10">
+            <header class="mb-10">
+                <div class="flex flex-wrap gap-2 mb-4">
+                    ${n.cat ? n.cat.map(c => `<span class="bg-blue-900 text-white px-2 py-0.5 text-[10px] font-bold uppercase rounded-sm">${c}</span>`).join('') : ''}
+                    ${n.translationOf ? `<span class="bg-amber-100 text-amber-800 px-2 py-0.5 text-[10px] font-bold rounded-sm">번역본 #${n.translationOf}</span>` : ''}
+                </div>
+                ${translationTabsHtml}
+                <h1 class="text-4xl font-black mt-4 mb-6 leading-tight">${n.title}</h1>
+                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 text-sm text-gray-400 border-y py-4">
+                    <div class="flex flex-col gap-1">
+                        <button type="button" class="text-left font-bold text-gray-600 hover:text-blue-800 hover:underline" onclick='goReporter(${JSON.stringify(n.authorId != null ? String(n.authorId) : String(n.author || ''))})'>T.N. ${n.author} 기자</button>
+                        ${(n.email && String(n.email).trim()) ? `<p class="text-xs text-gray-500">이메일 <a class="text-blue-700 font-semibold underline" href="mailto:${encodeURIComponent(String(n.email).trim())}">${escapeHtml(String(n.email).trim())}</a></p>` : ''}
+                    </div>
+                    <span class="shrink-0">발행: ${n.date} (조회: ${n.views || 0}) · ${escapeHtml(d.articleNo || '기사번호')} <b class="text-blue-900">#${n.globalNum}</b>${n.contentLang && n.contentLang !== 'ko' ? ` <span class="bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded text-[10px] ml-1 uppercase font-black">${n.contentLang}</span>` : ''}</span>
+                </div>
+            </header>
+            ${radioHtml}
+            ${!radioHtml ? `<img src="${escapeHtml(articleThumb(n.img))}" class="w-full rounded-2xl shadow-xl mb-12" alt="">` : ''}
+            <div class="prose prose-blue max-w-none text-xl leading-relaxed text-gray-800 flow-root" style="white-space: pre-wrap;">${processedContent}</div>
+            <section id="comments-mount" class="mt-16 pt-10 border-t border-gray-200"></section>
+            <div class="mt-10 pt-10 border-t flex justify-between items-center">
+                <button onclick="goHome()" class="bg-gray-100 px-6 py-2 rounded-full text-sm font-bold hover:bg-gray-200 transition">${escapeHtml(d.backHome || '목록으로')}</button>
+                <div class="flex gap-2">
+                    ${(user && (user.id === raw.authorId || RANK_POWER[user.rank] >= 4)) ?
+                        `<button onclick="editArticle('${raw.id}')" class="bg-gray-800 text-white px-6 py-2 rounded-full text-sm font-bold hover:bg-black transition">수정</button>` : ''}
+                    ${(user && RANK_POWER[user.rank] >= 4) ?
+                        `<button onclick="openTranslateModal('${raw.id}')" class="bg-amber-500 text-white px-6 py-2 rounded-full text-sm font-bold hover:bg-amber-600 transition">🌐 번역 요청</button>` : ''}
+                    <button onclick="shareLink()" class="bg-blue-50 text-blue-800 px-6 py-2 rounded-full text-sm font-bold hover:bg-blue-100 transition">${escapeHtml(d.share || '공유')}</button>
+                </div>
+            </div>
+        </article>`;
+
+    window.scrollTo(0, 0);
+    updateOG(n);
+    lucide.createIcons();
+    mountComments(raw.id);
+    if (window.db) {
+        window.fs.updateDoc(window.fs.doc(window.db, "articles", raw.id), { views: (raw.views || 0) + 1 });
+    }
+}
+
+function getYTId(url) {
+    const m = url.match(/^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/);
+    return (m && m[2].length === 11) ? m[2] : null;
+}
+
+function renderCategory(cat) {
+    const filtered = allNews.filter(n => n.cat && n.cat.includes(cat) && n.approved);
+    const container = document.getElementById('main-view');
+    const d = getDict();
+    container.innerHTML = `
+        <div class="mb-8 flex items-center justify-between flex-wrap gap-4">
+            <h2 class="text-3xl font-black border-b-4 border-blue-900 pb-2">${cat}</h2>
+            <div class="flex gap-2">
+                <button id="sub-newsletter-btn" onclick="toggleNewsletterSubscription('${cat}')"
+                    class="bg-blue-100 text-blue-800 px-4 py-2 rounded-lg text-sm font-bold hover:bg-blue-200 transition flex items-center">
+                    <i data-lucide="mail" class="w-4 h-4 mr-1"></i> <span id="sub-btn-text">${d.subscribeNewsletter}</span>
+                </button>
+                <button onclick="goHome()" class="text-sm font-bold text-blue-800 hover:underline">← ${d.backHome || '홈으로'}</button>
+            </div>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+            ${filtered.map(n => `
+                <div class="cursor-pointer group" onclick="renderDetail('${n.id}')">
+                    <img src="${articleThumb(n.img)}" class="w-full aspect-video object-cover rounded-lg mb-4 shadow-md group-hover:shadow-xl transition">
+                    <h3 class="font-bold group-hover:text-blue-700 leading-snug">${n.title}</h3>
+                    <p class="text-xs text-gray-400 mt-2">${n.date}</p>
+                </div>`).join('')}
+        </div>`;
+    checkNewsletterSubscription(cat);
+    lucide.createIcons();
+}
+
+async function checkNewsletterSubscription(cat) {
+    if (!user || !window.db) return;
+    const btn = document.getElementById('sub-newsletter-btn');
+    const txt = document.getElementById('sub-btn-text');
+    if (!btn || !txt) return;
+    try {
+        const ref = window.fs.doc(window.db, 'users', user.id, 'subscriptions', 'newsletter_' + cat);
+        const snap = await window.fs.getDoc(ref);
+        const d = getDict();
+        if (snap.exists()) {
+            btn.classList.remove('bg-blue-100', 'text-blue-800');
+            btn.classList.add('bg-slate-200', 'text-slate-600');
+            txt.textContent = d.unsubscribeNewsletter;
+        }
+    } catch(e) {}
+}
+
+async function toggleNewsletterSubscription(cat) {
+    if (!user) return alert('로그인이 필요합니다.');
+    const d = getDict();
+    const ref = window.fs.doc(window.db, 'users', user.id, 'subscriptions', 'newsletter_' + cat);
+    const snap = await window.fs.getDoc(ref);
+    if (snap.exists()) {
+        await window.fs.deleteDoc(ref);
+        showToast(d.newsletterUnsubscribed);
+    } else {
+        await window.fs.setDoc(ref, { type: 'newsletter', category: cat, timestamp: window.fs.serverTimestamp() });
+        showToast(d.newsletterSubscribed);
+        // 구독 알림 등록
+        await notifyNewsletterSubscribed(cat);
+    }
+    renderCategory(cat);
+}
+
+async function notifyNewsletterSubscribed(cat) {
+    if (!user || !window.db) return;
+    try {
+        await window.fs.addDoc(window.fs.collection(window.db, 'users', user.id, 'notifications'), {
+            type: 'newsletter_subscribed',
+            title: `[${cat}] 뉴스레터 구독 완료`,
+            body: `"${cat}" 카테고리의 새 기사가 발행되면 알림을 받습니다.`,
+            category: cat,
+            read: false,
+            timestamp: window.fs.serverTimestamp()
+        });
+    } catch(e) {}
+}
+
+function reporterArticles(authorKey) {
+    const key = String(authorKey);
+    return allNews.filter(n => n.approved && (
+        (n.authorId != null && String(n.authorId) === key) ||
+        (n.authorId == null && n.author === key)
+    ));
+}
+
+function goReporter(authorKey) {
+    if (!authorKey) return;
+    const s = String(authorKey);
+    window.history.pushState({ reporter: s }, '', '/reporter/' + encodeURIComponent(s));
+    renderReporterArchive(s);
+}
+
+function renderReporterArchive(authorKey) {
+    const list = reporterArticles(authorKey);
+    const sample = list[0] || allNews.find(n =>
+        (n.authorId != null && String(n.authorId) === String(authorKey)) || (n.author === authorKey)
+    );
+    const displayName = sample ? sample.author : authorKey;
+    const container = document.getElementById('main-view');
+    if (!container) return;
+    window.scrollTo(0, 0);
+    document.title = displayName + ' 기자 - T.N. News';
+    container.innerHTML = `
+        <div class="max-w-4xl mx-auto py-10">
+            <button type="button" onclick="goHome()" class="mb-6 text-sm font-bold text-blue-800 hover:underline">← 목록으로</button>
+            <header class="mb-10 border-b border-gray-200 pb-8">
+                <p class="text-xs font-black text-blue-900 uppercase tracking-widest mb-2">Reporter archive</p>
+                <h1 class="text-3xl font-black text-gray-900">T.N. ${escapeHtml(displayName)} 기자</h1>
+                <p class="text-gray-500 mt-2">승인된 기사 ${list.length}건</p>
+            </header>
+            ${list.length === 0 ? '<p class="text-gray-500">표시할 기사가 없습니다.</p>' : `
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                ${list.map(n => `
+                    <div class="cursor-pointer group flex gap-4" onclick="renderDetail('${n.id}')">
+                        <img src="${escapeHtml(articleThumb(n.img))}" class="w-36 h-24 object-cover rounded-lg shadow shrink-0" alt="">
                         <div>
-                            <h4 class="font-bold text-md group-hover:text-blue-700 line-clamp-2">${top.title}</h4>
-                            <p class="text-xs text-gray-500 mt-1">${top.date}</p>
+                            <h3 class="font-bold text-lg group-hover:text-blue-700 line-clamp-2">${escapeHtml(n.title)}</h3>
+                            <p class="text-xs text-gray-400 mt-2">${escapeHtml(n.date || '')}</p>
                         </div>
-                    </div>
-                    <ul class="space-y-2">
-                        ${list.slice(1, 3).map(n => `<li onclick="renderDetail('${n.id}')" class="text-sm hover:text-blue-600 cursor-pointer line-clamp-1">• ${n.title}</li>`).join('')}
-                    </ul>
-                </div>
-            `;
+                    </div>`).join('')}
+            </div>`}
+        </div>`;
+    lucide.createIcons();
+}
+
+// ══════════════════════════════════════════════════════════════════
+//  1. 미니맵 좌표 보정 (Web Mercator 기반)
+// ══════════════════════════════════════════════════════════════════
+// Wikimedia 세계지도(Miller-like)에 맞는 보정 계수
+// 이미지: https://upload.wikimedia.org/wikipedia/commons/thumb/e/ec/World_map_blank_without_borders.svg/1280px-World_map_blank_without_borders.svg.png
+// 측정된 이미지 기준점:
+//   경도 -180 → x≈1.5%,  경도 180 → x≈98.5%
+//   위도 85   → y≈1%,    위도 -85  → y≈98%
+//   (선형 경도, Mercator 위도)
+
+function _mercatorY(lat) {
+    // Miller 투영 근사 (Wikimedia 세계지도 기준)
+    const latRad = (lat * Math.PI) / 180;
+    const millerY = 1.25 * Math.log(Math.tan(Math.PI / 4 + 0.4 * latRad));
+    // Miller 범위: ±2.303 (±85°)
+    const maxMiller = 1.25 * Math.log(Math.tan(Math.PI / 4 + 0.4 * (85 * Math.PI / 180)));
+    return millerY / maxMiller; // -1 ~ 1
+}
+
+function latLonToMapPercent(lat, lon) {
+    const la = Math.max(-85, Math.min(85, Number(lat)));
+    const lo = Math.max(-180, Math.min(180, Number(lon)));
+    // X: 경도 선형
+    const x = ((lo + 180) / 360) * 97 + 1.5;
+    // Y: Miller 투영
+    const my = _mercatorY(la);
+    const y = ((1 - my) / 2) * 96 + 1;
+    return {
+        x: Math.min(98, Math.max(2, x)),
+        y: Math.min(97, Math.max(2, y))
+    };
+}
+
+function geoCatsToMapPercent(cats) {
+    const lats = [], lons = [];
+    (cats || []).forEach(c => {
+        const ll = MINIMAP_WEATHER_LL[c];
+        if (ll) { lats.push(ll[0]); lons.push(ll[1]); }
+    });
+    if (!lats.length) return latLonToMapPercent(20, 0);
+    return latLonToMapPercent(
+        lats.reduce((a, b) => a + b, 0) / lats.length,
+        lons.reduce((a, b) => a + b, 0) / lons.length
+    );
+}
+
+// ══════════════════════════════════════════════════════════════════
+//  2. 다국어 UI 완성
+// ══════════════════════════════════════════════════════════════════
+
+let uiLang = localStorage.getItem('tn_ui_lang') || 'ko';
+let regionDensity = localStorage.getItem('tn_region_density') || 'simple';
+
+const I18N = {
+    ko: {
+        siteTitle: 'TNfocnus - 글로벌 뉴스 네트워크',
+        desc: '모두를 위한 뉴스, T.N. News',
+        minimapTitle: '지역 미니맵',
+        minimapHint: '파란 핀: 권역 · 빨간 핀: 속보 · 검은 핀: 전쟁·재난·경제위기',
+        minimapMacroAll: '권역 전체 기사',
+        minimapSubNav: '세부 지역별 기사',
+        minimapLocalAll: '이 지역 전체 기사',
+        minimapGoArticle: '원기사 보기',
+        minimapWeather: '날씨',
+        minimapWeatherErr: '날씨를 불러오지 못했습니다.',
+        minimapFeatured: '주요 기사',
+        minimapNoArticle: '표시할 기사가 없습니다.',
+        subscribeNewsletter: '뉴스레터 구독',
+        unsubscribeNewsletter: '구독 해지',
+        newsletterSubscribed: '뉴스레터 구독이 등록되었습니다.',
+        newsletterUnsubscribed: '구독이 해지되었습니다.',
+        categoryNewsletter: '카테고리 뉴스레터',
+        regionBtnSimple: '지역: 간단',
+        regionBtnFull: '지역: 전체',
+        login: '로그인', register: '회원가입', logout: '로그아웃',
+        comments: '댓글', commentPlaceholder: '댓글을 입력하세요',
+        postComment: '등록', notifTitle: '알림 · 속보 뉴스레터',
+        notifEmpty: '알림이 없습니다.', breakingSubscribe: '이 속보 알림 받기',
+        backHome: '목록으로', share: '공유', articleNo: '기사번호',
+        translateRequest: '번역 요청',
+        translateModalTitle: '기사 번역 요청',
+        translateModalDesc: '번역할 언어를 선택하고 방식을 고르세요.',
+        translateAuto: 'Claude AI 자동번역',
+        translateManual: '수동번역 요청',
+        translateLang: '번역 언어',
+        translateSubmit: '번역 시작',
+        translateCancel: '취소',
+        translating: 'Claude AI가 번역 중입니다...',
+        translateDone: '번역이 완료되어 별도 기사번호로 저장되었습니다.',
+        translateManualDone: '수동번역 요청이 등록되었습니다.',
+        topics: { '정치':'정치','경제':'경제','사회':'사회','외교통일':'외교','국방':'국방','문화':'문화','사설/칼럼':'사설/칼럼','속보':'속보','단독':'단독','기획보도':'기획보도' },
+        regions: { '한국':'🇰🇷 한국','미국':'🇺🇸 미국','일본':'🇯🇵 일본','중국':'🇨🇳 중국','인도':'🇮🇳 인도','유럽':'🇪🇺 유럽','중동':'🌍 중동','아프리카':'🌍 아프리카','남미':'🌎 남미','캐나다':'🇨🇦 캐나다','오세아니아':'🌏 오세아니아','러시아':'🇷🇺 러시아','동남아':'🌏 동남아','라틴아메리카':'🌎 라틴아메리카','중앙아시아':'🌍 중앙아시아','이스라엘':'🇮🇱 이스라엘','파키스탄':'🇵🇰 파키스탄','동유럽':'🇪🇺 동유럽','서유럽':'🇪🇺 서유럽','남유럽':'🇪🇺 남유럽','북유럽':'🇪🇺 북유럽','영국':'🇬🇧 영국','프랑스':'🇫🇷 프랑스','독일':'🇩🇪 독일','이탈리아':'🇮🇹 이탈리아' }
+    },
+    en: {
+        siteTitle: 'TNfocnus - Global News Network',
+        desc: 'News from everywhere, for everyone.',
+        minimapTitle: 'Region minimap',
+        minimapHint: 'Blue: regions · Red: breaking · Black: war/disaster/crisis',
+        minimapMacroAll: 'All articles in region',
+        minimapSubNav: 'Browse sub-regions',
+        minimapLocalAll: 'All articles here',
+        minimapGoArticle: 'Open article',
+        minimapWeather: 'Weather',
+        minimapWeatherErr: 'Weather unavailable.',
+        minimapFeatured: 'Top story',
+        minimapNoArticle: 'No articles found.',
+        subscribeNewsletter: 'Subscribe',
+        unsubscribeNewsletter: 'Unsubscribe',
+        newsletterSubscribed: 'Newsletter subscription confirmed.',
+        newsletterUnsubscribed: 'Subscription cancelled.',
+        categoryNewsletter: 'Category Newsletter',
+        regionBtnSimple: 'Regions: Simple',
+        regionBtnFull: 'Regions: Full',
+        login: 'Log in', register: 'Register', logout: 'Logout',
+        comments: 'Comments', commentPlaceholder: 'Write a comment…',
+        postComment: 'Post', notifTitle: 'Alerts · Breaking digest',
+        notifEmpty: 'No alerts yet.', breakingSubscribe: 'Alert me for this story',
+        backHome: 'Back', share: 'Share', articleNo: 'Article',
+        translateRequest: 'Request translation',
+        translateModalTitle: 'Request Article Translation',
+        translateModalDesc: 'Choose a language and translation method.',
+        translateAuto: 'Claude AI Auto-translate',
+        translateManual: 'Manual translation request',
+        translateLang: 'Target language',
+        translateSubmit: 'Start',
+        translateCancel: 'Cancel',
+        translating: 'Claude AI is translating…',
+        translateDone: 'Translation saved with a new article number.',
+        translateManualDone: 'Manual translation request registered.',
+        topics: { '정치':'Politics','경제':'Economy','사회':'Society','외교통일':'Diplomacy','국방':'Defense','문화':'Culture','사설/칼럼':'Opinion','속보':'Breaking','단독':'Exclusive','기획보도':'Special' },
+        regions: { '한국':'Korea','미국':'USA','일본':'Japan','중국':'China','인도':'India','유럽':'Europe','중동':'Middle East','아프리카':'Africa','남미':'S. America','캐나다':'Canada','오세아니아':'Oceania','러시아':'Russia','동남아':'SE Asia','라틴아메리카':'Latin Am.','중앙아시아':'C. Asia','이스라엘':'Israel','파키스탄':'Pakistan','동유럽':'E. Europe','서유럽':'W. Europe','남유럽':'S. Europe','북유럽':'N. Europe','영국':'UK','프랑스':'France','독일':'Germany','이탈리아':'Italy' }
+    },
+    'zh-CN': {
+        siteTitle: 'TNfocnus - 全球新闻网络',
+        desc: '为所有人的新闻',
+        minimapTitle: '地区小地图',
+        minimapHint: '蓝色：地区 · 红色：快讯 · 黑色：战争/灾难/危机',
+        minimapMacroAll: '该地区全部文章',
+        minimapSubNav: '浏览子地区',
+        minimapLocalAll: '该地区所有文章',
+        minimapGoArticle: '查看文章',
+        minimapWeather: '天气',
+        minimapWeatherErr: '无法加载天气。',
+        minimapFeatured: '主要文章',
+        minimapNoArticle: '没有文章。',
+        subscribeNewsletter: '订阅新闻通讯',
+        unsubscribeNewsletter: '取消订阅',
+        newsletterSubscribed: '新闻通讯订阅成功。',
+        newsletterUnsubscribed: '订阅已取消。',
+        categoryNewsletter: '分类新闻通讯',
+        regionBtnSimple: '地区：简略',
+        regionBtnFull: '地区：全部',
+        login: '登录', register: '注册', logout: '退出',
+        comments: '评论', commentPlaceholder: '写评论…',
+        postComment: '发布', notifTitle: '通知 · 快讯简报',
+        notifEmpty: '暂无通知。', breakingSubscribe: '接收本快讯提醒',
+        backHome: '返回', share: '分享', articleNo: '文章编号',
+        translateRequest: '请求翻译',
+        translateModalTitle: '文章翻译请求',
+        translateModalDesc: '选择目标语言和翻译方式。',
+        translateAuto: 'Claude AI 自动翻译',
+        translateManual: '人工翻译请求',
+        translateLang: '目标语言',
+        translateSubmit: '开始',
+        translateCancel: '取消',
+        translating: 'Claude AI 翻译中…',
+        translateDone: '翻译已完成并以新文章编号保存。',
+        translateManualDone: '人工翻译请求已登记。',
+        topics: { '정치':'政治','경제':'经济','사회':'社会','외교통일':'外交','국방':'国防','문화':'文化','사설/칼럼':'社论','속보':'快讯','단독':'独家','기획보도':'专题' },
+        regions: { '한국':'韩国','미국':'美国','일본':'日本','중국':'中国','인도':'印度','유럽':'欧洲','중동':'中东','아프리카':'非洲','남미':'南美','캐나다':'加拿大','오세아니아':'大洋洲','러시아':'俄罗斯','동남아':'东南亚','라틴아메리카':'拉丁美洲','중앙아시아':'中亚','이스라엘':'以色列','파키스탄':'巴基斯坦','동유럽':'东欧','서유럽':'西欧','남유럽':'南欧','북유럽':'北欧','영국':'英国','프랑스':'法国','독일':'德国','이탈리아':'意大利' }
+    },
+    ja: {
+        siteTitle: 'TNfocnus - グローバルニュース',
+        desc: 'すべての人のためのニュース',
+        minimapTitle: '地域ミニマップ',
+        minimapHint: '青：地域 · 赤：速報 · 黒：戦争/災害/危機',
+        minimapMacroAll: '地域全記事',
+        minimapSubNav: 'サブ地域を表示',
+        minimapLocalAll: 'この地域の全記事',
+        minimapGoArticle: '記事を開く',
+        minimapWeather: '天気',
+        minimapWeatherErr: '天気を読み込めませんでした。',
+        minimapFeatured: '注目記事',
+        minimapNoArticle: '記事がありません。',
+        subscribeNewsletter: 'ニュースレター登録',
+        unsubscribeNewsletter: '登録解除',
+        newsletterSubscribed: 'ニュースレターの購読を登録しました。',
+        newsletterUnsubscribed: '購読を解除しました。',
+        categoryNewsletter: 'カテゴリーニュースレター',
+        regionBtnSimple: '地域：簡易',
+        regionBtnFull: '地域：全体',
+        login: 'ログイン', register: '登録', logout: 'ログアウト',
+        comments: 'コメント', commentPlaceholder: 'コメントを入力…',
+        postComment: '投稿', notifTitle: '通知 · 速報',
+        notifEmpty: '通知はありません。', breakingSubscribe: 'この速報の通知を受け取る',
+        backHome: '戻る', share: '共有', articleNo: '記事番号',
+        translateRequest: '翻訳リクエスト',
+        translateModalTitle: '記事翻訳リクエスト',
+        translateModalDesc: '言語と方法を選択してください。',
+        translateAuto: 'Claude AI 自動翻訳',
+        translateManual: '手動翻訳リクエスト',
+        translateLang: '翻訳言語',
+        translateSubmit: '開始',
+        translateCancel: 'キャンセル',
+        translating: 'Claude AIが翻訳中…',
+        translateDone: '翻訳が完了し、新しい記事番号で保存されました。',
+        translateManualDone: '手動翻訳リクエストが登録されました。',
+        topics: { '정치':'政治','경제':'経済','사회':'社会','외교통일':'外交','국방':'国防','문화':'文化','사설/칼럼':'社説','속보':'速報','단독':'独占','기획보도':'特集' },
+        regions: { '한국':'韓国','미국':'米国','일본':'日本','중국':'中国','인도':'インド','유럽':'欧州','중동':'中東','아프리카':'アフリカ','남미':'南米','캐나다':'カナダ','오세아니아':'オセアニア','러시아':'ロシア','동남아':'東南アジア','라틴아메리카':'ラテンアメリカ','중앙아시아':'中央アジア','이스라엘':'イスラエル','파키스탄':'パキスタン','동유럽':'東欧','서유럽':'西欧','남유럽':'南欧','북유럽':'北欧','영국':'英国','프랑스':'フランス','독일':'ドイツ','이탈리아':'イタリア' }
+    },
+    es: {
+        siteTitle: 'TNfocnus - Red de Noticias Global',
+        desc: 'Noticias de todo el mundo, para todos.',
+        minimapTitle: 'Minimapa regional',
+        minimapHint: 'Azul: regiones · Rojo: urgente · Negro: guerra/desastre/crisis',
+        minimapMacroAll: 'Todos los artículos de la región',
+        minimapSubNav: 'Ver subregiones',
+        minimapLocalAll: 'Todos los artículos aquí',
+        minimapGoArticle: 'Ver artículo',
+        minimapWeather: 'Tiempo',
+        minimapWeatherErr: 'No se pudo cargar el tiempo.',
+        minimapFeatured: 'Artículo destacado',
+        minimapNoArticle: 'No hay artículos.',
+        subscribeNewsletter: 'Suscribirse',
+        unsubscribeNewsletter: 'Cancelar suscripción',
+        newsletterSubscribed: 'Suscripción confirmada.',
+        newsletterUnsubscribed: 'Suscripción cancelada.',
+        categoryNewsletter: 'Boletín de categoría',
+        regionBtnSimple: 'Regiones: Simple',
+        regionBtnFull: 'Regiones: Completo',
+        login: 'Iniciar sesión', register: 'Registrarse', logout: 'Cerrar sesión',
+        comments: 'Comentarios', commentPlaceholder: 'Escribe un comentario…',
+        postComment: 'Publicar', notifTitle: 'Alertas · Boletín urgente',
+        notifEmpty: 'Sin alertas.', breakingSubscribe: 'Recibir alerta de esta noticia',
+        backHome: 'Volver', share: 'Compartir', articleNo: 'Artículo',
+        translateRequest: 'Solicitar traducción',
+        translateModalTitle: 'Solicitar traducción',
+        translateModalDesc: 'Selecciona idioma y método.',
+        translateAuto: 'Traducción automática Claude AI',
+        translateManual: 'Solicitud de traducción manual',
+        translateLang: 'Idioma destino',
+        translateSubmit: 'Iniciar',
+        translateCancel: 'Cancelar',
+        translating: 'Claude AI está traduciendo…',
+        translateDone: 'Traducción guardada con nuevo número de artículo.',
+        translateManualDone: 'Solicitud de traducción manual registrada.',
+        topics: { '정치':'Política','경제':'Economía','사회':'Sociedad','외교통일':'Diplomacia','국방':'Defensa','문화':'Cultura','사설/칼럼':'Opinión','속보':'Urgente','단독':'Exclusiva','기획보도':'Especial' },
+        regions: { '한국':'Corea','미국':'EE.UU.','일본':'Japón','중국':'China','인도':'India','유럽':'Europa','중동':'Oriente Medio','아프리카':'África','남미':'S. América','캐나다':'Canadá','오세아니아':'Oceanía','러시아':'Rusia','동남아':'SE Asia','라틴아메리카':'Lat. América','중앙아시아':'Asia Central','이스라엘':'Israel','파키스탄':'Pakistán','동유럽':'E. Europa','서유럽':'O. Europa','남유럽':'S. Europa','북유럽':'N. Europa','영국':'R. Unido','프랑스':'Francia','독일':'Alemania','이탈리아':'Italia' }
+    },
+    fr: {
+        siteTitle: 'TNfocnus - Réseau Mondial d\'Information',
+        desc: 'L\'actualité du monde entier, pour tous.',
+        minimapTitle: 'Minimap régionale',
+        minimapHint: 'Bleu: régions · Rouge: flash · Noir: guerre/catastrophe/crise',
+        minimapMacroAll: 'Tous les articles de la région',
+        minimapSubNav: 'Voir les sous-régions',
+        minimapLocalAll: 'Tous les articles ici',
+        minimapGoArticle: 'Voir l\'article',
+        minimapWeather: 'Météo',
+        minimapWeatherErr: 'Météo indisponible.',
+        minimapFeatured: 'À la une',
+        minimapNoArticle: 'Aucun article.',
+        subscribeNewsletter: 'S\'abonner',
+        unsubscribeNewsletter: 'Se désabonner',
+        newsletterSubscribed: 'Abonnement confirmé.',
+        newsletterUnsubscribed: 'Abonnement annulé.',
+        categoryNewsletter: 'Newsletter par catégorie',
+        regionBtnSimple: 'Régions: Simple',
+        regionBtnFull: 'Régions: Complet',
+        login: 'Connexion', register: 'S\'inscrire', logout: 'Déconnexion',
+        comments: 'Commentaires', commentPlaceholder: 'Écrire un commentaire…',
+        postComment: 'Publier', notifTitle: 'Alertes · Flash info',
+        notifEmpty: 'Aucune alerte.', breakingSubscribe: 'M\'alerter pour cette info',
+        backHome: 'Retour', share: 'Partager', articleNo: 'Article',
+        translateRequest: 'Demander une traduction',
+        translateModalTitle: 'Demande de traduction',
+        translateModalDesc: 'Choisissez la langue et la méthode.',
+        translateAuto: 'Traduction auto Claude AI',
+        translateManual: 'Traduction manuelle',
+        translateLang: 'Langue cible',
+        translateSubmit: 'Démarrer',
+        translateCancel: 'Annuler',
+        translating: 'Claude AI traduit…',
+        translateDone: 'Traduction enregistrée avec un nouveau numéro.',
+        translateManualDone: 'Demande de traduction manuelle enregistrée.',
+        topics: { '정치':'Politique','경제':'Économie','사회':'Société','외교통일':'Diplomatie','국방':'Défense','문화':'Culture','사설/칼럼':'Opinion','속보':'Flash','단독':'Exclusif','기획보도':'Spécial' },
+        regions: { '한국':'Corée','미국':'É.-U.','일본':'Japon','중국':'Chine','인도':'Inde','유럽':'Europe','중동':'Moyen-Orient','아프리카':'Afrique','남미':'Amér. du Sud','캐나다':'Canada','오세아니아':'Océanie','러시아':'Russie','동남아':'Asie du SE','라틴아메리카':'Amér. Latine','중앙아시아':'Asie Centrale','이스라엘':'Israël','파키스탄':'Pakistan','동유럽':'Europe de l\'Est','서유럽':'Europe de l\'Ouest','남유럽':'Europe du Sud','북유럽':'Europe du Nord','영국':'R.-U.','프랑스':'France','독일':'Allemagne','이탈리아':'Italie' }
+    },
+    de: {
+        siteTitle: 'TNfocnus - Globales Nachrichtennetzwerk',
+        desc: 'Nachrichten aus aller Welt, für alle.',
+        minimapTitle: 'Regionale Minikarte',
+        minimapHint: 'Blau: Regionen · Rot: Eilmeldung · Schwarz: Krieg/Katastrophe/Krise',
+        minimapMacroAll: 'Alle Artikel der Region',
+        minimapSubNav: 'Unterregionen anzeigen',
+        minimapLocalAll: 'Alle Artikel hier',
+        minimapGoArticle: 'Artikel öffnen',
+        minimapWeather: 'Wetter',
+        minimapWeatherErr: 'Wetter nicht verfügbar.',
+        minimapFeatured: 'Topbeitrag',
+        minimapNoArticle: 'Keine Artikel.',
+        subscribeNewsletter: 'Abonnieren',
+        unsubscribeNewsletter: 'Abbestellen',
+        newsletterSubscribed: 'Newsletter abonniert.',
+        newsletterUnsubscribed: 'Abonnement gekündigt.',
+        categoryNewsletter: 'Kategorie-Newsletter',
+        regionBtnSimple: 'Regionen: Einfach',
+        regionBtnFull: 'Regionen: Vollständig',
+        login: 'Anmelden', register: 'Registrieren', logout: 'Abmelden',
+        comments: 'Kommentare', commentPlaceholder: 'Kommentar schreiben…',
+        postComment: 'Senden', notifTitle: 'Benachrichtigungen · Eilmeldungen',
+        notifEmpty: 'Keine Benachrichtigungen.', breakingSubscribe: 'Benachrichtigung erhalten',
+        backHome: 'Zurück', share: 'Teilen', articleNo: 'Artikel',
+        translateRequest: 'Übersetzung anfordern',
+        translateModalTitle: 'Übersetzungsanfrage',
+        translateModalDesc: 'Sprache und Methode wählen.',
+        translateAuto: 'Claude AI Automatik',
+        translateManual: 'Manuelle Übersetzung',
+        translateLang: 'Zielsprache',
+        translateSubmit: 'Starten',
+        translateCancel: 'Abbrechen',
+        translating: 'Claude AI übersetzt…',
+        translateDone: 'Übersetzung mit neuer Artikelnummer gespeichert.',
+        translateManualDone: 'Manuelle Übersetzungsanfrage registriert.',
+        topics: { '정치':'Politik','경제':'Wirtschaft','사회':'Gesellschaft','외교통일':'Diplomatie','국방':'Verteidigung','문화':'Kultur','사설/칼럼':'Meinung','속보':'Eilmeldung','단독':'Exklusiv','기획보도':'Spezial' },
+        regions: { '한국':'Korea','미국':'USA','일본':'Japan','중국':'China','인도':'Indien','유럽':'Europa','중동':'Naher Osten','아프리카':'Afrika','남미':'Südamerika','캐나다':'Kanada','오세아니아':'Ozeanien','러시아':'Russland','동남아':'Südostasien','라틴아메리카':'Lateinamerika','중앙아시아':'Zentralasien','이스라엘':'Israel','파키스탄':'Pakistan','동유럽':'Osteuropa','서유럽':'Westeuropa','남유럽':'Südeuropa','북유럽':'Nordeuropa','영국':'UK','프랑스':'Frankreich','독일':'Deutschland','이탈리아':'Italien' }
+    },
+    ru: {
+        siteTitle: 'TNfocnus - Глобальная сеть новостей',
+        desc: 'Новости со всего мира для всех.',
+        minimapTitle: 'Региональная миникарта',
+        minimapHint: 'Синий: регионы · Красный: экстренно · Чёрный: война/катастрофа/кризис',
+        minimapMacroAll: 'Все статьи региона',
+        minimapSubNav: 'Показать подрегионы',
+        minimapLocalAll: 'Все статьи здесь',
+        minimapGoArticle: 'Открыть статью',
+        minimapWeather: 'Погода',
+        minimapWeatherErr: 'Погода недоступна.',
+        minimapFeatured: 'Главная статья',
+        minimapNoArticle: 'Статей нет.',
+        subscribeNewsletter: 'Подписаться',
+        unsubscribeNewsletter: 'Отписаться',
+        newsletterSubscribed: 'Подписка оформлена.',
+        newsletterUnsubscribed: 'Подписка отменена.',
+        categoryNewsletter: 'Рассылка по категории',
+        regionBtnSimple: 'Регионы: Кратко',
+        regionBtnFull: 'Регионы: Полно',
+        login: 'Войти', register: 'Зарегистрироваться', logout: 'Выйти',
+        comments: 'Комментарии', commentPlaceholder: 'Написать комментарий…',
+        postComment: 'Отправить', notifTitle: 'Уведомления · Экстренные новости',
+        notifEmpty: 'Нет уведомлений.', breakingSubscribe: 'Получить уведомление',
+        backHome: 'Назад', share: 'Поделиться', articleNo: 'Статья',
+        translateRequest: 'Запросить перевод',
+        translateModalTitle: 'Запрос перевода статьи',
+        translateModalDesc: 'Выберите язык и метод.',
+        translateAuto: 'Авто-перевод Claude AI',
+        translateManual: 'Ручной перевод',
+        translateLang: 'Язык перевода',
+        translateSubmit: 'Начать',
+        translateCancel: 'Отмена',
+        translating: 'Claude AI переводит…',
+        translateDone: 'Перевод сохранён с новым номером статьи.',
+        translateManualDone: 'Запрос ручного перевода зарегистрирован.',
+        topics: { '정치':'Политика','경제':'Экономика','사회':'Общество','외교통일':'Дипломатия','국방':'Оборона','문화':'Культура','사설/칼럼':'Мнение','속보':'Экстренно','단독':'Эксклюзив','기획보도':'Спецрепортаж' },
+        regions: { '한국':'Корея','미국':'США','일본':'Япония','중국':'Китай','인도':'Индия','유럽':'Европа','중동':'Ближний Восток','아프리카':'Африка','남미':'Ю. Америка','캐나다':'Канада','오세아니아':'Океания','러시아':'Россия','동남아':'ЮВ Азия','라틴아메리카':'Лат. Америка','중앙아시아':'Ц. Азия','이스라엘':'Израиль','파키스탄':'Пакистан','동유럽':'Вост. Европа','서유럽':'Зап. Европа','남유럽':'Юж. Европа','북유럽':'Сев. Европа','영국':'Великобритания','프랑스':'Франция','독일':'Германия','이탈리아':'Италия' }
+    },
+    pt: {
+        siteTitle: 'TNfocnus - Rede Global de Notícias',
+        desc: 'Notícias do mundo inteiro, para todos.',
+        minimapTitle: 'Minimapa regional',
+        minimapHint: 'Azul: regiões · Vermelho: urgente · Preto: guerra/desastre/crise',
+        minimapMacroAll: 'Todos os artigos da região',
+        minimapSubNav: 'Ver sub-regiões',
+        minimapLocalAll: 'Todos os artigos aqui',
+        minimapGoArticle: 'Ver artigo',
+        minimapWeather: 'Tempo',
+        minimapWeatherErr: 'Tempo indisponível.',
+        minimapFeatured: 'Destaque',
+        minimapNoArticle: 'Sem artigos.',
+        subscribeNewsletter: 'Assinar',
+        unsubscribeNewsletter: 'Cancelar assinatura',
+        newsletterSubscribed: 'Assinatura confirmada.',
+        newsletterUnsubscribed: 'Assinatura cancelada.',
+        categoryNewsletter: 'Newsletter por categoria',
+        regionBtnSimple: 'Regiões: Simples',
+        regionBtnFull: 'Regiões: Completo',
+        login: 'Entrar', register: 'Cadastrar', logout: 'Sair',
+        comments: 'Comentários', commentPlaceholder: 'Escrever comentário…',
+        postComment: 'Publicar', notifTitle: 'Alertas · Urgente',
+        notifEmpty: 'Sem alertas.', breakingSubscribe: 'Receber alerta',
+        backHome: 'Voltar', share: 'Compartilhar', articleNo: 'Artigo',
+        translateRequest: 'Solicitar tradução',
+        translateModalTitle: 'Solicitar tradução',
+        translateModalDesc: 'Escolha o idioma e o método.',
+        translateAuto: 'Tradução automática Claude AI',
+        translateManual: 'Tradução manual',
+        translateLang: 'Idioma alvo',
+        translateSubmit: 'Iniciar',
+        translateCancel: 'Cancelar',
+        translating: 'Claude AI traduzindo…',
+        translateDone: 'Tradução salva com novo número.',
+        translateManualDone: 'Solicitação de tradução manual registrada.',
+        topics: { '정치':'Política','경제':'Economia','사회':'Sociedade','외교통일':'Diplomacia','국방':'Defesa','문화':'Cultura','사설/칼럼':'Opinião','속보':'Urgente','단독':'Exclusivo','기획보도':'Especial' },
+        regions: { '한국':'Coreia','미국':'EUA','일본':'Japão','중국':'China','인도':'Índia','유럽':'Europa','중동':'Oriente Médio','아프리카':'África','남미':'Am. do Sul','캐나다':'Canadá','오세아니아':'Oceania','러시아':'Rússia','동남아':'AS Oriental','라틴아메리카':'Am. Latina','중앙아시아':'Ásia Central','이스라엘':'Israel','파키스탄':'Paquistão','동유럽':'Europa Oriental','서유럽':'Europa Ocidental','남유럽':'Europa do Sul','북유럽':'Europa do Norte','영국':'Reino Unido','프랑스':'França','독일':'Alemanha','이탈리아':'Itália' }
+    },
+    ar: {
+        siteTitle: 'TNfocnus - شبكة الأخبار العالمية',
+        desc: 'أخبار من كل مكان، للجميع.',
+        minimapTitle: 'خريطة صغيرة إقليمية',
+        minimapHint: 'أزرق: المناطق · أحمر: عاجل · أسود: حرب/كارثة/أزمة',
+        minimapMacroAll: 'جميع المقالات في المنطقة',
+        minimapSubNav: 'تصفح المناطق الفرعية',
+        minimapLocalAll: 'جميع المقالات هنا',
+        minimapGoArticle: 'فتح المقال',
+        minimapWeather: 'الطقس',
+        minimapWeatherErr: 'تعذر تحميل الطقس.',
+        minimapFeatured: 'المقال الرئيسي',
+        minimapNoArticle: 'لا توجد مقالات.',
+        subscribeNewsletter: 'اشتراك',
+        unsubscribeNewsletter: 'إلغاء الاشتراك',
+        newsletterSubscribed: 'تم تأكيد الاشتراك.',
+        newsletterUnsubscribed: 'تم إلغاء الاشتراك.',
+        categoryNewsletter: 'نشرة الفئة',
+        regionBtnSimple: 'المناطق: بسيط',
+        regionBtnFull: 'المناطق: كامل',
+        login: 'تسجيل الدخول', register: 'التسجيل', logout: 'تسجيل الخروج',
+        comments: 'تعليقات', commentPlaceholder: 'اكتب تعليقاً…',
+        postComment: 'نشر', notifTitle: 'تنبيهات · أخبار عاجلة',
+        notifEmpty: 'لا تنبيهات.', breakingSubscribe: 'تلقي تنبيه لهذا الخبر',
+        backHome: 'رجوع', share: 'مشاركة', articleNo: 'مقال',
+        translateRequest: 'طلب ترجمة',
+        translateModalTitle: 'طلب ترجمة المقال',
+        translateModalDesc: 'اختر اللغة والطريقة.',
+        translateAuto: 'ترجمة آلية بـ Claude AI',
+        translateManual: 'ترجمة يدوية',
+        translateLang: 'اللغة المستهدفة',
+        translateSubmit: 'ابدأ',
+        translateCancel: 'إلغاء',
+        translating: 'Claude AI يترجم…',
+        translateDone: 'تم حفظ الترجمة برقم مقال جديد.',
+        translateManualDone: 'تم تسجيل طلب الترجمة اليدوية.',
+        topics: { '정치':'سياسة','경제':'اقتصاد','사회':'مجتمع','외교통일':'دبلوماسية','국방':'دفاع','문화':'ثقافة','사설/칼럼':'رأي','속보':'عاجل','단독':'حصري','기획보도':'خاص' },
+        regions: { '한국':'كوريا','미국':'الولايات المتحدة','일본':'اليابان','중국':'الصين','인도':'الهند','유럽':'أوروبا','중동':'الشرق الأوسط','아프리카':'أفريقيا','남미':'أمريكا الجنوبية','캐나다':'كندا','오세아니아':'أوقيانوسيا','러시아':'روسيا','동남아':'جنوب شرق آسيا','라틴아메리카':'أمريكا اللاتينية','중앙아시아':'آسيا الوسطى','이스라엘':'إسرائيل','파키스탄':'باكستان','동유럽':'أوروبا الشرقية','서유럽':'أوروبا الغربية','남유럽':'أوروبا الجنوبية','북유럽':'أوروبا الشمالية','영국':'المملكة المتحدة','프랑스':'فرنسا','독일':'ألمانيا','이탈리아':'إيطاليا' }
+    },
+    hi: {
+        siteTitle: 'TNfocnus - वैश्विक समाचार नेटवर्क',
+        desc: 'हर किसी के लिए हर जगह की खबरें।',
+        minimapTitle: 'क्षेत्रीय मिनीमैप',
+        minimapHint: 'नीला: क्षेत्र · लाल: ब्रेकिंग · काला: युद्ध/आपदा/संकट',
+        minimapMacroAll: 'क्षेत्र के सभी लेख',
+        minimapSubNav: 'उप-क्षेत्र देखें',
+        minimapLocalAll: 'यहाँ के सभी लेख',
+        minimapGoArticle: 'लेख खोलें',
+        minimapWeather: 'मौसम',
+        minimapWeatherErr: 'मौसम उपलब्ध नहीं।',
+        minimapFeatured: 'प्रमुख लेख',
+        minimapNoArticle: 'कोई लेख नहीं।',
+        subscribeNewsletter: 'सदस्यता',
+        unsubscribeNewsletter: 'सदस्यता रद्द करें',
+        newsletterSubscribed: 'न्यूज़लेटर सदस्यता पुष्टि।',
+        newsletterUnsubscribed: 'सदस्यता रद्द।',
+        categoryNewsletter: 'श्रेणी न्यूज़लेटर',
+        regionBtnSimple: 'क्षेत्र: सरल',
+        regionBtnFull: 'क्षेत्र: पूर्ण',
+        login: 'लॉगिन', register: 'पंजीकरण', logout: 'लॉगआउट',
+        comments: 'टिप्पणियाँ', commentPlaceholder: 'टिप्पणी लिखें…',
+        postComment: 'पोस्ट', notifTitle: 'सूचनाएं · ब्रेकिंग',
+        notifEmpty: 'कोई सूचना नहीं।', breakingSubscribe: 'इस खबर की सूचना पाएं',
+        backHome: 'वापस', share: 'शेयर', articleNo: 'लेख',
+        translateRequest: 'अनुवाद अनुरोध',
+        translateModalTitle: 'लेख अनुवाद अनुरोध',
+        translateModalDesc: 'भाषा और विधि चुनें।',
+        translateAuto: 'Claude AI स्वचालित अनुवाद',
+        translateManual: 'मैनुअल अनुवाद',
+        translateLang: 'लक्ष्य भाषा',
+        translateSubmit: 'शुरू करें',
+        translateCancel: 'रद्द करें',
+        translating: 'Claude AI अनुवाद कर रहा है…',
+        translateDone: 'अनुवाद नए लेख संख्या के साथ सहेजा गया।',
+        translateManualDone: 'मैनुअल अनुवाद अनुरोध दर्ज।',
+        topics: { '정치':'राजनीति','경제':'अर्थव्यवस्था','사회':'समाज','외교통일':'कूटनीति','국방':'रक्षा','문화':'संस्कृति','사설/칼럼':'मत','속보':'ब्रेकिंग','단독':'एक्सक्लूसिव','기획보도':'विशेष' },
+        regions: { '한국':'कोरिया','미국':'अमेरिका','일본':'जापान','중국':'चीन','인도':'भारत','유럽':'यूरोप','중동':'मध्य पूर्व','아프리카':'अफ्रीका','남미':'दक्षिण अमेरिका','캐나다':'कनाडा','오세아니아':'ओशिनिया','러시아':'रूस','동남아':'दक्षिण-पूर्व एशिया','라틴아메리카':'लैटिन अमेरिका','중앙아시아':'मध्य एशिया','이스라엘':'इज़राइल','파키스탄':'पाकिस्तान','동유럽':'पूर्वी यूरोप','서유럽':'पश्चिमी यूरोप','남유럽':'दक्षिणी यूरोप','북유럽':'उत्तरी यूरोप','영국':'यूके','프랑스':'फ्रांस','독일':'जर्मनी','이탈리아':'इटली' }
+    }
+};
+
+// ══════════════════════════════════════════════════════════════════
+//  3. 번역 시스템 (관리자 수동 요청 → Claude API)
+// ══════════════════════════════════════════════════════════════════
+
+const TRANSLATE_LANGS = [
+    { code: 'en', label: '🇺🇸 English' },
+    { code: 'zh-CN', label: '🇨🇳 中文 (简体)' },
+    { code: 'ja', label: '🇯🇵 日本語' },
+    { code: 'es', label: '🇪🇸 Español' },
+    { code: 'fr', label: '🇫🇷 Français' },
+    { code: 'de', label: '🇩🇪 Deutsch' },
+    { code: 'ru', label: '🇷🇺 Русский' },
+    { code: 'ar', label: '🇸🇦 العربية' },
+    { code: 'hi', label: '🇮🇳 हिन्दी' },
+    { code: 'pt', label: '🇧🇷 Português' },
+];
+
+function openTranslateModal(articleId) {
+    const existing = document.getElementById('translate-modal');
+    if (existing) existing.remove();
+
+    const d = getDict();
+    const modal = document.createElement('div');
+    modal.id = 'translate-modal';
+    modal.className = 'fixed inset-0 z-[400] bg-black/80 flex items-center justify-center p-4';
+    modal.innerHTML = `
+        <div class="bg-white w-full max-w-sm rounded-2xl p-8 text-slate-900">
+            <h2 class="text-xl font-black mb-2">${escapeHtml(d.translateModalTitle)}</h2>
+            <p class="text-xs text-gray-400 mb-5">${escapeHtml(d.translateModalDesc)}</p>
+            <label class="block text-xs font-bold mb-1">${escapeHtml(d.translateLang)}</label>
+            <select id="tr-lang-select" class="w-full border p-3 rounded-lg mb-4 text-sm">
+                ${TRANSLATE_LANGS.map(l => `<option value="${l.code}">${l.label}</option>`).join('')}
+            </select>
+            <label class="block text-xs font-bold mb-2">방식</label>
+            <div class="flex flex-col gap-2 mb-5">
+                <label class="flex items-center gap-2 cursor-pointer">
+                    <input type="radio" name="tr-method" value="auto" checked class="accent-blue-700">
+                    <span class="text-sm font-bold">${escapeHtml(d.translateAuto)}</span>
+                </label>
+                <label class="flex items-center gap-2 cursor-pointer">
+                    <input type="radio" name="tr-method" value="manual">
+                    <span class="text-sm font-bold">${escapeHtml(d.translateManual)}</span>
+                </label>
+            </div>
+            <div id="tr-status" class="hidden text-xs text-blue-700 font-bold mb-3 animate-pulse"></div>
+            <div class="flex gap-2">
+                <button onclick="submitTranslation('${articleId}')" id="tr-submit-btn"
+                    class="flex-1 bg-[#003399] text-white py-3 rounded-lg font-bold">${escapeHtml(d.translateSubmit)}</button>
+                <button onclick="document.getElementById('translate-modal').remove()"
+                    class="flex-1 border border-gray-300 py-3 rounded-lg font-bold text-gray-600">${escapeHtml(d.translateCancel)}</button>
+            </div>
+        </div>`;
+    document.body.appendChild(modal);
+}
+
+async function submitTranslation(articleId) {
+    const raw = allNews.find(x => x.id === articleId);
+    if (!raw) return;
+    const langCode = document.getElementById('tr-lang-select').value;
+    const method = document.querySelector('input[name="tr-method"]:checked').value;
+    const statusEl = document.getElementById('tr-status');
+    const submitBtn = document.getElementById('tr-submit-btn');
+    const d = getDict();
+
+    if (method === 'manual') {
+        // 수동 번역 요청 → Firestore에 pending 태스크로 저장
+        await window.fs.addDoc(window.fs.collection(window.db, 'translation_requests'), {
+            articleId, originalNum: raw.globalNum, targetLang: langCode,
+            status: 'pending', requestedBy: user.id,
+            timestamp: window.fs.serverTimestamp()
+        });
+        alert(d.translateManualDone);
+        document.getElementById('translate-modal').remove();
+        return;
+    }
+
+    // 자동 번역 (Claude API)
+    statusEl.textContent = d.translating;
+    statusEl.classList.remove('hidden');
+    if (submitBtn) submitBtn.disabled = true;
+
+    const langMap = { en:'English', 'zh-CN':'Simplified Chinese', ja:'Japanese', es:'Spanish', fr:'French', de:'German', ru:'Russian', ar:'Arabic', hi:'Hindi', pt:'Portuguese (Brazilian)' };
+    const targetLangName = langMap[langCode] || langCode;
+
+    try {
+        const response = await fetch('https://api.anthropic.com/v1/messages', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                model: 'claude-sonnet-4-20250514',
+                max_tokens: 4000,
+                system: `You are a professional news translator. Translate the given Korean news article into ${targetLangName}.
+Rules:
+- Preserve all formatting and paragraph breaks
+- Keep proper nouns (people, places, organizations) accurate
+- Maintain the journalistic tone
+- Return ONLY a JSON object with keys: "title" and "content". No markdown, no preamble.`,
+                messages: [{
+                    role: 'user',
+                    content: `Translate this Korean news article to ${targetLangName}:\n\nTITLE: ${raw.title}\n\nCONTENT:\n${raw.content}`
+                }]
+            })
+        });
+
+        if (!response.ok) throw new Error('API error: ' + response.status);
+        const data = await response.json();
+        const text = data.content.map(b => b.text || '').join('');
+        const clean = text.replace(/```json|```/g, '').trim();
+        let parsed;
+        try { parsed = JSON.parse(clean); } catch(e) { throw new Error('JSON parse error'); }
+
+        if (!parsed.title || !parsed.content) throw new Error('Missing fields');
+
+        const newNum = allNews.length + 1;
+        await window.fs.addDoc(window.fs.collection(window.db, 'articles'), {
+            title: parsed.title,
+            content: parsed.content,
+            img: raw.img || DEFAULT_ARTICLE_THUMB,
+            desc: raw.desc || '',
+            cat: raw.cat || [],
+            author: raw.author,
+            authorId: raw.authorId,
+            email: raw.email || '',
+            date: new Date().toLocaleDateString('ko-KR'),
+            views: 0,
+            contentLang: langCode,
+            translationOf: raw.globalNum,
+            globalNum: newNum,
+            inlineImages: raw.inlineImages || [],
+            radioUrl: raw.radioUrl || '',
+            approved: true,
+            timestamp: window.fs.serverTimestamp()
+        });
+
+        alert(d.translateDone);
+        document.getElementById('translate-modal').remove();
+    } catch(e) {
+        statusEl.textContent = '번역 오류: ' + e.message;
+        if (submitBtn) submitBtn.disabled = false;
+    }
+}
+
+// ══════════════════════════════════════════════════════════════════
+//  4. 뉴스레터/알림 시스템
+// ══════════════════════════════════════════════════════════════════
+
+let notifUnsub = null;
+
+function toggleNotifPanel(force) {
+    const panel = document.getElementById('notif-panel');
+    if (!panel) return;
+    const open = force === false ? false : (force === true ? true : panel.classList.contains('hidden'));
+    if (open) { panel.classList.remove('hidden'); renderNotifList(); }
+    else panel.classList.add('hidden');
+    lucide.createIcons();
+}
+
+function renderNotifList() {
+    const list = document.getElementById('notif-list');
+    if (!list) return;
+    if (!user) {
+        list.innerHTML = '<p class="text-slate-500 text-xs p-2">로그인 후 알림을 받을 수 있습니다.</p>';
+        return;
+    }
+    list.innerHTML = '<p class="text-slate-400 text-xs p-2">불러오는 중…</p>';
+}
+
+function listenUserNotifications() {
+    if (notifUnsub) notifUnsub();
+    if (!user || !window.db) return;
+
+    const qNotif = window.fs.query(
+        window.fs.collection(window.db, 'users', user.id, 'notifications'),
+        window.fs.orderBy('timestamp', 'desc')
+    );
+
+    notifUnsub = window.fs.onSnapshot(qNotif, async (snap) => {
+        const items = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+        const unread = items.filter(i => !i.read).length;
+
+        const badge = document.getElementById('notif-badge');
+        if (badge) {
+            if (unread > 0) { badge.textContent = String(unread > 99 ? '99+' : unread); badge.classList.remove('hidden'); }
+            else badge.classList.add('hidden');
         }
 
-        function renderDetail(id) {
-            const raw = allNews.find(x => x.id === id);
-            if (!raw) return;
-            const n = resolveArticleForUiLang(raw);
-    
-            const category = (n.cat && n.cat[0]) || 'news';
-            const newPath = `/${encodeURIComponent(category)}/${n.globalNum}`;
-            window.history.pushState({ id: n.id }, '', newPath);
-            
-            let processedContent = n.content;
-            if (n.inlineImages && Array.isArray(n.inlineImages)) {
-                n.inlineImages.forEach((line, idx) => {
-                    const { url, align } = parseInlineImageLine(line);
-                    if (!url) return;
-                    const targetTag = `[img${idx + 1}]`;
-                    processedContent = processedContent.replace(targetTag, buildInlineFigureHtml(url, align));
-                });
-            }
+        // 구독 카테고리 목록도 로드
+        let subs = [];
+        try {
+            const subSnap = await window.fs.getDocs(window.fs.collection(window.db, 'users', user.id, 'subscriptions'));
+            subs = subSnap.docs.map(d => d.data().category).filter(Boolean);
+        } catch(e) {}
 
-            const radioHtml = (n.cat && n.cat.includes('라디오') && n.radioUrl) ? `
-                <div class="mb-8 bg-black rounded-2xl overflow-hidden aspect-video shadow-xl">
-                    <iframe class="w-full h-full" src="https://www.youtube.com/embed/${getYTId(n.radioUrl)}" frameborder="0" allowfullscreen></iframe>
-                </div>
-            ` : '';
+        const list = document.getElementById('notif-list');
+        if (!list) return;
+        const d = getDict();
 
-            const container = document.getElementById('main-view');
-            container.innerHTML = `
-                <article class="max-w-3xl mx-auto py-10">
-                    <header class="mb-10">
-                        <div class="flex flex-wrap gap-2 mb-4">
-                            ${n.cat ? n.cat.map(c => `<span class="bg-blue-900 text-white px-2 py-0.5 text-[10px] font-bold uppercase rounded-sm">${c}</span>`).join('') : ''}
-                        </div>
-                        <h1 class="text-4xl font-black mt-4 mb-6 leading-tight">${n.title}</h1>
-                        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 text-sm text-gray-400 border-y py-4">
-                            <div class="flex flex-col gap-1">
-                                <button type="button" class="text-left font-bold text-gray-600 hover:text-blue-800 hover:underline cursor-pointer" onclick='goReporter(${JSON.stringify(n.authorId != null ? String(n.authorId) : String(n.author || ''))})'>T.N. ${n.author} 기자</button>
-                                ${(n.email && String(n.email).trim()) ? `<p class="text-xs text-gray-500">이메일 <a class="text-blue-700 font-semibold underline" href="mailto:${encodeURIComponent(String(n.email).trim())}">${escapeHtml(String(n.email).trim())}</a></p>` : ''}
-                            </div>
-                            <span class="shrink-0">발행: ${n.date} (조회: ${n.views || 0}) · ${escapeHtml(getDict().articleNo || '기사번호')} <b class="text-blue-900">#${n.globalNum}</b>${n.translationOf ? ' · 원문 #' + n.translationOf : ''}${n.contentLang ? ' <span class="bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded text-[10px] ml-1 uppercase font-black">' + n.contentLang + '</span>' : ''}</span>
-                        </div>
-                    </header>
+        let html = '';
 
-                    ${radioHtml}
-                    ${!radioHtml ? `<img src="${escapeHtml(articleThumb(n.img))}" class="w-full rounded-2xl shadow-xl mb-12" alt="">` : ''}
-                
-                    <div class="prose prose-blue max-w-none text-xl leading-relaxed text-gray-800 flow-root" style="white-space: pre-wrap;">${processedContent}</div>
-                
-                    <section id="comments-mount" class="mt-16 pt-10 border-t border-gray-200"></section>
-                    <div class="mt-10 pt-10 border-t flex justify-between items-center">
-                        <button onclick="goHome()" class="bg-gray-100 px-6 py-2 rounded-full text-sm font-bold hover:bg-gray-200 transition">${escapeHtml(getDict().backHome || '목록으로')}</button>
-                        <div class="flex gap-2">
-                            ${(user && (user.id === raw.authorId || RANK_POWER[user.rank] >= 4)) ? 
-                                `<button onclick="editArticle('${raw.id}')" class="bg-gray-800 text-white px-6 py-2 rounded-full text-sm font-bold hover:bg-black transition">수정</button>` : ''}
-                            <button onclick="shareLink()" class="bg-blue-50 text-blue-800 px-6 py-2 rounded-full text-sm font-bold hover:bg-blue-100 transition">${escapeHtml(getDict().share || '공유')}</button>
-                        </div>
-                    </div>
-                </article>
-            `;
-            
-            window.scrollTo(0, 0);
-            updateOG(n);
-            lucide.createIcons();
-            mountComments(raw.id);
-
-            if (window.db) {
-                window.fs.updateDoc(window.fs.doc(window.db, "articles", raw.id), { 
-                    views: (raw.views || 0) + 1 
-                });
-            }
-        }
-
-        function getYTId(url) {
-            const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
-            const match = url.match(regExp);
-            return (match && match[2].length === 11) ? match[2] : null;
-        }
-
-        function renderCategory(cat) {
-            const filtered = allNews.filter(n => n.cat && n.cat.includes(cat));
-            const container = document.getElementById('main-view');
-            const d = getDict();
-            container.innerHTML = `
-                <div class="mb-8 flex items-center justify-between flex-wrap gap-4">
-                    <h2 class="text-3xl font-black border-b-4 border-blue-900 pb-2">${cat}</h2>
-                    <div class="flex gap-2">
-                        <button id="sub-newsletter-btn" onclick="toggleNewsletterSubscription('${cat}')" 
-                            class="bg-blue-100 text-blue-800 px-4 py-2 rounded-lg text-sm font-bold hover:bg-blue-200 transition flex items-center">
-                            <i data-lucide="mail" class="w-4 h-4 mr-1"></i> <span id="sub-btn-text">${d.subscribeNewsletter}</span>
-                        </button>
-                        <button onclick="goHome()" class="text-sm font-bold text-blue-800 hover:underline">← ${d.backHome || '홈으로'}</button>
-                    </div>
-                </div>
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-                    ${filtered.map(n => `
-                        <div class="cursor-pointer group" onclick="renderDetail('${n.id}')">
-                            <img src="${articleThumb(n.img)}" class="w-full aspect-video object-cover rounded-lg mb-4 shadow-md group-hover:shadow-xl transition">
-                            <h3 class="font-bold group-hover:text-blue-700 leading-snug">${n.title}</h3>
-                            <p class="text-xs text-gray-400 mt-2">${n.date}</p>
-                        </div>
+        // 뉴스레터 구독 현황
+        if (subs.length > 0) {
+            html += `<div class="mb-3 p-2 bg-blue-50 rounded-lg border border-blue-100">
+                <p class="text-[10px] font-black text-blue-800 uppercase mb-2 flex items-center gap-1">
+                    <i data-lucide="mail" class="w-3 h-3"></i> ${escapeHtml(d.categoryNewsletter)}
+                </p>
+                <div class="flex flex-wrap gap-1">
+                    ${subs.map(s => `
+                        <span class="bg-white text-blue-700 px-2 py-0.5 rounded text-[10px] font-bold border border-blue-200 cursor-pointer hover:bg-blue-50"
+                            onclick="renderCategory('${s}'); toggleNotifPanel(false);">${escapeHtml(s)}</span>
                     `).join('')}
                 </div>
-            `;
-            checkNewsletterSubscription(cat);
-            lucide.createIcons();
+            </div>`;
         }
 
-        async function checkNewsletterSubscription(cat) {
-            if (!user || !window.db) return;
-            const btn = document.getElementById('sub-newsletter-btn');
-            const txt = document.getElementById('sub-btn-text');
-            if (!btn || !txt) return;
-            
-            const ref = window.fs.doc(window.db, 'users', user.id, 'subscriptions', 'newsletter_' + cat);
-            const snap = await window.fs.getDoc(ref);
-            const d = getDict();
-            
-            if (snap.exists()) {
-                btn.classList.remove('bg-blue-100', 'text-blue-800');
-                btn.classList.add('bg-slate-200', 'text-slate-600');
-                txt.textContent = d.unsubscribeNewsletter;
-            }
-        }
-
-        async function toggleNewsletterSubscription(cat) {
-            if (!user) return alert('로그인이 필요합니다.');
-            const d = getDict();
-            const ref = window.fs.doc(window.db, 'users', user.id, 'subscriptions', 'newsletter_' + cat);
-            const snap = await window.fs.getDoc(ref);
-            
-            if (snap.exists()) {
-                await window.fs.deleteDoc(ref);
-                showToast(d.newsletterUnsubscribed);
-            } else {
-                await window.fs.setDoc(ref, {
-                    type: 'newsletter', category: cat, timestamp: window.fs.serverTimestamp()
-                });
-                showToast(d.newsletterSubscribed);
-            }
-            renderCategory(cat);
-        }
-
-        function reporterArticles(authorKey) {
-            const key = String(authorKey);
-            return allNews.filter(n => n.approved && (
-                (n.authorId != null && String(n.authorId) === key) ||
-                (n.authorId == null && n.author === key)
-            ));
-        }
-
-        function goReporter(authorKey) {
-            if (authorKey == null || authorKey === '') return;
-            const s = String(authorKey);
-            window.history.pushState({ reporter: s }, '', '/reporter/' + encodeURIComponent(s));
-            renderReporterArchive(s);
-        }
-
-        function renderReporterArchive(authorKey) {
-            const list = reporterArticles(authorKey);
-            const sample = list[0] || allNews.find(n =>
-                (n.authorId != null && String(n.authorId) === String(authorKey)) ||
-                (n.author === authorKey)
-            );
-            const displayName = sample ? sample.author : authorKey;
-            const container = document.getElementById('main-view');
-            if (!container) return;
-            window.scrollTo(0, 0);
-            document.title = displayName + ' 기자 - T.N. News';
-            const ogTitle = document.querySelector('meta[property="og:title"]');
-            if (ogTitle) ogTitle.setAttribute('content', displayName + ' 기자 | T.N. News');
-            container.innerHTML = `
-                <div class="max-w-4xl mx-auto py-10">
-                    <button type="button" onclick="goHome()" class="mb-6 text-sm font-bold text-blue-800 hover:underline">← 목록으로</button>
-                    <header class="mb-10 border-b border-gray-200 pb-8">
-                        <p class="text-xs font-black text-blue-900 uppercase tracking-widest mb-2">Reporter archive</p>
-                        <h1 class="text-3xl font-black text-gray-900">T.N. ${escapeHtml(displayName)} 기자</h1>
-                        <p class="text-gray-500 mt-2">승인된 기사 ${list.length}건</p>
-                    </header>
-                    ${list.length === 0 ? '<p class="text-gray-500">표시할 기사가 없습니다.</p>' : `
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                        ${list.map(n => `
-                            <div class="cursor-pointer group flex gap-4" onclick="renderDetail('${n.id}')">
-                                <img src="${escapeHtml(articleThumb(n.img))}" class="w-36 h-24 object-cover rounded-lg shadow shrink-0" alt="">
-                                <div>
-                                    <h3 class="font-bold text-lg group-hover:text-blue-700 line-clamp-2">${escapeHtml(n.title)}</h3>
-                                    <p class="text-xs text-gray-400 mt-2">${escapeHtml(n.date || '')}</p>
-                                </div>
-                            </div>
-                        `).join('')}
-                    </div>`}
-                </div>`;
-            lucide.createIcons();
-        }
-
-        function showModal(id) { document.getElementById(id).classList.remove('hidden'); }
-        function hideModal(id) { document.getElementById(id).classList.add('hidden'); }
-        
-        function toggleAdmin() { 
-            const admin = document.getElementById('admin-view');
-            admin.classList.toggle('hidden');
-            if(!admin.classList.contains('hidden')) {
-                buildAdminCategoryCheckboxes();
-                switchAdminTab('write');
-            }
-        }
-
-        function goHome() {
-            window.history.pushState({}, '', '/');
-            renderHome();
-        }
-
-        function execCmd(cmd, arg) { document.execCommand(cmd, false, arg); }
-        function googleTranslateElementInit() { new google.translate.TranslateElement({pageLanguage: 'ko'}, 'google_translate_element'); }
-
-        // ── UI 언어(로컬라이즈) ──
-        let uiLang = localStorage.getItem('tn_ui_lang') || 'ko';
-        let regionDensity = localStorage.getItem('tn_region_density') || 'simple'; // simple | full
-
-        const I18N = {
-            ko: {
-                siteTitle: 'TNfocnus - Global News Network',
-                desc: '모두를 위한 뉴스, T.N. News',
-                minimapTitle: '지역 미니맵',
-                minimapHint: '파란 큰 원: 권역 · 빨간 원: 속보 · 검은 원: 전쟁·재난·경제위기',
-                minimapMacroAll: '권역 전체 기사',
-                minimapSubNav: '세부 지역별 기사',
-                minimapLocalAll: '이 지역 전체 기사',
-                minimapGoArticle: '원기사 보기',
-                minimapWeather: '날씨',
-                minimapWeatherErr: '날씨를 불러오지 못했습니다.',
-                minimapFeatured: '주요 기사',
-                minimapNoArticle: '표시할 기사가 없습니다.',
-                subscribeNewsletter: "뉴스레터 구독",
-                unsubscribeNewsletter: "구독 해지",
-                newsletterSubscribed: "뉴스레터 구독이 등록되었습니다.",
-                newsletterUnsubscribed: "구독이 해지되었습니다.",
-                categoryNewsletter: "카테고리 뉴스레터",
-                regionBtnSimple: '지역: 간단',
-                regionBtnFull: '지역: 전체',
-                topics: {
-                    '정치':'정치','경제':'경제','사회':'사회','외교통일':'외교','국방':'국방','문화':'문화','사설/칼럼':'사설/칼럼',
-                    '속보':'속보','단독':'단독','기획보도':'기획보도'
-                },
-                regions: {
-                    '한국':'🇰🇷','미국':'🇺🇸','일본':'🇯🇵','중국':'🇨🇳','인도':'🇮🇳',
-                    '유럽':'🇪🇺','중동':'🌍 중동','아프리카':'🌍 아프리카','남미':'🌎 남미',
-                    '캐나다':'🇨🇦','오세아니아':'🌏 오세아니아','러시아':'🇷🇺','동남아':'🌏 동남아',
-                    '라틴아메리카':'🌎 라틴아메리카','중앙아시아':'🌍 중앙아시아','이스라엘':'🇮🇱','파키스탄':'🇵🇰',
-                    '동유럽':'🇪🇺 동유럽','서유럽':'🇪🇺 서유럽','남유럽':'🇪🇺 남유럽','북유럽':'🇪🇺 북유럽',
-                    '영국':'🇬🇧','프랑스':'🇫🇷','독일':'🇩🇪','이탈리아':'🇮🇹'
-                }
-            },
-            en: {
-                siteTitle: 'TNfocnus - Global News Network',
-                desc: 'News from everywhere, for everyone.',
-                minimapTitle: 'Region minimap',
-                minimapHint: 'Blue: regions · Red: breaking · Black: war / disaster / crisis',
-                minimapMacroAll: 'All articles in region',
-                minimapSubNav: 'Browse sub-regions',
-                minimapLocalAll: 'All articles in this area',
-                minimapGoArticle: 'Open article',
-                minimapWeather: 'Weather',
-                minimapWeatherErr: 'Weather unavailable.',
-                minimapFeatured: 'Top story',
-                minimapNoArticle: 'No matching articles.',
-                subscribeNewsletter: "Subscribe Newsletter",
-                unsubscribeNewsletter: "Unsubscribe",
-                newsletterSubscribed: "Newsletter subscription registered.",
-                newsletterUnsubscribed: "Subscription cancelled.",
-                categoryNewsletter: "Category Newsletter",
-                regionBtnSimple: 'Regions: Simple',
-                regionBtnFull: 'Regions: Full',
-                topics: {
-                    '정치':'Politics','경제':'Economy','사회':'Society','외교통일':'Diplomacy','국방':'Defense','문화':'Culture','사설/칼럼':'Opinion',
-                    '속보':'Breaking','단독':'Exclusive','기획보도':'Special'
-                },
-                regions: {
-                    '한국':'Korea','미국':'USA','일본':'Japan','중국':'China','인도':'India',
-                    '유럽':'Europe','중동':'Middle East','아프리카':'Africa','남미':'South America',
-                    '캐나다':'Canada','오세아니아':'Oceania','러시아':'Russia','동남아':'Southeast Asia',
-                    '라틴아메리카':'Latin America','중앙아시아':'Central Asia','이스라엘':'Israel','파키스탄':'Pakistan',
-                    '동유럽':'Eastern Europe','서유럽':'Western Europe','남유럽':'Southern Europe','북유럽':'Northern Europe',
-                    '영국':'UK','프랑스':'France','독일':'Germany','이탈리아':'Italy'
-                },
-                login: 'Log in', register: 'Register', logout: 'Logout', comments: 'Comments',
-                commentPlaceholder: 'Write a comment…', postComment: 'Post', notifTitle: 'Alerts · Breaking digest',
-                notifEmpty: 'No alerts yet.', breakingSubscribe: 'Alert me for this breaking story',
-                backHome: 'Back', share: 'Share', articleNo: 'Article #'
-            }
-        };
-        Object.assign(I18N.ko, {
-            login: '로그인', register: '회원가입', logout: '로그아웃', comments: '댓글',
-            commentPlaceholder: '댓글을 입력하세요', postComment: '등록', notifTitle: '알림 · 속보 뉴스레터',
-            notifEmpty: '알림이 없습니다.', breakingSubscribe: '이 속보를 내 알림함·뉴스레터로 받기',
-            backHome: '목록으로', share: '공유', articleNo: '기사번호'
-        });
-        I18N['zh-CN'] = Object.assign({}, I18N.en, {
-            siteTitle: 'TNfocnus - 全球新闻网络', desc: '为所有人的新闻', regionBtnSimple: '地区：简略', regionBtnFull: '地区：全部',
-            topics: { '정치':'政治','경제':'经济','사회':'社会','외교통일':'外交','국방':'国防','문화':'文化','사설/칼럼':'社论','속보':'快讯','단독':'独家','기획보도':'专题' },
-            login: '登录', register: '注册', logout: '退出', comments: '评论', notifTitle: '通知 · 快讯简报',
-            subscribeNewsletter: "订阅新闻通讯", unsubscribeNewsletter: "取消订阅",
-            newsletterSubscribed: "新闻通讯订阅成功。", newsletterUnsubscribed: "订阅已取消。",
-            categoryNewsletter: "分类新闻通讯", articleNo: "文章编号"
-        });
-        I18N.ja = Object.assign({}, I18N.en, {
-            siteTitle: 'TNfocnus - グローバルニュース', regionBtnSimple: '地域：簡易', regionBtnFull: '地域：全体',
-            topics: { '정치':'政治','경제':'経済','사회':'社会','외교통일':'外交','국방':'国防','문화':'文化','사설/칼럼':'社説','속보':'速報','단독':'独占','기획보도':'特集' },
-            login: 'ログイン', register: '登録', logout: 'ログアウト', comments: 'コメント', notifTitle: '通知 · 速報',
-            subscribeNewsletter: "ニュースレター購読", unsubscribeNewsletter: "購読解除",
-            newsletterSubscribed: "ニュースレターの購読が登録されました。", newsletterUnsubscribed: "購読が解除されました。",
-            categoryNewsletter: "カテゴリーニュースレター", articleNo: "記事番号"
-        });
-        ['es','fr','de','ru','pt','ar','hi'].forEach(code => { if (!I18N[code]) I18N[code] = Object.assign({}, I18N.en); });
-
-        const REGION_KEYS_SIMPLE = ['한국','미국','유럽','중국','일본','인도','중동','아프리카','남미'];
-        const REGION_KEYS_FULL = [
-            '한국','미국','일본','중국','인도','캐나다','오세아니아','러시아',
-            '유럽','동유럽','서유럽','남유럽','북유럽','영국','프랑스','독일','이탈리아',
-            '중앙아시아','중동','이스라엘','파키스탄','동남아','라틴아메리카','아프리카','남미'
-        ];
-
-        function minimapLabelToCat(label) {
-            const t = String(label || '').trim();
-            const m = t.match(/^(.+?)\s*\([^)]*\)\s*$/);
-            return (m ? m[1].trim() : t);
-        }
-
-        function minimapPairsFromLines(raw) {
-            return raw.trim().split(/\n+/).map(line => {
-                const t = line.trim();
-                if (!t) return null;
-                const cat = minimapLabelToCat(t);
-                return [t, cat];
-            }).filter(Boolean);
-        }
-
-        const MINIMAP_AFRICA_RAW = `
-가나
-가봉
-감비아
-기니
-기니비사우
-나미비아
-나이지리아
-남수단
-남아프리카공화국
-니제르
-라이베리아
-레소토
-르완다
-리비아
-마다가스카르
-말라위
-말리
-모로코
-서사하라
-모리셔스
-모잠비크
-베냉(Benin)
-보츠와나(Botswana)
-부룬디(Burundi)
-부르키나파소(Burkina Faso)
-상투메프린시페(Sao Tome and Principe)
-세네갈(Senegal)
-소말리아(Somalia)
-소말릴랜드
-수단
-에스와티니
-시에라리온(Sierra Leone)
-알제리(Algeria)
-앙골라(Angola)
-에리트레아(Eritrea)
-에티오피아(Ethiopia)
-우간다(Uganda)
-이집트(Egypt)
-잠비아(Zambia)
-적도기니(Equatorial Guinea)
-중앙아프리카공화국(Central African Republic)
-지부티(Djibouti)
-짐바브웨(Zimbabwe)
-차드(Chad)
-카메룬(Cameroon)
-보베르데(Cabo Verde)
-케냐(Kenya)
-코모로(Comoros)
-코트디부아르(Cote d'Ivoire)
-콩고(Congo)
-콩고민주공화국(DR Congo)
-탄자니아(Tanzania)
-토고(Togo)
-튀니지(Tunisia)`;
-
-        const MINIMAP_SECTIONS = [
-            { title: '대한민국 · 북한 · 일본', items: [['대한민국', '한국'], ['북한', '북한'], ['일본', '일본']] },
-            { title: '중화권', items: [['중국', '중국'], ['대만', '대만']] },
-            { title: '아시아', items: [['몽골', '몽골']] },
-            { title: '미국', items: [['미국', '미국']] },
-            { title: '북중미', items: [['캐나다', '캐나다'], ['멕시코', '멕시코'], ['그린란드', '그린란드']] },
-            { title: '오세아니아', items: minimapPairsFromLines(`
-호주
-뉴질랜드
-피지
-파푸아뉴기니
-사모아
-통가
-바누아투
-솔로몬 제도
-나우루
-투발루
-키리바시
-팔라우
-미크로네시아
-마셜 제도`) },
-            { title: '러시아', items: [['러시아', '러시아']] },
-            { title: '동유럽', items: minimapPairsFromLines(`
-벨라루스
-우크라이나
-폴란드
-체코
-슬로바키아
-헝가리
-루마니아
-불가리아
-세르비아
-크로아티아
-보스니아 헤르체고비나
-알바니아
-마케도니아`) },
-            { title: '독일 · 프랑스 · 영국', items: [['독일', '독일'], ['프랑스', '프랑스'], ['영국', '영국']] },
-            { title: '서유럽', items: minimapPairsFromLines(`
-네덜란드
-벨기에
-룩셈부르크
-아일랜드
-스위스`) },
-            { title: '남유럽', items: minimapPairsFromLines(`
-오스트리아
-이탈리아
-스페인
-포르투갈
-그리스
-몰타
-산마리노
-안도라
-모나코`) },
-            { title: '북유럽', items: minimapPairsFromLines(`
-스웨덴
-노르웨이
-핀란드
-덴마크
-아이슬란드
-페로 제도`) },
-            { title: '중앙아시아', items: minimapPairsFromLines(`
-카자흐스탄
-우즈베키스탄
-키르기스스탄
-타지키스탄
-투르크메니스탄
-아프가니스탄`) },
-            { title: '서아시아', items: minimapPairsFromLines(`
-이스라엘
-사우디아라비아
-아랍에미리트
-카타르
-쿠웨이트
-오만
-예멘
-이라크
-이란
-요르단
-레바논
-시리아
-튀르키예`) },
-            { title: '남아시아', items: minimapPairsFromLines(`
-인도
-파키스탄
-방글라데시
-네팔
-스리랑카
-부탄
-몰디브`) },
-            { title: '동남아시아', items: minimapPairsFromLines(`
-베트남
-태국
-인도네시아
-말레이시아
-싱가포르
-필리핀
-캄보디아
-라오스
-미얀마
-브루나이
-동티모르`) },
-            { title: '라틴아메리카', items: minimapPairsFromLines(`
-브라질
-아르헨티나
-칠레
-콜롬비아
-페루
-쿠바
-파나마
-볼리비아
-우루과이
-파라과이
-베네수엘라
-에콰도르
-가이아나
-수리남
-기아나(프랑스)`) },
-            { title: '아프리카', items: minimapPairsFromLines(MINIMAP_AFRICA_RAW) }
-        ];
-
-        const MINIMAP_WEATHER_LL = {
-            한국: [37.57, 126.98], 북한: [39.03, 125.75], 일본: [35.68, 139.76], 중국: [39.9, 116.4], 대만: [25.03, 121.56], 몽골: [47.92, 106.92],
-            미국: [38.9, -77.03], 캐나다: [45.42, -75.7], 멕시코: [19.43, -99.13], 그린란드: [64.18, -51.74],
-            러시아: [55.75, 37.62], 유럽: [50.11, 8.68], 독일: [52.52, 13.41], 프랑스: [48.86, 2.35], 영국: [51.5, -0.12], 이탈리아: [41.9, 12.48],
-            동남아: [13.75, 100.5], 인도: [28.6, 77.2], 파키스탄: [33.69, 73.05], 중동: [24.71, 46.68], 이스라엘: [31.77, 35.21],
-            중앙아시아: [43.24, 76.95], 오세아니아: [-25.27, 133.78], 라틴아메리카: [-15.78, -47.93], 아프리카: [6.52, 3.38],
-            _default: [20, 20]
-        };
-
-        function minimapWeatherCoords(cat) {
-            const k = String(cat || '');
-            if (MINIMAP_WEATHER_LL[k]) return MINIMAP_WEATHER_LL[k];
-            return MINIMAP_WEATHER_LL._default;
-        }
-
-        function minimapSectionSubs(...titles) {
-            const seen = new Set();
-            const out = [];
-            for (const t of titles) {
-                const sec = MINIMAP_SECTIONS.find(s => s.title === t);
-                if (!sec) continue;
-                for (const [label, cat] of sec.items) {
-                    if (seen.has(cat)) continue;
-                    seen.add(cat);
-                    const [lat, lon] = minimapWeatherCoords(cat);
-                    out.push({ label, cat, lat, lon });
-                }
-            }
-            return out;
-        }
-
-        /** 위도·경도 → 세계지도(등적 투영) % 좌표 */
-        function latLonToMapPercent(lat, lon) {
-            const la = Number(lat);
-            const lo = Number(lon);
-            return {
-                x: Math.min(98, Math.max(2, ((lo + 180) / 360) * 100)),
-                y: Math.min(92, Math.max(6, ((90 - la) / 180) * 100))
-            };
-        }
-
-        function geoCatsToMapPercent(cats) {
-            const lats = [];
-            const lons = [];
-            (cats || []).forEach(c => {
-                const ll = MINIMAP_WEATHER_LL[c];
-                if (ll) { lats.push(ll[0]); lons.push(ll[1]); }
-            });
-            if (!lats.length) return latLonToMapPercent(20, 0);
-            const lat = lats.reduce((a, b) => a + b, 0) / lats.length;
-            const lon = lons.reduce((a, b) => a + b, 0) / lons.length;
-            return latLonToMapPercent(lat, lon);
-        }
-
-        const MAP_MACRO_REGIONS_RAW = [
-            { id: 'neb', label: '동북아', lat: 38, lon: 105, cats: ['한국', '북한', '일본', '중국', '대만', '몽골'], subs: minimapSectionSubs('대한민국 · 북한 · 일본', '중화권', '아시아') },
-            { id: 'sea', label: '동남아', lat: 5, lon: 115, cats: ['동남아'], subs: minimapSectionSubs('동남아시아') },
-            { id: 'sa', label: '남아시아', lat: 22, lon: 78, cats: ['인도', '파키스탄', '방글라데시', '네팔', '스리랑카', '부탄', '몰디브'], subs: minimapSectionSubs('남아시아') },
-            { id: 'swa', label: '서아·중동', lat: 28, lon: 45, cats: ['중동', '이스라엘', '튀르키예', '이라크', '이란', '사우디아라비아', '아랍에미리트', '카타르', '쿠웨이트', '오만', '예멘', '요르단', '레바논', '시리아'], subs: minimapSectionSubs('서아시아') },
-            { id: 'ca', label: '중앙아시아', lat: 43, lon: 68, cats: ['중앙아시아'], subs: minimapSectionSubs('중앙아시아') },
-            { id: 'eu', label: '유럽', lat: 50, lon: 10, cats: ['유럽', '동유럽', '서유럽', '남유럽', '북유럽', '영국', '프랑스', '독일', '이탈리아'], subs: minimapSectionSubs('동유럽', '독일 · 프랑스 · 영국', '서유럽', '남유럽', '북유럽').slice(0, 18) },
-            { id: 'ru', label: '러시아', lat: 60, lon: 90, cats: ['러시아'], subs: minimapSectionSubs('러시아') },
-            { id: 'na', label: '미국', lat: 39, lon: -98, cats: ['미국'], subs: minimapSectionSubs('미국') },
-            { id: 'nc', label: '북중미', lat: 45, lon: -100, cats: ['캐나다', '멕시코', '그린란드'], subs: minimapSectionSubs('북중미') },
-            { id: 'lat', label: '라틴아메리카', lat: -15, lon: -60, cats: ['라틴아메리카', '남미'], subs: minimapSectionSubs('라틴아메리카') },
-            { id: 'af', label: '아프리카', lat: 2, lon: 20, cats: ['아프리카'], subs: minimapSectionSubs('아프리카').slice(0, 14) },
-            { id: 'oce', label: '오세아니아', lat: -25, lon: 135, cats: ['오세아니아'], subs: minimapSectionSubs('오세아니아') }
-        ];
-        const MAP_MACRO_REGIONS = MAP_MACRO_REGIONS_RAW.map(m => {
-            const xy = latLonToMapPercent(m.lat, m.lon);
-            const subs = (m.subs || []).map(s => ({ ...s, ...latLonToMapPercent(s.lat, s.lon) }));
-            return { ...m, x: xy.x, y: xy.y, subs };
-        });
-
-        let minimapZoom = parseFloat(localStorage.getItem('tn_minimap_zoom') || '1') || 1;
-        let minimapMinimized = false;
-        let minimapMode = 'root';
-        let minimapMacroId = null;
-        let minimapSubLayout = [];
-
-        function minimapClampZoom(z) {
-            return Math.min(1.85, Math.max(0.55, z));
-        }
-
-        function minimapApplyZoom(focusX, focusY) {
-            minimapZoom = minimapClampZoom(minimapZoom);
-            localStorage.setItem('tn_minimap_zoom', String(minimapZoom));
-            const stage = document.getElementById('minimap-stage');
-            const lbl = document.getElementById('minimap-zoom-label');
-            if (stage) {
-                if (focusX !== undefined && focusY !== undefined) {
-                    stage.style.transformOrigin = `${focusX}% ${focusY}%`;
-                } else if (minimapZoom === 1) {
-                    stage.style.transformOrigin = 'center center';
-                }
-                stage.style.transform = 'scale(' + minimapZoom + ')';
-            }
-            if (lbl) lbl.textContent = Math.round(minimapZoom * 100) + '%';
-        }
-
-        function minimapFocusZoom(x, y, level) {
-            minimapZoom = level || 1.6;
-            minimapApplyZoom(x, y);
-        }
-
-        function minimapZoomStep(delta) {
-            minimapZoom = minimapClampZoom(minimapZoom + delta * 0.12);
-            minimapApplyZoom();
-        }
-
-        function minimapZoomReset() {
-            minimapZoom = 1;
-            minimapApplyZoom();
-        }
-
-        function minimapToggleMin() {
-            minimapMinimized = !minimapMinimized;
-            const panel = document.getElementById('minimap-panel');
-            const fab = document.getElementById('minimap-fab');
-            if (minimapMinimized) {
-                if (panel) panel.classList.add('hidden');
-                if (fab) fab.classList.remove('hidden');
-                hideMinimapFlyout();
-            } else {
-                if (fab) fab.classList.add('hidden');
-                if (panel) panel.classList.remove('hidden');
-            }
-            lucide.createIcons();
-        }
-
-        function hideMinimapFlyout() {
-            const f = document.getElementById('minimap-flyout');
-            if (f) { f.classList.add('hidden'); f.innerHTML = ''; }
-        }
-
-        function clearMinimapInfluence() {
-            const layer = document.getElementById('minimap-influence-layer');
-            if (layer) layer.innerHTML = '';
-        }
-
-        function macrosMatchingArticleCats(article) {
-            const cats = article && article.cat ? article.cat : [];
-            return MAP_MACRO_REGIONS.filter(m => m.cats.some(c => cats.includes(c)) || (m.subs || []).some(s => cats.includes(s.cat)));
-        }
-
-        /** 기사 태그에 맞는 권역 좌표 위에 겹치지 않게 살짝 퍼뜨림 (지도 % 좌표) */
-        function minimapMapCoordsForArticle(article, spreadIndex) {
-            const base = geoCatsToMapPercent(article && article.cat ? article.cat : []);
-            const i = spreadIndex || 0;
-            const ang = i * 1.08;
-            const r = 1.8 + i * 1.6;
-            return {
-                x: Math.min(96, Math.max(4, base.x + r * Math.cos(ang))),
-                y: Math.min(90, Math.max(8, base.y + r * Math.sin(ang)))
-            };
-        }
-
-        function drawMinimapInfluenceForArticle(article, opts) {
-            opts = opts || {};
-            const layer = document.getElementById('minimap-influence-layer');
-            if (!layer) return;
-            if (!opts.keepExisting) layer.innerHTML = '';
-            const hits = macrosMatchingArticleCats(article);
-            const places = hits.length
-                ? hits.map(h => latLonToMapPercent(h.lat, h.lon))
-                : [geoCatsToMapPercent(article && article.cat ? article.cat : [])];
-            places.forEach((p, idx) => {
-                for (let i = 0; i < 3; i++) {
-                    const ring = document.createElement('div');
-                    ring.className = 'minimap-influence-ring' + (opts.crisis ? ' crisis' : '');
-                    ring.style.left = p.x + '%';
-                    ring.style.top = p.y + '%';
-                    ring.style.animationDelay = ((idx * 0.28 + i * 0.42) % 2.2) + 's';
-                    layer.appendChild(ring);
-                }
-            });
-        }
-
-        function approvedNews() {
-            return allNews.filter(n => n.approved);
-        }
-
-        function featuredArticleForCats(cats) {
-            const list = approvedNews().filter(n => n.cat && cats.some(c => n.cat.includes(c)));
-            return list[0] || null;
-        }
-
-        function renderMacroArticleList(macroId) {
-            const m = MAP_MACRO_REGIONS.find(x => x.id === macroId);
-            if (!m) return;
-            const cats = m.cats;
-            const filtered = approvedNews().filter(n => n.cat && cats.some(c => n.cat.includes(c)));
-            const container = document.getElementById('main-view');
-            if (!container) return;
-            window.history.pushState({}, '', '/');
-            container.innerHTML = `
-                <div class="mb-6 flex items-center justify-between flex-wrap gap-2">
-                    <h2 class="text-2xl font-black border-b-2 border-blue-900 pb-2">${escapeHtml(m.label)} <span class="text-sm font-bold text-slate-500">(권역 전체)</span></h2>
-                    <button type="button" onclick="goHome()" class="text-sm font-bold text-blue-800 hover:underline">← 홈</button>
-                </div>
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-                    ${filtered.map(n => `
-                        <div class="cursor-pointer group" onclick="renderDetail('${n.id}')">
-                            <img src="${escapeHtml(articleThumb(n.img))}" class="w-full aspect-video object-cover rounded-lg mb-4" alt="">
-                            <h3 class="font-bold group-hover:text-blue-700">${escapeHtml(n.title)}</h3>
-                        </div>
-                    `).join('') || '<p class="text-slate-500 font-bold">기사가 없습니다.</p>'}
-                </div>`;
-            lucide.createIcons();
-            window.scrollTo(0, 0);
-        }
-
-        function renderCategoryApprovedOnly(cat) {
-            const filtered = approvedNews().filter(n => n.cat && n.cat.includes(cat));
-            const container = document.getElementById('main-view');
-            if (!container) return;
-            window.history.pushState({}, '', '/');
-            container.innerHTML = `
-                <div class="mb-6"><button type="button" onclick="goHome()" class="text-sm font-bold text-blue-800 hover:underline">← 홈</button></div>
-                <h2 class="text-2xl font-black mb-8 border-b-2 border-blue-900 pb-2">${escapeHtml(cat)}</h2>
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-                    ${filtered.map(n => `
-                        <div class="cursor-pointer group" onclick="renderDetail('${n.id}')">
-                            <img src="${escapeHtml(articleThumb(n.img))}" class="w-full aspect-video object-cover rounded-lg mb-4" alt="">
-                            <h3 class="font-bold group-hover:text-blue-700">${escapeHtml(n.title)}</h3>
-                        </div>
-                    `).join('') || '<p class="text-slate-500 font-bold">기사가 없습니다.</p>'}
-                </div>`;
-            lucide.createIcons();
-            window.scrollTo(0, 0);
-        }
-
-        function showMinimapFlyout(html) {
-            const f = document.getElementById('minimap-flyout');
-            if (!f) return;
-            f.innerHTML = html;
-            f.classList.remove('hidden');
-            lucide.createIcons();
-        }
-
-        function minimapFlyoutFeaturedBlock(article) {
-            if (!article) {
-                const d = getDict();
-                return '<p class="text-xs text-slate-500 font-bold">' + escapeHtml(d.minimapNoArticle) + '</p>';
-            }
-            return `
-                <div class="rounded-lg border border-slate-200 overflow-hidden">
-                    <img src="${escapeHtml(articleThumb(article.img))}" class="w-full h-28 object-cover" alt="">
-                    <p class="p-2 text-xs font-bold leading-snug line-clamp-3">${escapeHtml(article.title)}</p>
-                </div>`;
-        }
-
-        function openMacroRegionFlyout(macroId) {
-            clearMinimapInfluence();
-            minimapMacroId = macroId;
-            minimapMode = 'root';
-            const m = MAP_MACRO_REGIONS.find(x => x.id === macroId);
-            if (!m) return;
-            const d = getDict();
-            const feat = featuredArticleForCats(m.cats);
-            const html = `
-                <p class="text-[10px] font-black text-blue-900 uppercase mb-2">${escapeHtml(m.label)}</p>
-                <p class="text-[10px] font-bold text-slate-500 mb-1">${escapeHtml(d.minimapFeatured)}</p>
-                ${minimapFlyoutFeaturedBlock(feat)}
-                <div class="mt-3 space-y-2">
-                    <button type="button" class="w-full py-2 rounded-lg bg-[#003399] text-white text-xs font-black hover:bg-blue-800" onclick="renderMacroArticleList('${macroId}'); closeMinimap();">${escapeHtml(d.minimapMacroAll)}</button>
-                    <button type="button" class="w-full py-2 rounded-lg bg-white border-2 border-[#003399] text-[#003399] text-xs font-black hover:bg-blue-50" onclick="minimapEnterSubs('${macroId}')">${escapeHtml(d.minimapSubNav)}</button>
-                </div>`;
-            showMinimapFlyout(html);
-        }
-
-        function minimapEnterSubs(macroId) {
-            const m = MAP_MACRO_REGIONS.find(x => x.id === macroId);
-            if (!m || !(m.subs && m.subs.length)) return;
-            minimapMacroId = macroId;
-            minimapMode = 'subs';
-            minimapSubLayout = m.subs.map(sub => ({
-                ...sub,
-                ...latLonToMapPercent(sub.lat, sub.lon)
-            }));
-            const back = document.getElementById('minimap-back-btn');
-            if (back) back.classList.remove('hidden');
-            hideMinimapFlyout();
-            refreshMinimapMarkers();
-            
-            // 해당 권역으로 인위적 확대
-            minimapFocusZoom(m.x, m.y, 1.5);
-        }
-
-        function minimapBackToRoot() {
-            minimapMode = 'root';
-            minimapSubLayout = [];
-            const back = document.getElementById('minimap-back-btn');
-            if (back) back.classList.add('hidden');
-            hideMinimapFlyout();
-            clearMinimapInfluence();
-            refreshMinimapMarkers();
-            
-            // 전체 지도로 복귀
-            minimapZoomReset();
-        }
-
-        async function openSubLocalFlyout(sub) {
-            clearMinimapInfluence();
-            const d = getDict();
-            const feat = featuredArticleForCats([sub.cat]);
-            const weatherId = 'minimap-weather-slot';
-            const html = `
-                <p class="text-[10px] font-black text-blue-900 uppercase mb-2">${escapeHtml(sub.label)}</p>
-                <p class="text-[10px] font-bold text-slate-500 mb-1">${escapeHtml(d.minimapWeather)}</p>
-                <div id="${weatherId}" class="text-xs text-slate-600 mb-2 min-h-[2.5rem] rounded border border-slate-100 bg-slate-50 p-2">${escapeHtml(d.minimapWeather)}…</div>
-                <p class="text-[10px] font-bold text-slate-500 mb-1">${escapeHtml(d.minimapFeatured)}</p>
-                ${minimapFlyoutFeaturedBlock(feat)}
-                <div class="mt-3 space-y-2">
-                    <button type="button" class="w-full py-2 rounded-lg bg-[#003399] text-white text-xs font-black hover:bg-blue-800" onclick="renderCategoryApprovedOnly(${JSON.stringify(sub.cat)}); closeMinimap();">${escapeHtml(d.minimapLocalAll)}</button>
-                </div>`;
-            showMinimapFlyout(html);
-            minimapLoadWeather(sub.lat, sub.lon, weatherId);
-            
-            // 세부 지역 클릭 시 더 깊게 확대
-            const pos = latLonToMapPercent(sub.lat, sub.lon);
-            minimapFocusZoom(pos.x, pos.y, 1.8);
-        }
-
-        async function minimapLoadWeather(lat, lon, elId) {
-            const el = document.getElementById(elId);
-            const d = getDict();
-            if (!el) return;
+        // 번역 요청 현황 (관리자)
+        if (user && RANK_POWER[user.rank] >= 4) {
             try {
-                const u = 'https://api.open-meteo.com/v1/forecast?latitude=' + lat + '&longitude=' + lon + '&current_weather=true';
-                const res = await fetch(u);
-                if (!res.ok) throw new Error('fail');
-                const data = await res.json();
-                const w = data.current_weather;
-                if (!w) throw new Error('no data');
-                el.textContent = Math.round(w.temperature) + '°C · 풍속 ' + (w.windspeed || '-') + (w.weathercode != null ? ' · 코드 ' + w.weathercode : '');
-            } catch (e) {
-                el.textContent = d.minimapWeatherErr || 'Error';
-            }
-        }
-
-        function openBreakingFlyout(article) {
-            const d = getDict();
-            drawMinimapInfluenceForArticle(article, { crisis: false });
-            const html = `
-                <p class="text-[10px] font-black text-red-700 uppercase mb-2">속보</p>
-                ${minimapFlyoutFeaturedBlock(article)}
-                <button type="button" class="w-full mt-3 py-2 rounded-lg bg-red-600 text-white text-xs font-black hover:bg-red-700" onclick="renderDetail('${article.id}'); closeMinimap();">${escapeHtml(d.minimapGoArticle)}</button>
-                <button type="button" class="w-full mt-2 py-2 rounded-lg border-2 border-red-600 text-red-700 text-xs font-black hover:bg-red-50" onclick="subscribeBreakingAlert('${article.id}')">${escapeHtml(d.breakingSubscribe || '속보 알림 받기')}</button>
-                <p class="text-[9px] text-slate-500 mt-2 leading-tight">지도 위 붉은 링은 이 속보 태그와 맞는 권역의 영향 범위입니다.</p>`;
-            showMinimapFlyout(html);
-        }
-
-        function crisisIconForArticle(a) {
-            if (!a || !a.cat) return 'alert-circle';
-            if (a.cat.includes('전쟁')) return 'bomb';
-            if (a.cat.includes('재난')) return 'triangle-alert';
-            if (a.cat.includes('경제위기')) return 'trending-down';
-            return 'alert-circle';
-        }
-
-        function crisisArticles() {
-            return approvedNews().filter(n => n.cat && (n.cat.includes('전쟁') || n.cat.includes('재난') || n.cat.includes('경제위기')));
-        }
-
-        function breakingArticles() {
-            return approvedNews().filter(n => n.cat && n.cat.includes('속보'));
-        }
-
-        function refreshMinimapMarkers() {
-            const wrap = document.getElementById('minimap-markers');
-            if (!wrap) return;
-            const frag = document.createDocumentFragment();
-
-            if (minimapMode === 'subs' && minimapSubLayout.length) {
-                minimapSubLayout.forEach((sub) => {
-                    const b = document.createElement('button');
-                    b.type = 'button';
-                    b.className = 'minimap-sub-pin';
-                    b.style.left = sub.x + '%';
-                    b.style.top = sub.y + '%';
-                    b.title = sub.label;
-                    b.setAttribute('aria-label', sub.label);
-                    b.addEventListener('click', () => openSubLocalFlyout(sub));
-                    frag.appendChild(b);
-                });
-            } else {
-                MAP_MACRO_REGIONS.forEach((m) => {
-                    const wrap = document.createElement('button');
-                    wrap.type = 'button';
-                    wrap.className = 'minimap-macro-pin';
-                    wrap.style.left = m.x + '%';
-                    wrap.style.top = m.y + '%';
-                    wrap.title = m.label;
-                    wrap.addEventListener('click', () => openMacroRegionFlyout(m.id));
-                    const head = document.createElement('div');
-                    head.className = 'minimap-pin-head';
-                    const ic = document.createElement('i');
-                    ic.setAttribute('data-lucide', 'map-pin');
-                    ic.className = 'w-3 h-3';
-                    head.appendChild(ic);
-                    const stem = document.createElement('div');
-                    stem.className = 'minimap-pin-stem';
-                    const lab = document.createElement('div');
-                    lab.className = 'minimap-pin-label';
-                    lab.textContent = m.label;
-                    wrap.appendChild(head);
-                    wrap.appendChild(stem);
-                    wrap.appendChild(lab);
-                    frag.appendChild(wrap);
-                });
-                const br = breakingArticles();
-                br.slice(0, 5).forEach((a, i) => {
-                    const pos = minimapMapCoordsForArticle(a, i);
-                    const wrap = document.createElement('button');
-                    wrap.type = 'button';
-                    wrap.className = 'minimap-breaking-pin';
-                    wrap.style.left = pos.x + '%';
-                    wrap.style.top = pos.y + '%';
-                    wrap.title = a.title;
-                    wrap.addEventListener('click', () => openBreakingFlyout(a));
-                    const head = document.createElement('div');
-                    head.className = 'minimap-pin-head';
-                    head.textContent = '속';
-                    const stem = document.createElement('div');
-                    stem.className = 'minimap-pin-stem';
-                    wrap.appendChild(head);
-                    wrap.appendChild(stem);
-                    frag.appendChild(wrap);
-                });
-                const cr = crisisArticles();
-                cr.slice(0, 5).forEach((a, i) => {
-                    const pos = minimapMapCoordsForArticle(a, i);
-                    const wrap = document.createElement('button');
-                    wrap.type = 'button';
-                    wrap.className = 'minimap-crisis-pin';
-                    wrap.style.left = pos.x + '%';
-                    wrap.style.top = pos.y + '%';
-                    wrap.title = a.title;
-                    wrap.addEventListener('click', () => minimapOnCrisis(a.id));
-                    const head = document.createElement('div');
-                    head.className = 'minimap-pin-head';
-                    const ic = document.createElement('i');
-                    ic.setAttribute('data-lucide', crisisIconForArticle(a));
-                    ic.className = 'w-4 h-4';
-                    head.appendChild(ic);
-                    const stem = document.createElement('div');
-                    stem.className = 'minimap-pin-stem';
-                    wrap.appendChild(head);
-                    wrap.appendChild(stem);
-                    frag.appendChild(wrap);
-                });
-            }
-            wrap.innerHTML = '';
-            wrap.appendChild(frag);
-            lucide.createIcons();
-        }
-
-        function minimapOnSubClick(cat) {
-            const sub = minimapSubLayout.find(s => s.cat === cat);
-            if (sub) openSubLocalFlyout(sub);
-        }
-
-        function minimapOnCrisis(id) {
-            const a = allNews.find(n => n.id === id);
-            if (!a) return;
-            drawMinimapInfluenceForArticle(a, { crisis: true });
-            const d = getDict();
-            const html = `
-                <p class="text-[10px] font-black text-neutral-900 uppercase mb-2">위기 보도</p>
-                ${minimapFlyoutFeaturedBlock(a)}
-                <button type="button" class="w-full mt-3 py-2 rounded-lg bg-neutral-900 text-white text-xs font-black hover:bg-black" onclick="renderDetail('${a.id}'); closeMinimap();">${escapeHtml(d.minimapGoArticle)}</button>`;
-            showMinimapFlyout(html);
-        }
-
-        function openMinimap() {
-            minimapMinimized = false;
-            const panel = document.getElementById('minimap-panel');
-            const fab = document.getElementById('minimap-fab');
-            if (fab) fab.classList.add('hidden');
-            if (panel) panel.classList.remove('hidden');
-            const d = getDict();
-            const t = document.getElementById('minimap-panel-title');
-            const h = document.getElementById('minimap-panel-hint');
-            if (t) t.textContent = d.minimapTitle || '지역 미니맵';
-            if (h) h.textContent = d.minimapHint || '';
-            minimapBackToRoot();
-            minimapApplyZoom();
-            lucide.createIcons();
-        }
-
-        function closeMinimap() {
-            const panel = document.getElementById('minimap-panel');
-            const fab = document.getElementById('minimap-fab');
-            if (panel) panel.classList.add('hidden');
-            if (fab) fab.classList.add('hidden');
-            minimapMinimized = false;
-            hideMinimapFlyout();
-            minimapBackToRoot();
-        }
-
-        document.addEventListener('keydown', function (e) {
-            if (e.key !== 'Escape') return;
-            const panel = document.getElementById('minimap-panel');
-            const fly = document.getElementById('minimap-flyout');
-            if (fly && !fly.classList.contains('hidden')) {
-                hideMinimapFlyout();
-                return;
-            }
-            if (panel && !panel.classList.contains('hidden')) closeMinimap();
-        });
-
-        function pickFromMinimap(cat) {
-            if (!cat) return;
-            closeMinimap();
-            window.history.pushState({}, '', '/');
-            renderCategory(cat);
-            window.scrollTo(0, 0);
-        }
-
-        function getDict() {
-            return I18N[uiLang] || I18N[uiLang && uiLang.split('-')[0]] || I18N.en;
-        }
-
-        function showToast(msg) { alert(msg); }
-
-        function resolveArticleForUiLang(article) {
-            if (!article || uiLang === 'ko') return article;
-            const tr = allNews.find(n => n.approved && n.translationOf === article.globalNum && n.contentLang === uiLang);
-            return tr || article;
-        }
-
-        let notifUnsub = null;
-        function toggleNotifPanel(force) {
-            const panel = document.getElementById('notif-panel');
-            if (!panel) return;
-            const open = force === false ? false : (force === true ? true : panel.classList.contains('hidden'));
-            if (open) {
-                panel.classList.remove('hidden');
-                renderNotifList();
-            } else panel.classList.add('hidden');
-            lucide.createIcons();
-        }
-
-        function renderNotifList() {
-            const list = document.getElementById('notif-list');
-            const d = getDict();
-            if (!list) return;
-            if (!user) {
-                list.innerHTML = '<p class="text-slate-500 text-xs p-2">로그인 후 속보 알림을 받을 수 있습니다.</p>';
-                return;
-            }
-            list.innerHTML = '<p class="text-slate-400 text-xs p-2">불러오는 중…</p>';
-        }
-
-        async function subscribeBreakingAlert(articleId) {
-            if (!user || !articleId) return alert('로그인이 필요합니다.');
-            const a = allNews.find(n => n.id === articleId);
-            if (!a) return;
-            const ref = window.fs.doc(window.db, 'users', user.id, 'notifications', 'breaking_' + articleId);
-            await window.fs.setDoc(ref, {
-                type: 'breaking_subscribe', articleId, title: a.title, globalNum: a.globalNum,
-                read: false, timestamp: window.fs.serverTimestamp()
-            });
-            showToast('속보 알림이 등록되었습니다. 알림함에서 확인하세요.');
-            toggleNotifPanel(true);
-        }
-
-        function listenUserNotifications() {
-            if (notifUnsub) notifUnsub();
-            if (!user || !window.db) return;
-            const qNotif = window.fs.query(window.fs.collection(window.db, 'users', user.id, 'notifications'), window.fs.orderBy('timestamp', 'desc'));
-            const qSub = window.fs.query(window.fs.collection(window.db, 'users', user.id, 'subscriptions'));
-            
-            notifUnsub = window.fs.onSnapshot(qNotif, async (snap) => {
-                const items = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-                const subSnap = await window.fs.getDoc(qSub);
-                const subs = subSnap.docs.map(d => d.data().category);
-                
-                const unread = items.filter(i => !i.read).length;
-                const badge = document.getElementById('notif-badge');
-                if (badge) {
-                    if (unread > 0) { badge.textContent = String(unread); badge.classList.remove('hidden'); }
-                    else badge.classList.add('hidden');
-                }
-                const list = document.getElementById('notif-list');
-                const d = getDict();
-                if (!list) return;
-
-                let html = '';
-                if (subs.length > 0) {
-                    html += `<div class="mb-4 p-2 bg-blue-50 rounded-lg border border-blue-100">
-                        <p class="text-[10px] font-black text-blue-800 uppercase mb-2 flex items-center"><i data-lucide="mail" class="w-3 h-3 mr-1"></i> ${d.categoryNewsletter}</p>
-                        <div class="flex flex-wrap gap-1">
-                            ${subs.map(s => `<span class="bg-white text-blue-700 px-2 py-0.5 rounded text-[10px] font-bold border border-blue-200 cursor-pointer" onclick="renderCategory('${s}'); toggleNotifPanel(false);">${s}</span>`).join('')}
-                        </div>
+                const trSnap = await window.fs.getDocs(
+                    window.fs.query(window.fs.collection(window.db, 'translation_requests'), window.fs.where('status', '==', 'pending'))
+                );
+                const pending = trSnap.docs.length;
+                if (pending > 0) {
+                    html += `<div class="mb-3 p-2 bg-amber-50 rounded-lg border border-amber-200">
+                        <p class="text-[10px] font-black text-amber-800 flex items-center gap-1">
+                            <i data-lucide="languages" class="w-3 h-3"></i> 수동번역 대기 ${pending}건
+                        </p>
+                        <button onclick="showTranslationQueue(); toggleNotifPanel(false);" 
+                            class="mt-1 text-[10px] text-amber-700 underline font-bold">대기 목록 보기</button>
                     </div>`;
                 }
-
-                if (!items.length && !subs.length) {
-                    list.innerHTML = '<p class="text-slate-500 text-xs p-2">' + escapeHtml(d.notifEmpty || '알림이 없습니다.') + '</p>';
-                    return;
-                }
-
-                html += items.slice(0, 30).map(it => `
-                    <button type="button" class="w-full text-left p-2 rounded-lg hover:bg-slate-50 border border-slate-100 mb-1 ${it.read ? 'opacity-70' : ''}"
-                        onclick="openNotifItem('${it.id}','${it.articleId || ''}')">
-                        <p class="text-[10px] font-black text-red-700 uppercase">${escapeHtml(it.type === 'breaking_subscribe' ? '속보' : '알림')}</p>
-                        <p class="text-xs font-bold line-clamp-2">${escapeHtml(it.title || '')}</p>
-                    </button>`).join('');
-                
-                list.innerHTML = html;
-                lucide.createIcons();
-            });
+            } catch(e) {}
         }
 
-        async function openNotifItem(notifId, articleId) {
-            if (notifId && user) {
-                try {
-                    await window.fs.updateDoc(window.fs.doc(window.db, 'users', user.id, 'notifications', notifId), { read: true });
-                } catch (e) { /* ignore */ }
+        if (!items.length && !subs.length) {
+            list.innerHTML = html + `<p class="text-slate-500 text-xs p-2">${escapeHtml(d.notifEmpty || '알림이 없습니다.')}</p>`;
+            return;
+        }
+
+        html += items.slice(0, 30).map(it => {
+            const typeColor = it.type === 'breaking_subscribe' ? 'text-red-700' :
+                              it.type === 'newsletter_subscribed' ? 'text-blue-700' : 'text-slate-700';
+            const typeLabel = it.type === 'breaking_subscribe' ? '속보' :
+                              it.type === 'newsletter_subscribed' ? '구독' : '알림';
+            return `<button type="button" class="w-full text-left p-2 rounded-lg hover:bg-slate-50 border border-slate-100 mb-1 ${it.read ? 'opacity-60' : 'font-semibold'}"
+                onclick="openNotifItem('${it.id}','${it.articleId || ''}')">
+                <p class="text-[10px] font-black ${typeColor} uppercase">${typeLabel}</p>
+                <p class="text-xs line-clamp-2">${escapeHtml(it.title || '')}</p>
+                ${it.body ? `<p class="text-[10px] text-slate-500 line-clamp-1">${escapeHtml(it.body)}</p>` : ''}
+            </button>`;
+        }).join('');
+
+        list.innerHTML = html;
+        lucide.createIcons();
+    });
+}
+
+async function openNotifItem(notifId, articleId) {
+    if (notifId && user) {
+        try { await window.fs.updateDoc(window.fs.doc(window.db, 'users', user.id, 'notifications', notifId), { read: true }); } catch(e) {}
+    }
+    toggleNotifPanel(false);
+    if (articleId) {
+        const a = allNews.find(n => n.id === articleId);
+        if (a) renderDetail(a.id);
+    }
+}
+
+async function subscribeBreakingAlert(articleId) {
+    if (!user || !articleId) return alert('로그인이 필요합니다.');
+    const a = allNews.find(n => n.id === articleId);
+    if (!a) return;
+    const ref = window.fs.doc(window.db, 'users', user.id, 'notifications', 'breaking_' + articleId);
+    await window.fs.setDoc(ref, {
+        type: 'breaking_subscribe', articleId, title: a.title, globalNum: a.globalNum,
+        read: false, timestamp: window.fs.serverTimestamp()
+    });
+    showToast('속보 알림이 등록되었습니다. 알림함에서 확인하세요.');
+    toggleNotifPanel(true);
+}
+
+// 번역 요청 대기 목록 (관리자용)
+async function showTranslationQueue() {
+    const container = document.getElementById('main-view');
+    if (!container) return;
+    let trDocs = [];
+    try {
+        const snap = await window.fs.getDocs(
+            window.fs.query(window.fs.collection(window.db, 'translation_requests'), window.fs.where('status', '==', 'pending'))
+        );
+        trDocs = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    } catch(e) {}
+
+    container.innerHTML = `
+        <div class="max-w-3xl mx-auto py-10">
+            <div class="flex items-center justify-between mb-6">
+                <h2 class="text-2xl font-black">수동번역 대기 목록</h2>
+                <button onclick="goHome()" class="text-sm font-bold text-blue-800 hover:underline">← 홈</button>
+            </div>
+            ${trDocs.length === 0 ? '<p class="text-gray-500">대기 중인 번역 요청이 없습니다.</p>' : `
+            <div class="space-y-4">
+                ${trDocs.map(t => {
+                    const article = allNews.find(n => n.globalNum === t.originalNum);
+                    const flagMap = { en:'🇺🇸','zh-CN':'🇨🇳', ja:'🇯🇵', es:'🇪🇸', fr:'🇫🇷', de:'🇩🇪', ru:'🇷🇺', ar:'🇸🇦', hi:'🇮🇳', pt:'🇧🇷' };
+                    return `<div class="border rounded-xl p-4 bg-white shadow-sm">
+                        <div class="flex justify-between items-start gap-2">
+                            <div>
+                                <p class="text-xs text-gray-400 mb-1">원문 #${t.originalNum} → ${flagMap[t.targetLang] || '🌐'} ${t.targetLang}</p>
+                                <p class="font-bold">${article ? escapeHtml(article.title) : '기사 없음'}</p>
+                            </div>
+                            <div class="flex gap-2 shrink-0">
+                                ${article ? `<button onclick="openTranslateModalForRequest('${article.id}','${t.id}','${t.targetLang}')"
+                                    class="bg-amber-500 text-white px-3 py-1.5 rounded text-xs font-bold hover:bg-amber-600">AI 번역</button>` : ''}
+                                <button onclick="markTranslationDone('${t.id}')"
+                                    class="bg-green-600 text-white px-3 py-1.5 rounded text-xs font-bold hover:bg-green-700">완료 처리</button>
+                            </div>
+                        </div>
+                    </div>`;
+                }).join('')}
+            </div>`}
+        </div>`;
+    lucide.createIcons();
+}
+
+function openTranslateModalForRequest(articleId, requestId, langCode) {
+    openTranslateModal(articleId);
+    setTimeout(() => {
+        const sel = document.getElementById('tr-lang-select');
+        if (sel) sel.value = langCode;
+    }, 50);
+}
+
+async function markTranslationDone(requestId) {
+    if (!confirm('번역 완료로 처리하시겠습니까?')) return;
+    try {
+        await window.fs.updateDoc(window.fs.doc(window.db, 'translation_requests', requestId), { status: 'done' });
+        showToast('완료 처리되었습니다.');
+        showTranslationQueue();
+    } catch(e) { alert('오류: ' + e.message); }
+}
+
+// ══════════════════════════════════════════════════════════════════
+//  미니맵 (나머지 - 좌표 로직 위에서 교체됨)
+// ══════════════════════════════════════════════════════════════════
+
+const MINIMAP_AFRICA_RAW = `가나\n가봉\n감비아\n기니\n기니비사우\n나미비아\n나이지리아\n남수단\n남아프리카공화국\n니제르\n라이베리아\n레소토\n르완다\n리비아\n마다가스카르\n말라위\n말리\n모로코\n서사하라\n모리셔스\n모잠비크\n베냉\n보츠와나\n부룬디\n부르키나파소\n상투메프린시페\n세네갈\n소말리아\n소말릴랜드\n수단\n에스와티니\n시에라리온\n알제리\n앙골라\n에리트레아\n에티오피아\n우간다\n이집트\n잠비아\n적도기니\n중앙아프리카공화국\n지부티\n짐바브웨\n차드\n카메룬\n카보베르데\n케냐\n코모로\n코트디부아르\n콩고\n콩고민주공화국\n탄자니아\n토고\n튀니지`;
+
+function minimapPairsFromLines(raw) {
+    return raw.trim().split(/\n+/).map(line => {
+        const t = line.trim(); if (!t) return null;
+        const m = t.match(/^(.+?)\s*\([^)]*\)\s*$/);
+        return [t, m ? m[1].trim() : t];
+    }).filter(Boolean);
+}
+
+function minimapLabelToCat(label) {
+    const t = String(label || '').trim();
+    const m = t.match(/^(.+?)\s*\([^)]*\)\s*$/);
+    return m ? m[1].trim() : t;
+}
+
+const MINIMAP_SECTIONS = [
+    { title: '대한민국 · 북한 · 일본', items: [['대한민국', '한국'], ['북한', '북한'], ['일본', '일본']] },
+    { title: '중화권', items: [['중국', '중국'], ['대만', '대만']] },
+    { title: '아시아', items: [['몽골', '몽골']] },
+    { title: '미국', items: [['미국', '미국']] },
+    { title: '북중미', items: [['캐나다', '캐나다'], ['멕시코', '멕시코'], ['그린란드', '그린란드']] },
+    { title: '오세아니아', items: minimapPairsFromLines('호주\n뉴질랜드\n피지\n파푸아뉴기니\n사모아\n통가\n바누아투\n솔로몬 제도\n나우루\n투발루\n키리바시\n팔라우\n미크로네시아\n마셜 제도') },
+    { title: '러시아', items: [['러시아', '러시아']] },
+    { title: '동유럽', items: minimapPairsFromLines('벨라루스\n우크라이나\n폴란드\n체코\n슬로바키아\n헝가리\n루마니아\n불가리아\n세르비아\n크로아티아\n보스니아 헤르체고비나\n알바니아\n마케도니아') },
+    { title: '독일 · 프랑스 · 영국', items: [['독일', '독일'], ['프랑스', '프랑스'], ['영국', '영국']] },
+    { title: '서유럽', items: minimapPairsFromLines('네덜란드\n벨기에\n룩셈부르크\n아일랜드\n스위스') },
+    { title: '남유럽', items: minimapPairsFromLines('오스트리아\n이탈리아\n스페인\n포르투갈\n그리스\n몰타\n산마리노\n안도라\n모나코') },
+    { title: '북유럽', items: minimapPairsFromLines('스웨덴\n노르웨이\n핀란드\n덴마크\n아이슬란드\n페로 제도') },
+    { title: '중앙아시아', items: minimapPairsFromLines('카자흐스탄\n우즈베키스탄\n키르기스스탄\n타지키스탄\n투르크메니스탄\n아프가니스탄') },
+    { title: '서아시아', items: minimapPairsFromLines('이스라엘\n사우디아라비아\n아랍에미리트\n카타르\n쿠웨이트\n오만\n예멘\n이라크\n이란\n요르단\n레바논\n시리아\n튀르키예') },
+    { title: '남아시아', items: minimapPairsFromLines('인도\n파키스탄\n방글라데시\n네팔\n스리랑카\n부탄\n몰디브') },
+    { title: '동남아시아', items: minimapPairsFromLines('베트남\n태국\n인도네시아\n말레이시아\n싱가포르\n필리핀\n캄보디아\n라오스\n미얀마\n브루나이\n동티모르') },
+    { title: '라틴아메리카', items: minimapPairsFromLines('브라질\n아르헨티나\n칠레\n콜롬비아\n페루\n쿠바\n파나마\n볼리비아\n우루과이\n파라과이\n베네수엘라\n에콰도르\n가이아나\n수리남') },
+    { title: '아프리카', items: minimapPairsFromLines(MINIMAP_AFRICA_RAW) }
+];
+
+// 정확한 대표 도시 위경도 (보정된 값)
+const MINIMAP_WEATHER_LL = {
+    한국: [37.57, 126.98], 북한: [39.03, 125.75], 일본: [35.68, 139.76],
+    중국: [39.9, 116.4], 대만: [25.03, 121.56], 몽골: [47.92, 106.92],
+    미국: [38.9, -77.03], 캐나다: [45.42, -75.7], 멕시코: [19.43, -99.13], 그린란드: [72, -40],
+    러시아: [55.75, 37.62],
+    독일: [52.52, 13.41], 프랑스: [48.86, 2.35], 영국: [51.5, -0.12], 이탈리아: [41.9, 12.48],
+    유럽: [50.11, 8.68], 동유럽: [52.25, 21.01], 서유럽: [48.86, 2.35],
+    남유럽: [41.9, 12.48], 북유럽: [59.33, 18.07],
+    동남아: [13.75, 100.5], 인도: [28.6, 77.2], 파키스탄: [33.69, 73.05],
+    중동: [24.71, 46.68], 이스라엘: [31.77, 35.21], 튀르키예: [39.92, 32.85],
+    중앙아시아: [43.24, 76.95], 아프가니스탄: [34.52, 69.18],
+    오세아니아: [-33.87, 151.21], 라틴아메리카: [-15.78, -47.93],
+    아프리카: [6.52, 3.38], 남미: [-23.55, -46.63],
+    // 동남아시아 국가들
+    베트남: [21.02, 105.84], 태국: [13.75, 100.5], 인도네시아: [-6.21, 106.85],
+    말레이시아: [3.14, 101.69], 싱가포르: [1.35, 103.82], 필리핀: [14.6, 120.98],
+    캄보디아: [11.56, 104.92], 미얀마: [16.87, 96.19],
+    // 유럽
+    네덜란드: [52.37, 4.9], 벨기에: [50.85, 4.35], 스위스: [46.95, 7.45],
+    스페인: [40.42, -3.7], 포르투갈: [38.72, -9.14], 그리스: [37.98, 23.73],
+    폴란드: [52.23, 21.01], 우크라이나: [50.45, 30.52], 루마니아: [44.43, 26.1],
+    체코: [50.07, 14.44], 헝가리: [47.5, 19.04], 스웨덴: [59.33, 18.07],
+    노르웨이: [59.91, 10.75], 핀란드: [60.17, 24.94], 덴마크: [55.68, 12.57],
+    아이슬란드: [64.13, -21.82],
+    // 중동
+    사우디아라비아: [24.69, 46.72], 이란: [35.69, 51.42], 이라크: [33.34, 44.4],
+    요르단: [31.95, 35.93], 레바논: [33.89, 35.5], 시리아: [33.51, 36.29],
+    아랍에미리트: [24.46, 54.37], 카타르: [25.29, 51.53], 쿠웨이트: [29.37, 47.98],
+    // 남아시아
+    방글라데시: [23.72, 90.41], 네팔: [27.7, 85.32], 스리랑카: [6.93, 79.85],
+    // 라틴아메리카
+    브라질: [-15.78, -47.93], 아르헨티나: [-34.6, -58.38], 칠레: [-33.46, -70.65],
+    콜롬비아: [4.71, -74.07], 페루: [-12.05, -77.04],
+    // 아프리카
+    이집트: [30.06, 31.25], 나이지리아: [9.07, 7.4], 케냐: [-1.29, 36.82],
+    남아프리카공화국: [-25.75, 28.19], 에티오피아: [9.03, 38.74],
+    _default: [20, 0]
+};
+
+function minimapWeatherCoords(cat) {
+    const k = String(cat || '');
+    return MINIMAP_WEATHER_LL[k] || MINIMAP_WEATHER_LL._default;
+}
+
+function minimapSectionSubs(...titles) {
+    const seen = new Set();
+    const out = [];
+    for (const t of titles) {
+        const sec = MINIMAP_SECTIONS.find(s => s.title === t);
+        if (!sec) continue;
+        for (const [label, cat] of sec.items) {
+            if (seen.has(cat)) continue;
+            seen.add(cat);
+            const [lat, lon] = minimapWeatherCoords(cat);
+            out.push({ label, cat, lat, lon });
+        }
+    }
+    return out;
+}
+
+const MAP_MACRO_REGIONS_RAW = [
+    { id: 'neb', label: '동북아', lat: 37, lon: 125, cats: ['한국', '북한', '일본', '중국', '대만', '몽골'], subs: minimapSectionSubs('대한민국 · 북한 · 일본', '중화권', '아시아') },
+    { id: 'sea', label: '동남아', lat: 5, lon: 115, cats: ['동남아'], subs: minimapSectionSubs('동남아시아') },
+    { id: 'sa', label: '남아시아', lat: 22, lon: 78, cats: ['인도', '파키스탄'], subs: minimapSectionSubs('남아시아') },
+    { id: 'swa', label: '서아·중동', lat: 29, lon: 44, cats: ['중동', '이스라엘'], subs: minimapSectionSubs('서아시아') },
+    { id: 'ca', label: '중앙아시아', lat: 43, lon: 68, cats: ['중앙아시아'], subs: minimapSectionSubs('중앙아시아') },
+    { id: 'eu', label: '유럽', lat: 50, lon: 10, cats: ['유럽', '동유럽', '서유럽', '남유럽', '북유럽', '영국', '프랑스', '독일', '이탈리아'], subs: minimapSectionSubs('동유럽', '독일 · 프랑스 · 영국', '서유럽', '남유럽', '북유럽').slice(0, 18) },
+    { id: 'ru', label: '러시아', lat: 60, lon: 90, cats: ['러시아'], subs: minimapSectionSubs('러시아') },
+    { id: 'na', label: '미국', lat: 39, lon: -98, cats: ['미국'], subs: minimapSectionSubs('미국') },
+    { id: 'nc', label: '북중미', lat: 50, lon: -100, cats: ['캐나다', '멕시코', '그린란드'], subs: minimapSectionSubs('북중미') },
+    { id: 'lat', label: '라틴아메리카', lat: -15, lon: -60, cats: ['라틴아메리카', '남미'], subs: minimapSectionSubs('라틴아메리카') },
+    { id: 'af', label: '아프리카', lat: 0, lon: 20, cats: ['아프리카'], subs: minimapSectionSubs('아프리카').slice(0, 14) },
+    { id: 'oce', label: '오세아니아', lat: -25, lon: 135, cats: ['오세아니아'], subs: minimapSectionSubs('오세아니아') }
+];
+
+const MAP_MACRO_REGIONS = MAP_MACRO_REGIONS_RAW.map(m => {
+    const xy = latLonToMapPercent(m.lat, m.lon);
+    const subs = (m.subs || []).map(s => ({ ...s, ...latLonToMapPercent(s.lat, s.lon) }));
+    return { ...m, x: xy.x, y: xy.y, subs };
+});
+
+let minimapZoom = parseFloat(localStorage.getItem('tn_minimap_zoom') || '1') || 1;
+let minimapMinimized = false;
+let minimapMode = 'root';
+let minimapMacroId = null;
+let minimapSubLayout = [];
+
+function minimapClampZoom(z) { return Math.min(1.85, Math.max(0.55, z)); }
+
+function minimapApplyZoom(focusX, focusY) {
+    minimapZoom = minimapClampZoom(minimapZoom);
+    localStorage.setItem('tn_minimap_zoom', String(minimapZoom));
+    const stage = document.getElementById('minimap-stage');
+    const lbl = document.getElementById('minimap-zoom-label');
+    if (stage) {
+        if (focusX !== undefined && focusY !== undefined) stage.style.transformOrigin = `${focusX}% ${focusY}%`;
+        else if (minimapZoom === 1) stage.style.transformOrigin = 'center center';
+        stage.style.transform = 'scale(' + minimapZoom + ')';
+    }
+    if (lbl) lbl.textContent = Math.round(minimapZoom * 100) + '%';
+}
+
+function minimapFocusZoom(x, y, level) { minimapZoom = level || 1.6; minimapApplyZoom(x, y); }
+function minimapZoomStep(delta) { minimapZoom = minimapClampZoom(minimapZoom + delta * 0.12); minimapApplyZoom(); }
+function minimapZoomReset() { minimapZoom = 1; minimapApplyZoom(); }
+
+function minimapToggleMin() {
+    minimapMinimized = !minimapMinimized;
+    const panel = document.getElementById('minimap-panel');
+    const fab = document.getElementById('minimap-fab');
+    if (minimapMinimized) { if (panel) panel.classList.add('hidden'); if (fab) fab.classList.remove('hidden'); hideMinimapFlyout(); }
+    else { if (fab) fab.classList.add('hidden'); if (panel) panel.classList.remove('hidden'); }
+    lucide.createIcons();
+}
+
+function hideMinimapFlyout() { const f = document.getElementById('minimap-flyout'); if (f) { f.classList.add('hidden'); f.innerHTML = ''; } }
+function clearMinimapInfluence() { const layer = document.getElementById('minimap-influence-layer'); if (layer) layer.innerHTML = ''; }
+
+function macrosMatchingArticleCats(article) {
+    const cats = article && article.cat ? article.cat : [];
+    return MAP_MACRO_REGIONS.filter(m => m.cats.some(c => cats.includes(c)) || (m.subs || []).some(s => cats.includes(s.cat)));
+}
+
+function minimapMapCoordsForArticle(article, spreadIndex) {
+    const base = geoCatsToMapPercent(article && article.cat ? article.cat : []);
+    const i = spreadIndex || 0;
+    const ang = i * 1.08;
+    const r = 1.8 + i * 1.6;
+    return {
+        x: Math.min(96, Math.max(4, base.x + r * Math.cos(ang))),
+        y: Math.min(90, Math.max(8, base.y + r * Math.sin(ang)))
+    };
+}
+
+function drawMinimapInfluenceForArticle(article, opts) {
+    opts = opts || {};
+    const layer = document.getElementById('minimap-influence-layer');
+    if (!layer) return;
+    if (!opts.keepExisting) layer.innerHTML = '';
+    const hits = macrosMatchingArticleCats(article);
+    const places = hits.length ? hits.map(h => latLonToMapPercent(h.lat, h.lon)) : [geoCatsToMapPercent(article && article.cat ? article.cat : [])];
+    places.forEach((p, idx) => {
+        for (let i = 0; i < 3; i++) {
+            const ring = document.createElement('div');
+            ring.className = 'minimap-influence-ring' + (opts.crisis ? ' crisis' : '');
+            ring.style.left = p.x + '%';
+            ring.style.top = p.y + '%';
+            ring.style.animationDelay = ((idx * 0.28 + i * 0.42) % 2.2) + 's';
+            layer.appendChild(ring);
+        }
+    });
+}
+
+function approvedNews() { return allNews.filter(n => n.approved); }
+function featuredArticleForCats(cats) { return approvedNews().filter(n => n.cat && cats.some(c => n.cat.includes(c)))[0] || null; }
+
+function renderMacroArticleList(macroId) {
+    const m = MAP_MACRO_REGIONS.find(x => x.id === macroId);
+    if (!m) return;
+    const filtered = approvedNews().filter(n => n.cat && m.cats.some(c => n.cat.includes(c)));
+    const container = document.getElementById('main-view');
+    if (!container) return;
+    window.history.pushState({}, '', '/');
+    container.innerHTML = `
+        <div class="mb-6 flex items-center justify-between flex-wrap gap-2">
+            <h2 class="text-2xl font-black border-b-2 border-blue-900 pb-2">${escapeHtml(m.label)} <span class="text-sm font-bold text-slate-500">(권역 전체)</span></h2>
+            <button type="button" onclick="goHome()" class="text-sm font-bold text-blue-800 hover:underline">← 홈</button>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+            ${filtered.map(n => `<div class="cursor-pointer group" onclick="renderDetail('${n.id}')">
+                <img src="${escapeHtml(articleThumb(n.img))}" class="w-full aspect-video object-cover rounded-lg mb-4" alt="">
+                <h3 class="font-bold group-hover:text-blue-700">${escapeHtml(n.title)}</h3>
+            </div>`).join('') || '<p class="text-slate-500 font-bold">기사가 없습니다.</p>'}
+        </div>`;
+    lucide.createIcons(); window.scrollTo(0, 0);
+}
+
+function renderCategoryApprovedOnly(cat) {
+    const filtered = approvedNews().filter(n => n.cat && n.cat.includes(cat));
+    const container = document.getElementById('main-view');
+    if (!container) return;
+    window.history.pushState({}, '', '/');
+    container.innerHTML = `
+        <div class="mb-6"><button type="button" onclick="goHome()" class="text-sm font-bold text-blue-800 hover:underline">← 홈</button></div>
+        <h2 class="text-2xl font-black mb-8 border-b-2 border-blue-900 pb-2">${escapeHtml(cat)}</h2>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+            ${filtered.map(n => `<div class="cursor-pointer group" onclick="renderDetail('${n.id}')">
+                <img src="${escapeHtml(articleThumb(n.img))}" class="w-full aspect-video object-cover rounded-lg mb-4" alt="">
+                <h3 class="font-bold group-hover:text-blue-700">${escapeHtml(n.title)}</h3>
+            </div>`).join('') || '<p class="text-slate-500 font-bold">기사가 없습니다.</p>'}
+        </div>`;
+    lucide.createIcons(); window.scrollTo(0, 0);
+}
+
+function showMinimapFlyout(html) {
+    const f = document.getElementById('minimap-flyout');
+    if (!f) return;
+    f.innerHTML = html; f.classList.remove('hidden'); lucide.createIcons();
+}
+
+function minimapFlyoutFeaturedBlock(article) {
+    if (!article) {
+        const d = getDict();
+        return '<p class="text-xs text-slate-500 font-bold">' + escapeHtml(d.minimapNoArticle) + '</p>';
+    }
+    return `<div class="rounded-lg border border-slate-200 overflow-hidden">
+        <img src="${escapeHtml(articleThumb(article.img))}" class="w-full h-28 object-cover" alt="">
+        <p class="p-2 text-xs font-bold leading-snug line-clamp-3">${escapeHtml(article.title)}</p>
+    </div>`;
+}
+
+function openMacroRegionFlyout(macroId) {
+    clearMinimapInfluence(); minimapMacroId = macroId; minimapMode = 'root';
+    const m = MAP_MACRO_REGIONS.find(x => x.id === macroId);
+    if (!m) return;
+    const d = getDict();
+    const feat = featuredArticleForCats(m.cats);
+    const html = `
+        <p class="text-[10px] font-black text-blue-900 uppercase mb-2">${escapeHtml(m.label)}</p>
+        <p class="text-[10px] font-bold text-slate-500 mb-1">${escapeHtml(d.minimapFeatured)}</p>
+        ${minimapFlyoutFeaturedBlock(feat)}
+        <div class="mt-3 space-y-2">
+            <button type="button" class="w-full py-2 rounded-lg bg-[#003399] text-white text-xs font-black hover:bg-blue-800" onclick="renderMacroArticleList('${macroId}'); closeMinimap();">${escapeHtml(d.minimapMacroAll)}</button>
+            <button type="button" class="w-full py-2 rounded-lg bg-white border-2 border-[#003399] text-[#003399] text-xs font-black hover:bg-blue-50" onclick="minimapEnterSubs('${macroId}')">${escapeHtml(d.minimapSubNav)}</button>
+        </div>`;
+    showMinimapFlyout(html);
+}
+
+function minimapEnterSubs(macroId) {
+    const m = MAP_MACRO_REGIONS.find(x => x.id === macroId);
+    if (!m || !(m.subs && m.subs.length)) return;
+    minimapMacroId = macroId; minimapMode = 'subs';
+    minimapSubLayout = m.subs.map(sub => ({ ...sub, ...latLonToMapPercent(sub.lat, sub.lon) }));
+    const back = document.getElementById('minimap-back-btn');
+    if (back) back.classList.remove('hidden');
+    hideMinimapFlyout(); refreshMinimapMarkers();
+    minimapFocusZoom(m.x, m.y, 1.5);
+}
+
+function minimapBackToRoot() {
+    minimapMode = 'root'; minimapSubLayout = [];
+    const back = document.getElementById('minimap-back-btn');
+    if (back) back.classList.add('hidden');
+    hideMinimapFlyout(); clearMinimapInfluence(); refreshMinimapMarkers(); minimapZoomReset();
+}
+
+async function openSubLocalFlyout(sub) {
+    clearMinimapInfluence();
+    const d = getDict();
+    const feat = featuredArticleForCats([sub.cat]);
+    const weatherId = 'minimap-weather-slot';
+    const html = `
+        <p class="text-[10px] font-black text-blue-900 uppercase mb-2">${escapeHtml(sub.label)}</p>
+        <p class="text-[10px] font-bold text-slate-500 mb-1">${escapeHtml(d.minimapWeather)}</p>
+        <div id="${weatherId}" class="text-xs text-slate-600 mb-2 min-h-[2.5rem] rounded border border-slate-100 bg-slate-50 p-2">${escapeHtml(d.minimapWeather)}…</div>
+        <p class="text-[10px] font-bold text-slate-500 mb-1">${escapeHtml(d.minimapFeatured)}</p>
+        ${minimapFlyoutFeaturedBlock(feat)}
+        <div class="mt-3 space-y-2">
+            <button type="button" class="w-full py-2 rounded-lg bg-[#003399] text-white text-xs font-black hover:bg-blue-800" onclick="renderCategoryApprovedOnly(${JSON.stringify(sub.cat)}); closeMinimap();">${escapeHtml(d.minimapLocalAll)}</button>
+        </div>`;
+    showMinimapFlyout(html);
+    minimapLoadWeather(sub.lat, sub.lon, weatherId);
+    const pos = latLonToMapPercent(sub.lat, sub.lon);
+    minimapFocusZoom(pos.x, pos.y, 1.8);
+}
+
+async function minimapLoadWeather(lat, lon, elId) {
+    const el = document.getElementById(elId);
+    const d = getDict();
+    if (!el) return;
+    try {
+        const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true`);
+        if (!res.ok) throw new Error('fail');
+        const data = await res.json();
+        const w = data.current_weather;
+        if (!w) throw new Error('no data');
+        el.textContent = Math.round(w.temperature) + '°C  ·  ' + d.minimapWeather.split(' ')[0] + ' ↗ ' + (w.windspeed || '-') + ' km/h';
+    } catch (e) { el.textContent = d.minimapWeatherErr || 'Error'; }
+}
+
+function openBreakingFlyout(article) {
+    const d = getDict();
+    drawMinimapInfluenceForArticle(article, { crisis: false });
+    const html = `
+        <p class="text-[10px] font-black text-red-700 uppercase mb-2">속보</p>
+        ${minimapFlyoutFeaturedBlock(article)}
+        <button type="button" class="w-full mt-3 py-2 rounded-lg bg-red-600 text-white text-xs font-black hover:bg-red-700" onclick="renderDetail('${article.id}'); closeMinimap();">${escapeHtml(d.minimapGoArticle)}</button>
+        <button type="button" class="w-full mt-2 py-2 rounded-lg border-2 border-red-600 text-red-700 text-xs font-black hover:bg-red-50" onclick="subscribeBreakingAlert('${article.id}')">${escapeHtml(d.breakingSubscribe || '속보 알림 받기')}</button>`;
+    showMinimapFlyout(html);
+}
+
+function crisisIconForArticle(a) {
+    if (!a || !a.cat) return 'alert-circle';
+    if (a.cat.includes('전쟁')) return 'bomb';
+    if (a.cat.includes('재난')) return 'triangle-alert';
+    if (a.cat.includes('경제위기')) return 'trending-down';
+    return 'alert-circle';
+}
+
+function crisisArticles() { return approvedNews().filter(n => n.cat && (n.cat.includes('전쟁') || n.cat.includes('재난') || n.cat.includes('경제위기'))); }
+function breakingArticles() { return approvedNews().filter(n => n.cat && n.cat.includes('속보')); }
+
+function refreshMinimapMarkers() {
+    const wrap = document.getElementById('minimap-markers');
+    if (!wrap) return;
+    const frag = document.createDocumentFragment();
+
+    if (minimapMode === 'subs' && minimapSubLayout.length) {
+        minimapSubLayout.forEach(sub => {
+            const b = document.createElement('button');
+            b.type = 'button'; b.className = 'minimap-sub-pin';
+            b.style.left = sub.x + '%'; b.style.top = sub.y + '%';
+            b.title = sub.label; b.setAttribute('aria-label', sub.label);
+            b.addEventListener('click', () => openSubLocalFlyout(sub));
+            frag.appendChild(b);
+        });
+    } else {
+        MAP_MACRO_REGIONS.forEach(m => {
+            const pin = document.createElement('button');
+            pin.type = 'button'; pin.className = 'minimap-macro-pin';
+            pin.style.left = m.x + '%'; pin.style.top = m.y + '%';
+            pin.title = m.label;
+            pin.addEventListener('click', () => openMacroRegionFlyout(m.id));
+            const head = document.createElement('div'); head.className = 'minimap-pin-head';
+            const ic = document.createElement('i'); ic.setAttribute('data-lucide', 'map-pin'); ic.className = 'w-3 h-3';
+            head.appendChild(ic);
+            const stem = document.createElement('div'); stem.className = 'minimap-pin-stem';
+            const lab = document.createElement('div'); lab.className = 'minimap-pin-label'; lab.textContent = m.label;
+            pin.appendChild(head); pin.appendChild(stem); pin.appendChild(lab);
+            frag.appendChild(pin);
+        });
+        breakingArticles().slice(0, 5).forEach((a, i) => {
+            const pos = minimapMapCoordsForArticle(a, i);
+            const pin = document.createElement('button');
+            pin.type = 'button'; pin.className = 'minimap-breaking-pin';
+            pin.style.left = pos.x + '%'; pin.style.top = pos.y + '%'; pin.title = a.title;
+            pin.addEventListener('click', () => openBreakingFlyout(a));
+            const head = document.createElement('div'); head.className = 'minimap-pin-head'; head.textContent = '속';
+            const stem = document.createElement('div'); stem.className = 'minimap-pin-stem';
+            pin.appendChild(head); pin.appendChild(stem); frag.appendChild(pin);
+        });
+        crisisArticles().slice(0, 5).forEach((a, i) => {
+            const pos = minimapMapCoordsForArticle(a, i);
+            const pin = document.createElement('button');
+            pin.type = 'button'; pin.className = 'minimap-crisis-pin';
+            pin.style.left = pos.x + '%'; pin.style.top = pos.y + '%'; pin.title = a.title;
+            pin.addEventListener('click', () => minimapOnCrisis(a.id));
+            const head = document.createElement('div'); head.className = 'minimap-pin-head';
+            const ic = document.createElement('i'); ic.setAttribute('data-lucide', crisisIconForArticle(a)); ic.className = 'w-4 h-4';
+            head.appendChild(ic);
+            const stem = document.createElement('div'); stem.className = 'minimap-pin-stem';
+            pin.appendChild(head); pin.appendChild(stem); frag.appendChild(pin);
+        });
+    }
+    wrap.innerHTML = ''; wrap.appendChild(frag); lucide.createIcons();
+}
+
+function minimapOnCrisis(id) {
+    const a = allNews.find(n => n.id === id);
+    if (!a) return;
+    drawMinimapInfluenceForArticle(a, { crisis: true });
+    const d = getDict();
+    showMinimapFlyout(`
+        <p class="text-[10px] font-black text-neutral-900 uppercase mb-2">위기 보도</p>
+        ${minimapFlyoutFeaturedBlock(a)}
+        <button type="button" class="w-full mt-3 py-2 rounded-lg bg-neutral-900 text-white text-xs font-black hover:bg-black" onclick="renderDetail('${a.id}'); closeMinimap();">${escapeHtml(d.minimapGoArticle)}</button>`);
+}
+
+function openMinimap() {
+    minimapMinimized = false;
+    const panel = document.getElementById('minimap-panel');
+    const fab = document.getElementById('minimap-fab');
+    if (fab) fab.classList.add('hidden');
+    if (panel) panel.classList.remove('hidden');
+    const d = getDict();
+    const t = document.getElementById('minimap-panel-title');
+    const h = document.getElementById('minimap-panel-hint');
+    if (t) t.textContent = d.minimapTitle || '지역 미니맵';
+    if (h) h.textContent = d.minimapHint || '';
+    minimapBackToRoot(); minimapApplyZoom(); lucide.createIcons();
+}
+
+function closeMinimap() {
+    const panel = document.getElementById('minimap-panel');
+    const fab = document.getElementById('minimap-fab');
+    if (panel) panel.classList.add('hidden');
+    if (fab) fab.classList.add('hidden');
+    minimapMinimized = false; hideMinimapFlyout(); minimapBackToRoot();
+}
+
+document.addEventListener('keydown', e => {
+    if (e.key !== 'Escape') return;
+    const fly = document.getElementById('minimap-flyout');
+    if (fly && !fly.classList.contains('hidden')) { hideMinimapFlyout(); return; }
+    const panel = document.getElementById('minimap-panel');
+    if (panel && !panel.classList.contains('hidden')) closeMinimap();
+});
+
+// ── 공통 유틸 ───────────────────────────────────────────────────
+const REGION_KEYS_SIMPLE = ['한국','미국','유럽','중국','일본','인도','중동','아프리카','남미'];
+const REGION_KEYS_FULL = ['한국','미국','일본','중국','인도','캐나다','오세아니아','러시아','유럽','동유럽','서유럽','남유럽','북유럽','영국','프랑스','독일','이탈리아','중앙아시아','중동','이스라엘','파키스탄','동남아','라틴아메리카','아프리카','남미'];
+
+function getDict() { return I18N[uiLang] || I18N[uiLang && uiLang.split('-')[0]] || I18N.en; }
+function showToast(msg) { alert(msg); }
+
+function resolveArticleForUiLang(article) {
+    if (!article || uiLang === 'ko') return article;
+    const tr = allNews.find(n => n.approved && n.translationOf === article.globalNum && n.contentLang === uiLang);
+    return tr || article;
+}
+
+function renderNav() {
+    const d = getDict();
+    const langForHtml = (uiLang === 'zh-CN') ? 'zh' : uiLang;
+    document.documentElement.lang = langForHtml;
+    const titleTag = document.getElementById('site-title-tag');
+    if (titleTag) titleTag.textContent = d.siteTitle;
+    const metaDesc = document.getElementById('meta-desc');
+    if (metaDesc) metaDesc.setAttribute('content', d.desc);
+
+    const regionKeys = (regionDensity === 'full') ? REGION_KEYS_FULL : REGION_KEYS_SIMPLE;
+    const navRegions = document.getElementById('nav-regions');
+    if (navRegions) navRegions.innerHTML = regionKeys.map(k => `<button onclick="renderCategory('${k}')" class="hover:text-yellow-300 px-2">${d.regions[k] || k}</button>`).join('');
+
+    const topicKeys = ['정치','경제','사회','외교통일','국방','문화','사설/칼럼'];
+    const navTopics = document.getElementById('nav-topics');
+    if (navTopics) navTopics.innerHTML = topicKeys.map(k => `<button onclick="renderCategory('${k}')" class="hover:text-yellow-300">${d.topics[k] || k}</button>`).join('');
+
+    const flagKeys = ['속보','단독','기획보도'];
+    const navFlags = document.getElementById('nav-flags');
+    if (navFlags) navFlags.innerHTML = flagKeys.map(k => `<button onclick="renderCategory('${k}')" class="text-orange-400 hover:text-yellow-300">${d.topics[k] || k}</button>`).join('');
+
+    const mob = document.getElementById('mobile-nav');
+    if (mob) {
+        const mobKeys = [...regionKeys, ...topicKeys, ...flagKeys];
+        mob.innerHTML = mobKeys.map(k => {
+            const label = d.regions[k] || d.topics[k] || k;
+            return `<button onclick="renderCategory('${k}')" class="${flagKeys.includes(k) ? 'text-orange-400' : 'hover:text-yellow-300'} px-2 py-1">${label}</button>`;
+        }).join('');
+    }
+
+    const densBtn = document.getElementById('region-density-btn');
+    if (densBtn) { densBtn.textContent = (regionDensity === 'full') ? d.regionBtnFull : d.regionBtnSimple; densBtn.classList.remove('hidden'); }
+
+    // 로그인/아웃 버튼 텍스트
+    const authUi = document.getElementById('auth-ui');
+    if (authUi && !authUi.classList.contains('hidden')) {
+        const btns = authUi.querySelectorAll('button');
+        if (btns[0]) btns[0].textContent = d.login || 'Log in';
+        if (btns[1]) btns[1].textContent = d.register || 'Register';
+    }
+
+    // RTL 지원 (Arabic)
+    document.body.style.direction = (uiLang === 'ar') ? 'rtl' : 'ltr';
+}
+
+function changeLang(code) {
+    uiLang = code;
+    localStorage.setItem('tn_ui_lang', uiLang);
+    renderNav();
+    // 미니맵 힌트 업데이트
+    const d = getDict();
+    const t = document.getElementById('minimap-panel-title');
+    const h = document.getElementById('minimap-panel-hint');
+    if (t) t.textContent = d.minimapTitle;
+    if (h) h.textContent = d.minimapHint;
+}
+
+function toggleRegionDensity() {
+    regionDensity = (regionDensity === 'full') ? 'simple' : 'full';
+    localStorage.setItem('tn_region_density', regionDensity);
+    renderNav();
+}
+
+function shareLink() {
+    const url = window.location.href;
+    if (navigator.clipboard) {
+        navigator.clipboard.writeText(url).then(() => alert('기사 주소가 복사되었습니다.'));
+    } else {
+        const t = document.createElement("textarea");
+        document.body.appendChild(t); t.value = url; t.select();
+        document.execCommand('copy'); document.body.removeChild(t);
+        alert('기사 주소가 복사되었습니다.');
+    }
+}
+
+function handleLogout() { localStorage.removeItem('tnuser'); location.reload(); }
+
+async function handleLoginLegacy() {
+    const id = document.getElementById('li-id-legacy').value.trim();
+    const pw = document.getElementById('li-pw-legacy').value.trim();
+    if (!id || !pw) return alert('아이디와 비밀번호를 입력하세요.');
+    if (id === 'admin' && pw === 'admin123') {
+        user = { id: 'admin', name: '최고관리자', rank: '최고운영진', approved: true };
+        localStorage.setItem('tnuser', JSON.stringify(user)); loginSuccess(); return;
+    }
+    try {
+        const userSnap = await window.fs.getDoc(window.fs.doc(window.db, "users", id));
+        if (!userSnap.exists()) return alert('존재하지 않는 아이디입니다.');
+        const data = userSnap.data();
+        if (data.pw !== pw) return alert('비밀번호가 틀립니다.');
+        if (!data.approved && data.rank !== '일반회원') return alert('아직 승인 대기 중인 계정입니다.');
+        user = { id, ...data };
+        localStorage.setItem('tnuser', JSON.stringify(user)); loginSuccess();
+    } catch(e) { alert('로그인 오류: ' + e.message); }
+}
+
+function handleLoginMP() { alert('Mannamplace 통합 계정 로그인 기능은 준비 중입니다.'); }
+function handleGoogleLogin() { alert('Google 로그인 기능은 준비 중입니다.'); }
+function switchLoginTab(tab) {
+    const ltab = document.getElementById('ltab-legacy');
+    const mtab = document.getElementById('ltab-mp');
+    const ldiv = document.getElementById('login-legacy');
+    const mdiv = document.getElementById('login-mp');
+    if (tab === 'legacy') {
+        ltab.classList.add('bg-[#003399]','text-white'); ltab.classList.remove('text-gray-500');
+        mtab.classList.remove('bg-[#B84A00]','text-white'); mtab.classList.add('text-gray-500');
+        ldiv.style.display = 'block'; mdiv.style.display = 'none';
+    } else {
+        mtab.classList.add('bg-[#B84A00]','text-white'); mtab.classList.remove('text-gray-500');
+        ltab.classList.remove('bg-[#003399]','text-white'); ltab.classList.add('text-gray-500');
+        mdiv.style.display = 'block'; ldiv.style.display = 'none';
+    }
+}
+
+async function handleSignup() {
+    const email = document.getElementById('su-email').value;
+    const mpid = document.getElementById('su-mpid').value;
+    const pw = document.getElementById('su-pw').value;
+    const rank = document.getElementById('su-type').value;
+    const name = document.getElementById('su-name').value || mpid;
+    const nick = document.getElementById('su-nick').value || mpid;
+    if (!mpid || !pw) return alert('필수 정보를 입력하세요.');
+    await window.fs.setDoc(window.fs.doc(window.db, "users", mpid), {
+        id: mpid, email, pw, name, nick, rank,
+        approved: rank === '일반회원', timestamp: window.fs.serverTimestamp()
+    });
+    alert(rank === '일반회원' ? '가입 완료!' : '가입 신청 완료! 심사를 기다려주세요.');
+    hideModal('signup-modal');
+}
+
+function loginSuccess() {
+    hideModal('login-modal');
+    document.getElementById('auth-ui').classList.add('hidden');
+    const userUi = document.getElementById('user-ui');
+    userUi.classList.remove('hidden'); userUi.classList.add('flex');
+    document.getElementById('user-badge').innerText = user.rank;
+    if (RANK_POWER[user.rank] >= 3) document.getElementById('admin-btn').classList.remove('hidden');
+    listenUserNotifications(); lucide.createIcons();
+}
+
+function showModal(id) { document.getElementById(id).classList.remove('hidden'); }
+function hideModal(id) { document.getElementById(id).classList.add('hidden'); }
+function toggleAdmin() {
+    const admin = document.getElementById('admin-view');
+    admin.classList.toggle('hidden');
+    if (!admin.classList.contains('hidden')) { buildAdminCategoryCheckboxes(); switchAdminTab('write'); }
+}
+function goHome() { window.history.pushState({}, '', '/'); renderHome(); }
+function execCmd(cmd, arg) { document.execCommand(cmd, false, arg); }
+function googleTranslateElementInit() { new google.translate.TranslateElement({ pageLanguage: 'ko' }, 'google_translate_element'); }
+
+let editingId = null;
+async function handlePublish() {
+    const title = document.getElementById('post-title').value;
+    const content = document.getElementById('post-content').value;
+    const email = document.getElementById('post-email').value.trim();
+    const imgRaw = document.getElementById('post-img-main').value.trim();
+    const img = imgRaw || DEFAULT_ARTICLE_THUMB;
+    const desc = document.getElementById('post-desc') ? document.getElementById('post-desc').value.trim() : '';
+    const radioUrl = document.getElementById('post-radio-url').value;
+    const inlineImages = document.getElementById('post-inline-images').value.split('\n').filter(l => l.trim());
+    const cats = Array.from(document.querySelectorAll('#cat-checkboxes input:checked')).map(i => i.value);
+    const date = document.getElementById('post-date').value || new Date().toLocaleDateString('ko-KR');
+    const views = parseInt(document.getElementById('post-views').value) || 0;
+    if (!title || !content) return alert('제목과 본문은 필수입니다.');
+
+    // 자동 번역 옵션 체크
+    const autoTranslateEl = document.getElementById('post-auto-translate');
+    const autoTranslateLangs = autoTranslateEl ? Array.from(document.querySelectorAll('.auto-tr-lang-cb:checked')).map(cb => cb.value) : [];
+
+    const articleData = {
+        title, content, img, desc, radioUrl, inlineImages, cat: cats,
+        author: user.name, authorId: user.id, email: email || '',
+        date, views, contentLang: 'ko', translationOf: null,
+        timestamp: window.fs.serverTimestamp(),
+        approved: RANK_POWER[user.rank] >= 4
+    };
+
+    let savedId;
+    if (editingId) {
+        await window.fs.updateDoc(window.fs.doc(window.db, "articles", editingId), articleData);
+        alert('기사가 수정되었습니다.'); editingId = null;
+    } else {
+        articleData.globalNum = allNews.length + 1;
+        const docRef = await window.fs.addDoc(window.fs.collection(window.db, "articles"), articleData);
+        savedId = docRef.id;
+        alert('기사가 발행/요청 되었습니다.');
+
+        // 발행 후 자동번역 트리거
+        if (autoTranslateLangs.length > 0 && RANK_POWER[user.rank] >= 4) {
+            for (const lang of autoTranslateLangs) {
+                const fakeArticle = { ...articleData, id: savedId };
+                allNews.unshift(fakeArticle);
+                await submitTranslationForArticle(fakeArticle, lang);
+                allNews.shift();
             }
-            toggleNotifPanel(false);
-            if (articleId) {
-                const a = allNews.find(n => n.id === articleId);
-                if (a) renderDetail(a.id);
-            }
         }
+    }
+    toggleAdmin();
+}
 
-        let commentsUnsub = null;
-        function mountComments(articleId) {
-            const box = document.getElementById('comments-mount');
-            if (!box || !window.db) return;
-            if (commentsUnsub) commentsUnsub();
-            const d = getDict();
-            const q = window.fs.query(window.fs.collection(window.db, 'articles', articleId, 'comments'), window.fs.orderBy('timestamp', 'desc'));
-            commentsUnsub = window.fs.onSnapshot(q, (snap) => {
-                const rows = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                box.innerHTML = `
-                    <h3 class="text-lg font-black mb-4">${escapeHtml(d.comments || '댓글')}</h3>
-                    ${user ? `<div class="flex gap-2 mb-4">
-                        <input id="comment-input" type="text" maxlength="500" placeholder="${escapeHtml(d.commentPlaceholder || '')}" class="flex-1 border rounded-lg px-3 py-2 text-sm">
-                        <button type="button" onclick="submitComment('${articleId}')" class="shrink-0 bg-blue-900 text-white px-4 py-2 rounded-lg text-sm font-bold">${escapeHtml(d.postComment || '등록')}</button>
-                    </div>` : '<p class="text-sm text-gray-500 mb-4">로그인 후 댓글을 남길 수 있습니다.</p>'}
-                    <ul class="space-y-3">${rows.map(c => `
-                        <li class="border-b border-gray-100 pb-3">
-                            <p class="text-xs font-bold text-gray-600">${escapeHtml(c.author || '')}</p>
-                            <p class="text-sm text-gray-800 mt-1">${escapeHtml(c.text || '')}</p>
-                        </li>`).join('') || '<li class="text-sm text-gray-400">첫 댓글을 남겨보세요.</li>'}</ul>`;
-            });
-        }
+async function submitTranslationForArticle(raw, langCode) {
+    const langMap = { en:'English', 'zh-CN':'Simplified Chinese', ja:'Japanese', es:'Spanish', fr:'French', de:'German', ru:'Russian', ar:'Arabic', hi:'Hindi', pt:'Portuguese (Brazilian)' };
+    const targetLangName = langMap[langCode] || langCode;
+    try {
+        const response = await fetch('https://api.anthropic.com/v1/messages', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                model: 'claude-sonnet-4-20250514', max_tokens: 4000,
+                system: `You are a professional news translator. Translate the given Korean news article into ${targetLangName}. Return ONLY a JSON object with keys: "title" and "content". No markdown, no preamble.`,
+                messages: [{ role: 'user', content: `Translate to ${targetLangName}:\n\nTITLE: ${raw.title}\n\nCONTENT:\n${raw.content}` }]
+            })
+        });
+        if (!response.ok) return;
+        const data = await response.json();
+        const text = data.content.map(b => b.text || '').join('');
+        const clean = text.replace(/```json|```/g, '').trim();
+        const parsed = JSON.parse(clean);
+        if (!parsed.title || !parsed.content) return;
+        await window.fs.addDoc(window.fs.collection(window.db, 'articles'), {
+            title: parsed.title, content: parsed.content, img: raw.img || DEFAULT_ARTICLE_THUMB,
+            desc: raw.desc || '', cat: raw.cat || [], author: raw.author, authorId: raw.authorId,
+            email: raw.email || '', date: new Date().toLocaleDateString('ko-KR'), views: 0,
+            contentLang: langCode, translationOf: raw.globalNum, globalNum: allNews.length + 1,
+            inlineImages: raw.inlineImages || [], radioUrl: raw.radioUrl || '',
+            approved: true, timestamp: window.fs.serverTimestamp()
+        });
+    } catch(e) { console.warn('자동번역 실패:', langCode, e); }
+}
 
-        async function submitComment(articleId) {
-            const input = document.getElementById('comment-input');
-            const text = (input && input.value || '').trim();
-            if (!user) return alert('로그인이 필요합니다.');
-            if (!text) return;
-            await window.fs.addDoc(window.fs.collection(window.db, 'articles', articleId, 'comments'), {
-                text, author: user.name, authorId: user.id, timestamp: window.fs.serverTimestamp()
-            });
-            if (input) input.value = '';
-        }
+function editArticle(id) {
+    const n = allNews.find(x => x.id === id);
+    if (!n) return;
+    editingId = id; toggleAdmin();
+    document.getElementById('post-title').value = n.title;
+    document.getElementById('post-content').value = n.content;
+    document.getElementById('post-img-main').value = (n.img && n.img !== DEFAULT_ARTICLE_THUMB) ? n.img : '';
+    document.getElementById('post-email').value = n.email || '';
+    if (document.getElementById('post-desc')) document.getElementById('post-desc').value = n.desc || '';
+    document.getElementById('post-date').value = n.date;
+    document.getElementById('post-views').value = n.views;
+    document.getElementById('post-radio-url').value = n.radioUrl || '';
+    document.getElementById('post-inline-images').value = (n.inlineImages || []).join('\n');
+    document.querySelectorAll('#cat-checkboxes input').forEach(cb => { cb.checked = n.cat && n.cat.includes(cb.value); });
+}
 
-        function insertInlineImageSlot() {
-            const ta = document.getElementById('post-content');
-            const imgTa = document.getElementById('post-inline-images');
-            if (!ta || !imgTa) return;
-            const lines = imgTa.value.split('\n').filter(l => l.trim());
-            const n = lines.length + 1;
-            const tag = '[img' + n + ']';
-            const start = ta.selectionStart || ta.value.length;
-            const before = ta.value.slice(0, start);
-            const after = ta.value.slice(start);
-            ta.value = before + (before.endsWith('\n') || !before ? '' : '\n') + tag + '\n' + after;
-            imgTa.value = (imgTa.value ? imgTa.value + '\n' : '') + 'https:// | center';
-            ta.focus();
-        }
+function switchAdminTab(id) {
+    document.querySelectorAll('.admin-tab').forEach(t => t.classList.add('hidden'));
+    document.getElementById('admin-tab-' + id).classList.remove('hidden');
+    if (id === 'write') buildAdminCategoryCheckboxes();
+    if (id === 'approval') loadApprovals();
+    if (id === 'users') loadUsers();
+    if (id === 'settings') loadSettings();
+    if (id === 'manage') loadNewsList();
+}
 
-        function buildAdminCategoryCheckboxes() {
-            const wrap = document.getElementById('cat-checkboxes');
-            if (!wrap || wrap.dataset.built === '1') return;
-            const topics = ['정치','경제','사회','외교통일','국방','문화','사설/칼럼','속보','전쟁','재난','경제위기','단독','기획보도'];
-            const macros = ['한국','미국','유럽','중국','일본','인도','중동','아프리카','남미','캐나다','러시아','동남아','라틴아메리카','중앙아시아'];
-            let html = '<p class="col-span-2 text-[10px] font-bold text-yellow-300 mb-1">주제·속보</p>';
-            topics.forEach(t => { html += `<label class="flex items-center space-x-2"><input type="checkbox" value="${t}"> <span>${t}</span></label>`; });
-            html += '<p class="col-span-2 text-[10px] font-bold text-blue-300 mt-2 mb-1">권역 (간단)</p>';
-            macros.forEach(t => { html += `<label class="flex items-center space-x-2"><input type="checkbox" value="${t}"> <span>${t}</span></label>`; });
-            MINIMAP_SECTIONS.forEach(sec => {
-                html += `<details class="col-span-2 mt-1 border border-white/10 rounded"><summary class="cursor-pointer px-2 py-1 text-[10px] font-bold text-slate-300">${escapeHtml(sec.title)}</summary><div class="grid grid-cols-2 gap-1 p-2">`;
-                sec.items.forEach(([label, cat]) => {
-                    html += `<label class="flex items-center space-x-1 text-[10px]"><input type="checkbox" value="${escapeHtml(cat)}"> <span>${escapeHtml(label)}</span></label>`;
-                });
-                html += '</div></details>';
-            });
-            wrap.innerHTML = html;
-            wrap.dataset.built = '1';
-        }
+function updateAdminLists() {
+    if (document.getElementById('admin-tab-approval') && !document.getElementById('admin-tab-approval').classList.contains('hidden')) loadApprovals();
+    if (document.getElementById('admin-tab-manage') && !document.getElementById('admin-tab-manage').classList.contains('hidden')) loadNewsList();
+}
 
-        function renderNav() {
-            const d = getDict();
-            const langForHtml = (uiLang === 'zh-CN') ? 'zh' : uiLang;
-            document.documentElement.lang = langForHtml;
+async function loadApprovals() {
+    const list = allNews.filter(n => !n.approved);
+    document.getElementById('approval-list').innerHTML = list.map(a => `
+        <div class="flex justify-between items-center bg-white/5 p-4 rounded border border-white/10">
+            <div>
+                <p class="font-bold">${a.title}</p>
+                <p class="text-xs text-gray-400">${a.author} | ${a.cat ? a.cat.join(', ') : ''}</p>
+            </div>
+            <button onclick="approveArticle('${a.id}')" class="bg-green-600 px-4 py-1 rounded text-xs">승인</button>
+        </div>`).join('') || '<p class="text-gray-500">대기 중인 기사가 없습니다.</p>';
+}
 
-            // title/description 기본
-            const titleTag = document.getElementById('site-title-tag');
-            if (titleTag) titleTag.textContent = d.siteTitle;
-            const metaDesc = document.getElementById('meta-desc');
-            if (metaDesc) metaDesc.setAttribute('content', d.desc);
-            const ogDesc = document.getElementById('og-desc');
-            if (ogDesc) ogDesc.setAttribute('content', d.desc);
-            const twDesc = document.getElementById('tw-desc');
-            if (twDesc) twDesc.setAttribute('content', d.desc);
+async function approveArticle(id) {
+    await window.fs.updateDoc(window.fs.doc(window.db, "articles", id), { approved: true });
+    alert('승인되었습니다.'); loadApprovals();
+}
 
-            // 지역 버튼
-            const regionKeys = (regionDensity === 'full') ? REGION_KEYS_FULL : REGION_KEYS_SIMPLE;
-            const navRegions = document.getElementById('nav-regions');
-            if (navRegions) {
-                navRegions.innerHTML = regionKeys.map(k => {
-                    const label = d.regions[k] || k;
-                    return `<button onclick="renderCategory('${k}')" class="hover:text-yellow-300 px-2">${label}</button>`;
-                }).join('');
-            }
+function loadNewsList() {
+    const container = document.getElementById('news-manage-list');
+    if (!container) return;
+    container.innerHTML = allNews.map(n => `
+        <div class="flex justify-between items-center bg-white/5 p-4 rounded border border-white/10 mb-2">
+            <div>
+                <p class="font-bold text-white">${n.title}</p>
+                <p class="text-[10px] text-gray-400">${n.author} | ${n.date} | #${n.globalNum}${n.translationOf ? ` (번역본 원문 #${n.translationOf})` : ''} ${n.contentLang && n.contentLang !== 'ko' ? `[${n.contentLang}]` : ''}</p>
+            </div>
+            <button onclick="deleteArticle('${n.id}')" class="bg-red-600 hover:bg-red-700 px-3 py-1 rounded text-xs font-bold">삭제</button>
+        </div>`).join('') || '<p class="text-gray-500">기사가 없습니다.</p>';
+}
 
-            // 토픽 버튼
-            const topicKeys = ['정치','경제','사회','외교통일','국방','문화','사설/칼럼'];
-            const navTopics = document.getElementById('nav-topics');
-            if (navTopics) {
-                navTopics.innerHTML = topicKeys.map(k => {
-                    const label = d.topics[k] || k;
-                    return `<button onclick="renderCategory('${k}')" class="hover:text-yellow-300">${label}</button>`;
-                }).join('');
-            }
+async function deleteArticle(id) {
+    if (!user || RANK_POWER[user.rank] < 4) return alert('권한이 없습니다.');
+    if (!confirm('영구 삭제하시겠습니까?')) return;
+    try { await window.fs.deleteDoc(window.fs.doc(window.db, "articles", id)); alert('삭제되었습니다.'); loadNewsList(); }
+    catch(e) { alert('실패: ' + e.message); }
+}
 
-            // 플래그(속보/단독/기획)
-            const flagKeys = ['속보','단독','기획보도'];
-            const navFlags = document.getElementById('nav-flags');
-            if (navFlags) {
-                navFlags.innerHTML = flagKeys.map(k => {
-                    const label = d.topics[k] || k;
-                    return `<button onclick="renderCategory('${k}')" class="text-orange-400 hover:text-yellow-300">${label}</button>`;
-                }).join('');
-            }
+async function loadUsers() {
+    const snap = await window.fs.getDocs(window.fs.collection(window.db, 'users'));
+    const tbody = document.getElementById('user-table-body');
+    if (!tbody) return;
+    tbody.innerHTML = snap.docs.map(d => {
+        const u = d.data();
+        return `<tr class="border-b border-white/10">
+            <td class="p-3">${escapeHtml(u.id || d.id)}</td>
+            <td class="p-3">${escapeHtml(u.rank || '-')}</td>
+            <td class="p-3">
+                <select onchange="changeUserRank('${d.id}', this.value)" class="bg-slate-700 rounded p-1 text-xs">
+                    ${['일반회원','시민기자','기자','기자 간부','최고운영진'].map(r => `<option value="${r}" ${u.rank===r?'selected':''}>${r}</option>`).join('')}
+                </select>
+            </td>
+        </tr>`;
+    }).join('');
+}
 
-            // 모바일
-            const mob = document.getElementById('mobile-nav');
-            if (mob) {
-                const mobKeys = [...regionKeys, ...topicKeys, ...flagKeys];
-                mob.innerHTML = mobKeys.map(k => {
-                    const label = (d.regions[k] || d.topics[k] || k);
-                    const cls = (flagKeys.includes(k)) ? 'text-orange-400' : 'hover:text-yellow-300';
-                    return `<button onclick="renderCategory('${k}')" class="${cls} px-2 py-1">${label}</button>`;
-                }).join('');
-            }
+async function changeUserRank(uid, rank) {
+    await window.fs.updateDoc(window.fs.doc(window.db, 'users', uid), { rank, approved: true });
+    alert('승급 완료');
+}
 
-            // 버튼 라벨
-            const densBtn = document.getElementById('region-density-btn');
-            if (densBtn) {
-                densBtn.textContent = (regionDensity === 'full') ? d.regionBtnFull : d.regionBtnSimple;
-                densBtn.classList.remove('hidden');
-            }
-            const authUi = document.getElementById('auth-ui');
-            if (authUi && !authUi.classList.contains('hidden')) {
-                const loginBtn = authUi.querySelector('button');
-                const regBtn = authUi.querySelectorAll('button')[1];
-                if (loginBtn) loginBtn.textContent = d.login || 'Log in';
-                if (regBtn) regBtn.textContent = d.register || 'Register';
-            }
-            const logoutBtn = document.querySelector('#user-ui button[onclick="handleLogout()"]');
-            if (logoutBtn) logoutBtn.textContent = d.logout || '로그아웃';
-        }
+async function loadSettings() {
+    const el = document.getElementById('set-site-title');
+    if (el) el.value = siteConfig.title || '';
+}
 
-        function changeLang(code) {
-            // 1차 승급: "UI를 바꾸는" 언어 선택 (번역은 별도 기능으로 남겨둘 수 있음)
-            uiLang = code;
-            localStorage.setItem('tn_ui_lang', uiLang);
-            renderNav();
-            showToast('언어 UI가 적용되었습니다.', 'success');
-        }
+function buildAdminCategoryCheckboxes() {
+    const wrap = document.getElementById('cat-checkboxes');
+    if (!wrap || wrap.dataset.built === '1') return;
 
-        function toggleRegionDensity() {
-            regionDensity = (regionDensity === 'full') ? 'simple' : 'full';
-            localStorage.setItem('tn_region_density', regionDensity);
-            renderNav();
-            showToast(regionDensity === 'full' ? '지역: 전체 보기' : '지역: 간단 보기', 'info');
-        }
+    // 발행 폼에 자동번역 옵션 추가
+    const publishBtn = document.querySelector('button[onclick="handlePublish()"]');
+    if (publishBtn && !document.getElementById('auto-translate-section')) {
+        const section = document.createElement('div');
+        section.id = 'auto-translate-section';
+        section.className = 'mt-4 p-3 bg-white/5 rounded border border-white/10';
+        section.innerHTML = `<p class="text-xs font-bold text-yellow-300 mb-2">발행 후 자동 번역 (Claude AI)</p>
+            <div class="flex flex-wrap gap-2">
+                ${TRANSLATE_LANGS.map(l => `<label class="flex items-center gap-1 text-[11px] bg-white/5 px-2 py-1 rounded cursor-pointer">
+                    <input type="checkbox" class="auto-tr-lang-cb" value="${l.code}"> ${l.label}
+                </label>`).join('')}
+            </div>`;
+        publishBtn.parentNode.insertBefore(section, publishBtn);
+    }
 
-        function shareLink() {
-            const url = window.location.href;
-            const t = document.createElement("textarea");
-            document.body.appendChild(t);
-            t.value = url;
-            t.select();
-            document.execCommand('copy');
-            document.body.removeChild(t);
-            alert('기사 주소가 복사되었습니다.');
-        }
+    wrap.dataset.built = '1';
+    // (카테고리 체크박스는 기존 HTML에 이미 있으므로 추가 빌드 생략 또는 보강 가능)
+}
 
-        function handleLogout() { 
-            localStorage.removeItem('tnuser');
-            location.reload(); 
-        }
+function updateOG(article) {
+    if (!article) return;
+    document.title = article.title + " - T.N. News";
+    [['og:title', article.title], ['og:description', (article.desc || article.content.substring(0, 100)).replace(/\n/g, ' ')], ['og:image', articleThumb(article.img)], ['og:url', window.location.href]].forEach(([prop, content]) => {
+        const el = document.querySelector(`meta[property="${prop}"]`);
+        if (el) el.setAttribute('content', content);
+    });
+}
 
-        async function handleLoginLegacy() {
-            const id = document.getElementById('li-id-legacy').value.trim();
-            const pw = document.getElementById('li-pw-legacy').value.trim();
+// 마운트 시 UI 적용
+(function bootstrapUi() {
+    const sel = document.getElementById('lang-select');
+    if (sel) sel.value = uiLang;
+    renderNav();
+    if (typeof lucide !== 'undefined') lucide.createIcons();
+})();
 
-            if(!id || !pw) return alert('아이디와 비밀번호를 입력하세요.');
+window.onload = init;
 
-            if(id === 'admin' && pw === 'admin123') {
-                user = { id: 'admin', name: '최고관리자', rank: '최고운영진', approved: true };
-                localStorage.setItem('tnuser', JSON.stringify(user));
-                loginSuccess();
-                return;
-            }
-
-            try {
-                const userSnap = await window.fs.getDoc(window.fs.doc(window.db, "users", id));
-                if(!userSnap.exists()) return alert('존재하지 않는 아이디입니다.');
-
-                const data = userSnap.data();
-                if(data.pw !== pw) return alert('비밀번호가 틀립니다.');
-                
-                if(!data.approved && data.rank !== '일반회원') return alert('아직 승인 대기 중인 계정입니다.');
-                
-                user = { id, ...data };
-                localStorage.setItem('tnuser', JSON.stringify(user));
-                loginSuccess();
-            } catch(error) {
-                console.error('로그인 오류:', error);
-                alert('로그인 중 오류가 발생했습니다.');
-            }
-        }
-
-        function handleLoginMP() { alert('Mannamplace 통합 계정 로그인 기능은 준비 중입니다.'); }
-        function handleGoogleLogin() { alert('Google 로그인 기능은 준비 중입니다.'); }
-
-        function switchLoginTab(tab) {
-            const legacyTab = document.getElementById('ltab-legacy');
-            const mpTab = document.getElementById('ltab-mp');
-            const legacyDiv = document.getElementById('login-legacy');
-            const mpDiv = document.getElementById('login-mp');
-
-            if(tab === 'legacy') {
-                legacyTab.classList.add('bg-[#003399]', 'text-white');
-                legacyTab.classList.remove('text-gray-500');
-                mpTab.classList.remove('bg-[#B84A00]', 'text-white');
-                mpTab.classList.add('text-gray-500');
-                legacyDiv.style.display = 'block';
-                mpDiv.style.display = 'none';
-            } else {
-                mpTab.classList.add('bg-[#B84A00]', 'text-white');
-                mpTab.classList.remove('text-gray-500');
-                legacyTab.classList.remove('bg-[#003399]', 'text-white');
-                legacyTab.classList.add('text-gray-500');
-                mpDiv.style.display = 'block';
-                legacyDiv.style.display = 'none';
-            }
-        }
-
-        async function handleSignup() {
-            const email = document.getElementById('su-email').value;
-            const mpid = document.getElementById('su-mpid').value;
-            const pw = document.getElementById('su-pw').value;
-            const rank = document.getElementById('su-type').value;
-            const name = document.getElementById('su-name').value || mpid;
-            const nick = document.getElementById('su-nick').value || mpid;
-            
-            if(!mpid || !pw) return alert('필수 정보를 입력하세요.');
-
-            await window.fs.setDoc(window.fs.doc(window.db, "users", mpid), {
-                id: mpid, email, pw, name, nick, rank, 
-                approved: rank === '일반회원',
-                timestamp: window.fs.serverTimestamp()
-            });
-            
-            alert(rank === '일반회원' ? '가입 완료!' : '가입 신청 완료! 심사를 기다려주세요.');
-            hideModal('signup-modal');
-        }
-
-        function loginSuccess() {
-            hideModal('login-modal');
-            document.getElementById('auth-ui').classList.add('hidden');
-            const userUi = document.getElementById('user-ui');
-            userUi.classList.remove('hidden');
-            userUi.classList.add('flex');
-            document.getElementById('user-badge').innerText = user.rank;
-            
-            if(RANK_POWER[user.rank] >= 3) {
-                document.getElementById('admin-btn').classList.remove('hidden');
-            }
-            listenUserNotifications();
-            lucide.createIcons();
-        }
-
-        let editingId = null;
-        async function handlePublish() {
-            const title = document.getElementById('post-title').value;
-            const content = document.getElementById('post-content').value;
-            const email = document.getElementById('post-email').value.trim();
-            const imgRaw = document.getElementById('post-img-main').value.trim();
-            const img = imgRaw || DEFAULT_ARTICLE_THUMB;
-            const desc = document.getElementById('post-desc') ? document.getElementById('post-desc').value.trim() : '';
-            const radioUrl = document.getElementById('post-radio-url').value;
-            const inlineImages = document.getElementById('post-inline-images').value.split('\n').filter(l => l.trim());
-            const cats = Array.from(document.querySelectorAll('#cat-checkboxes input:checked')).map(i => i.value);
-            const date = document.getElementById('post-date').value || new Date().toLocaleDateString();
-            const views = parseInt(document.getElementById('post-views').value) || 0;
-
-            if(!title || !content) return alert('제목과 본문은 필수입니다.');
-
-            const articleData = {
-               title, content, img, desc, radioUrl, inlineImages, cat: cats,
-               author: user.name, authorId: user.id,
-               email: email || '',
-               date, views,
-               contentLang: 'ko',
-               translationOf: null,
-               timestamp: window.fs.serverTimestamp(),
-               approved: RANK_POWER[user.rank] >= 4
-            };
-
-            if (editingId) {
-                await window.fs.updateDoc(window.fs.doc(window.db, "articles", editingId), articleData);
-                alert('기사가 수정되었습니다.');
-                editingId = null;
-            } else {
-                articleData.globalNum = allNews.length + 1;
-                await window.fs.addDoc(window.fs.collection(window.db, "articles"), articleData);
-                alert('기사가 발행/요청 되었습니다.');
-            }
-            toggleAdmin();
-        }
-
-        function editArticle(id) {
-            const n = allNews.find(x => x.id === id);
-            if(!n) return;
-            editingId = id;
-            toggleAdmin();
-            document.getElementById('post-title').value = n.title;
-            document.getElementById('post-content').value = n.content;
-            document.getElementById('post-img-main').value = (n.img && n.img !== DEFAULT_ARTICLE_THUMB) ? n.img : '';
-            document.getElementById('post-email').value = n.email || '';
-            if (document.getElementById('post-desc')) document.getElementById('post-desc').value = n.desc || '';
-            document.getElementById('post-date').value = n.date;
-            document.getElementById('post-views').value = n.views;
-            document.getElementById('post-radio-url').value = n.radioUrl || '';
-            document.getElementById('post-inline-images').value = (n.inlineImages || []).join('\n');
-            
-            document.querySelectorAll('#cat-checkboxes input').forEach(cb => {
-                cb.checked = n.cat && n.cat.includes(cb.value);
-            });
-        }
-
-        function switchAdminTab(id) {
-            document.querySelectorAll('.admin-tab').forEach(t => t.classList.add('hidden'));
-            document.getElementById('admin-tab-' + id).classList.remove('hidden');
-            if (id === 'write') buildAdminCategoryCheckboxes();
-            if(id === 'approval') loadApprovals();
-            if(id === 'users') loadUsers();
-            if(id === 'settings') loadSettings();
-            if(id === 'manage') loadNewsList();
-        }
-
-        function updateAdminLists() {
-            if(document.getElementById('admin-tab-approval') && !document.getElementById('admin-tab-approval').classList.contains('hidden')) loadApprovals();
-            if(document.getElementById('admin-tab-manage') && !document.getElementById('admin-tab-manage').classList.contains('hidden')) loadNewsList();
-        }
-
-        async function loadApprovals() {
-            const q = window.fs.query(window.fs.collection(window.db, "articles"), window.fs.where("approved", "==", false));
-            const snap = await window.fs.getDoc(q); // onSnapshot 대신 getDoc 사용 가능하나 실시간 위해 onSnapshot 권장
-            // 여기서는 단순화를 위해 전역 allNews 활용 가능
-            const list = allNews.filter(n => !n.approved);
-            document.getElementById('approval-list').innerHTML = list.map(a => `
-                <div class="flex justify-between items-center bg-white/5 p-4 rounded border border-white/10">
-                    <div>
-                        <p class="font-bold">${a.title}</p>
-                        <p class="text-xs text-gray-400">${a.author} 기자 | ${a.cat ? a.cat.join(', ') : ''}</p>
-                    </div>
-                    <button onclick="approveArticle('${a.id}')" class="bg-green-600 px-4 py-1 rounded text-xs">승인</button>
-                </div>
-            `).join('') || '<p class="text-gray-500">대기 중인 기사가 없습니다.</p>';
-        }
-
-        async function approveArticle(id) {
-            await window.fs.updateDoc(window.fs.doc(window.db, "articles", id), { approved: true });
-            alert('승인되었습니다.');
-            loadApprovals();
-        }
-
-        function loadNewsList() {
-            const container = document.getElementById('news-manage-list');
-            if(!container) return;
-            container.innerHTML = allNews.map(n => `
-                <div class="flex justify-between items-center bg-white/5 p-4 rounded border border-white/10 mb-2">
-                    <div>
-                        <p class="font-bold text-white">${n.title}</p>
-                        <p class="text-[10px] text-gray-400">${n.author} | ${n.date}</p>
-                    </div>
-                    <button onclick="deleteArticle('${n.id}')" class="bg-red-600 hover:bg-red-700 px-3 py-1 rounded text-xs font-bold transition">삭제</button>
-                </div>
-            `).join('') || '<p class="text-gray-500">기사가 없습니다.</p>';
-        }
-
-        async function deleteArticle(id) {
-            if(!user || RANK_POWER[user.rank] < 4) return alert('권한이 없습니다.');
-            if(!confirm('영구 삭제하시겠습니까?')) return;
-            try {
-                await window.fs.deleteDoc(window.fs.doc(window.db, "articles", id));
-                alert('삭제되었습니다.');
-                loadNewsList();
-            } catch(e) { alert('실패: ' + e.message); }
-        }
-
-        function updateOG(article) {
-            if (!article) return;
-            document.title = article.title + " - T.N. News";
-            const metaTags = {
-                'og:title': article.title,
-                'og:description': (article.desc || article.content.substring(0, 100)).replace(/\n/g, ' '),
-                'og:image': articleThumb(article.img),
-                'og:url': window.location.href
-            };
-            Object.entries(metaTags).forEach(([prop, content]) => {
-                let el = document.querySelector(`meta[property="${prop}"]`);
-                if (el) el.setAttribute('content', content);
-            });
-        }
-
-        // 페이지 시작 시 UI 언어/지역 적용
-        (function bootstrapUi() {
-            const sel = document.getElementById('lang-select');
-            if (sel) sel.value = uiLang;
-            renderNav();
-            if (typeof lucide !== 'undefined') lucide.createIcons();
-        })();
-
-        window.onload = init;
+// Firestore getDocs 누락 방지
+if (window.fs && !window.fs.getDocs) {
+    window.fs.getDocs = async (q) => {
+        return new Promise((resolve, reject) => {
+            const unsub = window.fs.onSnapshot(q, snap => { unsub(); resolve(snap); }, reject);
+        });
+    };
+}
     </script>
 </body>
 </html>
