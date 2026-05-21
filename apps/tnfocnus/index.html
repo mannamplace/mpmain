@@ -2948,6 +2948,17 @@ function minimapOnCrisis(id) {
 
 // ── 미니맵 열기/닫기 ────────────────────────────────────────────
 function openMinimap() {
+    // ↓ 디버그 코드 추가
+    var dbg = document.createElement('div');
+    dbg.style.cssText = 'position:fixed;top:60px;left:0;right:0;background:yellow;color:black;font-size:12px;z-index:9999;padding:8px;word-break:break-all;';
+    dbg.id = 'map-debug';
+    document.body.appendChild(dbg);
+    dbg.textContent = 'L=' + typeof L + ' | el=' + !!document.getElementById('minimap-leaflet');
+    setTimeout(function(){
+        var d = document.getElementById('map-debug');
+        if(d) d.textContent += ' | _map=' + !!_map + ' | elH=' + (document.getElementById('minimap-leaflet')||{}).offsetHeight;
+    }, 500);
+    // ↑ 디버그 코드 끝
     minimapMinimized = false;
     var panel = document.getElementById('minimap-panel');
     var fab = document.getElementById('minimap-fab');
