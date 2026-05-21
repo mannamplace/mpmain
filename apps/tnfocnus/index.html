@@ -491,12 +491,6 @@
     </div>
 
     <script>
-/* 개선사항:
- * 1. 미니맵 좌표 정확도 (Mercator 투영 기반 보정)
- * 2. 다국어 UI 완성 (ES/FR/DE/RU/PT/AR/HI)
- * 3. 번역 시스템 (관리자 수동 요청 → Claude API → 별도 기사번호)
- * 4. 뉴스레터/알림 시스템 완성
- */
 
 // ── 상태 ──────────────────────────────────────────────────────────
 let user = null;
@@ -2120,16 +2114,36 @@ function minimapOnCrisis(id) {
 
 function openMinimap() {
     minimapMinimized = false;
-    const panel = document.getElementById('minimap-panel');
-    const fab = document.getElementById('minimap-fab');
+    var panel = document.getElementById('minimap-panel');
+    var fab = document.getElementById('minimap-fab');
     if (fab) fab.classList.add('hidden');
     if (panel) panel.classList.remove('hidden');
-    const d = getDict();
-    const t = document.getElementById('minimap-panel-title');
-    const h = document.getElementById('minimap-panel-hint');
+
+    var d = (typeof getDict === 'function') ? getDict() : {};
+    var t = document.getElementById('minimap-panel-title');
+    var h = document.getElementById('minimap-panel-hint');
     if (t) t.textContent = d.minimapTitle || '지역 미니맵';
-    if (h) h.textContent = d.minimapHint || '';
-    minimapBackToRoot(); minimapApplyZoom(); lucide.createIcons();
+    if (h) h.textContent = d.minimapHint || '권역 핀을 클릭하세요';
+
+    // L(Leaflet) 로드 확인 후 초기화
+    function tryInit(attempts) {
+        if (typeof L === 'undefined') {
+            if (attempts > 20) return; // 2초 후 포기
+            setTimeout(function() { tryInit(attempts + 1); }, 100);
+            return;
+        }
+        _initLeafletMap();
+        setTimeout(function() {
+            if (_map) {
+                _map.invalidateSize();
+                _map.eachLayer(function(layer) { if (layer.redraw) layer.redraw(); });
+                refreshMinimapMarkers();
+            }
+        }, 150);
+    }
+    tryInit(0);
+
+    if (typeof lucide !== 'undefined') lucide.createIcons();
 }
 
 function closeMinimap() {
