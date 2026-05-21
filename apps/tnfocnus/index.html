@@ -22,6 +22,10 @@
 
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
+
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
     <script type="text/javascript" src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
     
     <!-- Firebase SDK -->
@@ -444,33 +448,38 @@
         </div>
     </div>
 
-    <!-- 지역 미니맵: 우하단 플로팅 -->
-    <div id="minimap-dock" class="fixed bottom-3 right-3 sm:bottom-5 sm:right-5 z-[250] flex flex-col items-end gap-2 max-w-[calc(100vw-1.5rem)]" aria-live="polite">
-        <div id="minimap-flyout" class="hidden w-[min(100%,20rem)] rounded-xl border border-slate-200 bg-white shadow-2xl p-3 text-slate-900 text-sm"></div>
-        <div id="minimap-panel" class="hidden w-[min(100vw-1.5rem,22rem)] sm:w-[24rem] rounded-2xl border border-slate-200 bg-white shadow-2xl overflow-hidden flex flex-col">
-            <div class="flex items-center justify-between gap-2 px-3 py-2 bg-slate-900 text-white shrink-0">
-                <div class="min-w-0">
-                    <h2 id="minimap-panel-title" class="text-xs font-black tracking-tight truncate">지역 미니맵</h2>
-                    <p id="minimap-panel-hint" class="text-[9px] text-slate-400 leading-tight line-clamp-2">권역을 눌러 주요 기사와 필터를 선택하세요.</p>
-                </div>
-                <div class="flex items-center gap-0.5 shrink-0">
-                    <button type="button" onclick="minimapToggleMin()" id="minimap-btn-min" class="p-1.5 rounded hover:bg-white/10 text-slate-300" title="접기"><i data-lucide="minus" class="w-4 h-4"></i></button>
-                    <button type="button" onclick="closeMinimap()" class="p-1.5 rounded hover:bg-red-600/80" title="닫기" aria-label="닫기"><i data-lucide="x" class="w-4 h-4"></i></button>
-                </div>
-            </div>
-            <div class="flex items-center justify-between gap-2 px-2 py-1.5 bg-slate-100 border-b border-slate-200 shrink-0">
-                <button type="button" onclick="minimapZoomStep(-1)" class="flex-1 py-1 rounded bg-white border border-slate-300 text-xs font-black hover:bg-slate-50" title="축소">−</button>
-                <span id="minimap-zoom-label" class="text-[10px] font-bold text-slate-600 w-14 text-center">100%</span>
-                <button type="button" onclick="minimapZoomStep(1)" class="flex-1 py-1 rounded bg-white border border-slate-300 text-xs font-black hover:bg-slate-50" title="확대">+</button>
-                <button type="button" onclick="minimapZoomReset()" class="px-2 py-1 rounded bg-white border border-slate-300 text-[10px] font-bold hover:bg-slate-50" title="줌 초기화">1:1</button>
-            </div>
-            <div id="minimap-stage-wrap" class="relative minimap-ocean overflow-hidden shrink-0 h-[200px] sm:h-[220px]">
-                <div id="minimap-stage" class="absolute inset-0 w-full h-full">
-                    <img id="minimap-world-img" class="absolute inset-0 w-full h-full pointer-events-none opacity-[0.92] object-cover" style="object-position:center 40%; filter:saturate(0.85) brightness(0.95);" src="https://upload.wikimedia.org/wikipedia/commons/thumb/e/ec/World_map_blank_without_borders.svg/1280px-World_map_blank_without_borders.svg.png" alt="" crossorigin="anonymous" loading="lazy">
-                    <div id="minimap-influence-layer" class="absolute inset-0 w-full h-full pointer-events-none overflow-visible"></div>
-                    <div id="minimap-markers" class="absolute inset-0 w-full h-full overflow-visible"></div>
-                </div>
-            </div>
+    
+<!-- Leaflet 미니맵 -->
+<div id="minimap-dock" class="fixed bottom-3 right-3 sm:bottom-5 sm:right-5 z-[250] flex flex-col items-end gap-2 max-w-[calc(100vw-1.5rem)]" aria-live="polite">
+
+  <div id="minimap-flyout" class="hidden w-[min(100%,20rem)] rounded-xl border border-slate-200 bg-white shadow-2xl p-3 text-slate-900 text-sm"></div>
+
+  <div id="minimap-panel" class="hidden w-[min(100vw-1.5rem,22rem)] sm:w-[26rem] rounded-2xl border border-slate-200 bg-white shadow-2xl overflow-hidden flex flex-col">
+
+    <div class="flex items-center justify-between gap-2 px-3 py-2 bg-slate-900 text-white shrink-0">
+      <div class="min-w-0">
+        <h2 id="minimap-panel-title" class="text-xs font-black tracking-tight truncate">지역 미니맵</h2>
+        <p id="minimap-panel-hint" class="text-[9px] text-slate-400 leading-tight line-clamp-2">권역을 눌러 주요 기사와 필터를 선택하세요.</p>
+      </div>
+      <div class="flex items-center gap-0.5 shrink-0">
+        <button type="button" onclick="minimapToggleMin()" class="p-1.5 rounded hover:bg-white/10 text-slate-300" title="접기"><i data-lucide="minus" class="w-4 h-4"></i></button>
+        <button type="button" onclick="closeMinimap()" class="p-1.5 rounded hover:bg-red-600/80" title="닫기"><i data-lucide="x" class="w-4 h-4"></i></button>
+      </div>
+    </div>
+
+    <div id="minimap-leaflet" style="height:240px; width:100%; z-index:0;"></div>
+
+    <div class="px-2 py-1.5 bg-slate-50 border-t border-slate-200 text-[10px] text-slate-500 shrink-0 flex justify-between items-center">
+      <button type="button" onclick="minimapBackToRoot()" id="minimap-back-btn" class="hidden font-bold text-blue-800 hover:underline">← 권역 지도</button>
+      <span class="flex-1 text-right">🔵 권역 · 🔴 속보 · ⚫ 위기</span>
+    </div>
+  </div>
+
+  <button type="button" id="minimap-fab" onclick="openMinimap()" class="hidden w-14 h-14 rounded-full bg-[#003399] text-white shadow-2xl border-4 border-blue-300 flex items-center justify-center hover:bg-blue-800" title="미니맵 열기">
+    <i data-lucide="map" class="w-7 h-7"></i>
+  </button>
+</div>
+
             <div id="minimap-footer" class="px-2 py-1.5 bg-slate-50 border-t border-slate-200 text-[10px] text-slate-500 shrink-0 flex justify-between items-center">
                 <button type="button" onclick="minimapBackToRoot()" id="minimap-back-btn" class="hidden font-bold text-blue-800 hover:underline">← 권역 지도</button>
                 <span class="flex-1 text-right">지도 위 핀 · 영향 범위는 지도 링</span>
@@ -2534,6 +2543,52 @@ if (window.fs && !window.fs.getDocs) {
     };
 }
     </script>
+
+<script>
+// Leaflet minimap patch
+let _map = null;
+let _markersLayer = null;
+
+function _initLeafletMap() {
+    if (_map) return;
+
+    _map = L.map('minimap-leaflet', {
+        center: [25, 15],
+        zoom: 2,
+        minZoom: 2,
+        maxZoom: 8
+    });
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap'
+    }).addTo(_map);
+
+    _markersLayer = L.layerGroup().addTo(_map);
+}
+
+function openMinimap() {
+    const panel = document.getElementById('minimap-panel');
+    if (!panel) return;
+
+    panel.classList.remove('hidden');
+
+    setTimeout(() => {
+        _initLeafletMap();
+        _map.invalidateSize();
+    }, 100);
+}
+
+function closeMinimap() {
+    const panel = document.getElementById('minimap-panel');
+    if (panel) panel.classList.add('hidden');
+}
+
+function minimapToggleMin() {
+    closeMinimap();
+    document.getElementById('minimap-fab')?.classList.remove('hidden');
+}
+</script>
+
 </body>
 </html>
 
