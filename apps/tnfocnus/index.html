@@ -2691,44 +2691,46 @@ function _crisisIcon(type) {
 function _initLeafletMap() {
     if (_map) return;
 
-    _map = L.map('minimap-leaflet', {
-        center: [25, 15],
-        zoom: 2,
-        minZoom: 2,
-        maxZoom: 8,
-        zoomControl: true,
-        attributionControl: false,
-        scrollWheelZoom: true
-    });
+    var el = document.getElementById('minimap-leaflet');
+    if (!el) return;
 
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        maxZoom: 19
-    }).addTo(_map);
+    // 강제로 크기 확보
+    el.style.height = '240px';
+    el.style.width = '100%';
+    el.style.display = 'block';
+    el.style.visibility = 'visible';
+    el.style.position = 'relative';
 
-    L.control.attribution({ prefix: false, position: 'bottomright' })
-        .addAttribution('<a href="https://www.openstreetmap.org/copyright" style="font-size:9px">© OSM</a>')
-        .addTo(_map);
+    try {
+        _map = L.map(el, {
+            center: [25, 15],
+            zoom: 2,
+            minZoom: 2,
+            maxZoom: 8,
+            zoomControl: true,
+            attributionControl: false,
+            scrollWheelZoom: true,
+            preferCanvas: true  // ← 모바일 성능 향상
+        });
 
-    _markersLayer = L.layerGroup().addTo(_map);
-    _circleLayer = L.layerGroup().addTo(_map);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+            detectRetina: true
+        }).addTo(_map);
 
-    // 지도 빈 곳 클릭 시 플라이아웃 닫기
-    _map.on('click', function() { hideMinimapFlyout(); });
+        _markersLayer = L.layerGroup().addTo(_map);
+        _circleLayer = L.layerGroup().addTo(_map);
+        _map.on('click', function() { hideMinimapFlyout(); });
 
-    // 툴팁 스타일 주입
-    if (!document.getElementById('tn-leaflet-style')) {
-        var style = document.createElement('style');
-        style.id = 'tn-leaflet-style';
-        style.textContent =
-            '.tn-tooltip{background:#1e293b!important;color:#f8fafc!important;' +
-            'border:none!important;border-radius:6px!important;font-size:10px!important;' +
-            'font-weight:700!important;padding:3px 8px!important;' +
-            'box-shadow:0 2px 8px rgba(0,0,0,.35)!important;}' +
-            '.tn-tooltip::before{display:none!important;}';
-        document.head.appendChild(style);
+        // 초기화 직후 한 번 더 강제 리사이즈
+        setTimeout(function() {
+            _map.invalidateSize(true);
+        }, 300);
+
+    } catch(e) {
+        console.error('Leaflet 초기화 실패:', e);
     }
 }
-
 // ── 마커 새로고침 ───────────────────────────────────────────────
 function refreshMinimapMarkers() {
     if (!_map || !_markersLayer) return;
