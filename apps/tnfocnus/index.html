@@ -3202,31 +3202,112 @@ async function _submitTranslation(articleId) {
     }
 }
 
+// ── 미니맵 완전 복구 및 제어 스크립트 ──────────────────────────────────
+
+// 1. 미니맵 열기 함수 (Tailwind 슬라이드 애니메이션 처리)
+function openMinimap() {
+    var panel = document.getElementById('minimap-panel');
+    if (panel) {
+        panel.classList.remove('hidden');
+        // 아주 미세한 딜레이를 주어 스르륵 열리는 애니메이션 작동
+        setTimeout(function() {
+            panel.classList.remove('translate-x-full');
+            panel.classList.add('translate-x-0');
+        }, 10);
+        
+        // 미니맵 내부가 비어있다면 카테고리 내비게이션을 동적으로 그려줌
+        renderMinimapContent();
+    }
+}
+
+// 2. 미니맵 닫기 함수 (오른쪽으로 다시 밀어내고 hidden 처리)
+function closeMinimap() {
+    var panel = document.getElementById('minimap-panel');
+    if (panel) {
+        panel.classList.remove('translate-x-0');
+        panel.classList.add('translate-x-full');
+        // 애니메이션(300ms)이 끝난 후 hidden 추가
+        setTimeout(function() {
+            panel.classList.add('hidden');
+        }, 300);
+    }
+    hideMinimapFlyout();
+}
+
+// 미니맵 플라이아웃 숨기기
+function hideMinimapFlyout() {
+    var fly = document.getElementById('minimap-flyout');
+    if (fly) fly.classList.add('hidden');
+}
+
+// 미니맵이 열렸을 때 보여줄 사이트맵 콘텐츠 생성
+function renderMinimapContent() {
+    var body = document.getElementById('minimap-body') || document.getElementById('minimap-panel');
+    if (!body) return;
+    
+    // 이미 내용이 차 있다면 중복 생성 방지
+    if (body.innerHTML.trim().length > 100) return; 
+
+    var categories = ['정치', '경제', '사회', 'IT/과학', '세계', '오피니언'];
+    var html = '<div class="p-4 space-y-4">';
+    html += '<p class="text-sm text-gray-400 font-semibold uppercase tracking-wider">Quick Navigation</p>';
+    html += '<ul class="space-y-2">';
+    categories.forEach(function(cat) {
+        html += '<li><a href="#" onclick="closeMinimap();" class="block p-2 rounded hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-200 transition font-medium">' + cat + '</a></li>';
+    });
+    html += '</ul></div>';
+    
+    // 적절한 컨테이너에 삽입
+    var target = document.getElementById('minimap-body') || body;
+    target.innerHTML = html;
+}
+
+// 3. 버튼 클릭 이벤트 바인딩
+function initMinimapEvents() {
+    // 열기 버튼 (minimap-btn 또는 토글 버튼 인식)
+    var openBtn = document.getElementById('minimap-btn') || document.getElementById('minimap-toggle');
+    if (openBtn) {
+        openBtn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            openMinimap();
+        });
+    }
+
+    // 닫기 버튼 (X 아이콘 버튼)
+    var closeBtn = document.getElementById('close-minimap-btn') || document.getElementById('close-minimap');
+    if (closeBtn) {
+        closeBtn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            closeMinimap();
+        });
+    }
+}
+
+// DOM 로드 완료 후 실행
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initMinimapEvents);
+} else {
+    initMinimapEvents();
+}
+
 // ── ESC 키 추가 핸들러 ──────────────────────────────────────────
 document.addEventListener('keydown', function(e) {
     if (e.key !== 'Escape') return;
     var dyn = document.getElementById('translate-modal-dynamic');
     if (dyn) { dyn.remove(); return; }
+    
     var fly = document.getElementById('minimap-flyout');
     if (fly && !fly.classList.contains('hidden')) { 
-        if (typeof hideMinimapFlyout === 'function') {
-            hideMinimapFlyout(); 
-        } else {
-            fly.classList.add('hidden');
-        }
+        hideMinimapFlyout(); 
         return; 
     }
+    
     var panel = document.getElementById('minimap-panel');
-    if (panel && !panel.classList.contains('hidden')) { 
-        panel.classList.add('hidden'); // 안전하게 직접 숨김 처리
+    if (panel && (!panel.classList.contains('hidden') || panel.classList.contains('translate-x-0'))) { 
+        closeMinimap(); 
         return; 
     }
 });
 </script>
-
-// ── 초기화 실행 ─────────────────────────────────────────────────
-_ensureGetDocs();
-
 </body>
 </html>
-
