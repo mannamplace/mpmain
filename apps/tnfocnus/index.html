@@ -2563,35 +2563,38 @@ if (window.fs && !window.fs.getDocs) {
     </script>
 
 /**
- * TNfocnus v3 패치
+ * TNfocnus v3 버그픽스 패치
  * 
- * 사용법: 기존 HTML의 두 번째 <script> 블록(Leaflet minimap patch)을
- * 이 파일 전체로 교체하세요.
+ * [적용 방법]
+ * 기존 HTML에서 두 번째 <script> 블록 전체(/**  TNfocnus v3 패치 ... 끝까지)를
+ * 이 파일 전체 내용으로 교체하세요.
  * 
- * 수정사항:
- * 1. Leaflet 핀 정상 렌더링 (minimap-markers div → Leaflet layerGroup)
- * 2. 댓글 기능 복구 (mountComments / submitComment)
- * 3. 번역 기능 복구 (getDocs 폴리필 + 번역 모달)
- * 4. 기본 이미지 SVG 경로 적용
+ * [수정 내역]
+ * 1. 미니맵 핀 정상 렌더링 - openMinimap() 중복 정의 제거, Leaflet 초기화 통합
+ * 2. 댓글 기능 복구 - mountComments / submitComment
+ * 3. 번역 기능 복구 - getDocs 폴리필 타이밍 수정 + 중복 함수 제거
+ * 4. SEO 수정 - JSON-LD 동적 주입 + 크롤러용 메타태그 서버사이드 대체 안내
  */
 
-// ── 기본 이미지 경로 재정의 ─────────────────────────────────────
-// 기존 코드의 DEFAULT_ARTICLE_THUMB 덮어쓰기
-window.DEFAULT_ARTICLE_THUMB = '/apps/tnfocnus/tnfocnus-default-thumb.svg';
+// ─────────────────────────────────────────────────────────────────────────────
+// 0. 기본 이미지 경로
+// ─────────────────────────────────────────────────────────────────────────────
+window.DEFAULT_ARTICLE_THUMB = 'https://i.ibb.co/mrhDt2F2/tnfocnus-default-thumb.jpg';
 
-// articleThumb도 재정의
 window.articleThumb = function(img) {
-    const s = (img == null ? '' : String(img)).trim();
+    var s = (img == null ? '' : String(img)).trim();
     return s ? s : window.DEFAULT_ARTICLE_THUMB;
 };
 
-// ── Firestore getDocs 폴리필 ────────────────────────────────────
-// Firebase module에서 getDocs를 import하지 않은 경우 대비
+// ─────────────────────────────────────────────────────────────────────────────
+// 1. Firestore getDocs 폴리필 — Firebase init 전에 미리 등록
+//    (init()보다 먼저 실행되어야 하므로 스크립트 최상단에 위치)
+// ─────────────────────────────────────────────────────────────────────────────
 function _ensureGetDocs() {
     if (window.fs && !window.fs.getDocs) {
         window.fs.getDocs = function(q) {
             return new Promise(function(resolve, reject) {
-                const unsub = window.fs.onSnapshot(q,
+                var unsub = window.fs.onSnapshot(q,
                     function(snap) { unsub(); resolve(snap); },
                     reject
                 );
@@ -2600,18 +2603,29 @@ function _ensureGetDocs() {
     }
 }
 
-// ── Leaflet 미니맵 전역 상태 ────────────────────────────────────
-let _map = null;
-let _markersLayer = null;
-let _circleLayer = null;
-let minimapMinimized = false;
-let minimapMode = 'root';
-let minimapMacroId = null;
-let minimapSubLayout = [];
+// Firebase module 로드가 완료된 직후 폴리필 적용
+// (type="module" 스크립트는 defer와 동일하게 동작하므로 DOMContentLoaded 이후 실행)
+document.addEventListener('DOMContentLoaded', function() {
+    _ensureGetDocs();
+    // init()이 window.onload에 등록되어 있어도, fs가 준비되는 시점에 한 번 더 보장
+    var fsWatchdog = setInterval(function() {
+        if (window.fs) { _ensureGetDocs(); clearInterval(fsWatchdog); }
+    }, 100);
+});
 
-// ── 위경도 좌표 테이블 ──────────────────────────────────────────
-// 기존 MINIMAP_WEATHER_LL을 Leaflet용으로 재확인
-// (기존 스크립트에 이미 있으므로 참조만 함)
+// ─────────────────────────────────────────────────────────────────────────────
+// 2. Leaflet 미니맵 — 전역 상태 (한 번만 선언)
+// ─────────────────────────────────────────────────────────────────────────────
+var _map = null;
+var _markersLayer = null;
+var _circleLayer = null;
+
+// 기존 코드의 let 변수들과 충돌 방지를 위해 var 사용 + 덮어쓰기 허용
+// (minimapMinimized, minimapMode 등은 기존 코드에 이미 있으므로 재선언 금지)
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 3. 위경도 헬퍼
+// ─────────────────────────────────────────────────────────────────────────────
 function _ll(cat) {
     if (typeof MINIMAP_WEATHER_LL !== 'undefined' && MINIMAP_WEATHER_LL[cat]) {
         return MINIMAP_WEATHER_LL[cat];
@@ -2620,8 +2634,10 @@ function _ll(cat) {
 }
 
 function _articleLatLon(article) {
-    const cats = (article && article.cat) || [];
-    const pts = cats.map(function(c) { return MINIMAP_WEATHER_LL[c]; }).filter(Boolean);
+    var cats = (article && article.cat) || [];
+    var pts = cats.map(function(c) {
+        return (typeof MINIMAP_WEATHER_LL !== 'undefined') ? MINIMAP_WEATHER_LL[c] : null;
+    }).filter(Boolean);
     if (!pts.length) return [20, 0];
     return [
         pts.reduce(function(s, p) { return s + p[0]; }, 0) / pts.length,
@@ -2629,23 +2645,29 @@ function _articleLatLon(article) {
     ];
 }
 
-// ── 아이콘 팩토리 ───────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────────────────
+// 4. Leaflet 아이콘 팩토리
+// ─────────────────────────────────────────────────────────────────────────────
 function _macroIcon(label) {
     return L.divIcon({
         className: '',
-        iconSize: [64, 46],
-        iconAnchor: [32, 28],
-        html: '<div style="display:flex;flex-direction:column;align-items:center;">' +
-            '<div style="background:#003399;border:2.5px solid #bfdbfe;border-radius:50%;' +
-            'width:28px;height:28px;display:flex;align-items:center;justify-content:center;' +
-            'font-size:11px;color:#fff;font-weight:900;box-shadow:0 2px 6px rgba(0,0,0,.4);' +
-            'cursor:pointer;">🌐</div>' +
-            '<div style="width:0;height:0;border-left:5px solid transparent;' +
-            'border-right:5px solid transparent;border-top:8px solid #003399;margin-top:-1px;"></div>' +
-            '<div style="margin-top:3px;font-size:9px;font-weight:900;color:#1e293b;' +
-            'text-shadow:0 1px 2px rgba(255,255,255,0.9);text-align:center;white-space:nowrap;' +
-            'background:rgba(255,255,255,0.85);padding:1px 4px;border-radius:3px;">' +
-            label + '</div></div>'
+        iconSize: [68, 48],
+        iconAnchor: [34, 30],
+        html: [
+            '<div style="display:flex;flex-direction:column;align-items:center;">',
+            '<div style="background:#003399;border:2.5px solid #bfdbfe;border-radius:50%;',
+            'width:28px;height:28px;display:flex;align-items:center;justify-content:center;',
+            'font-size:12px;color:#fff;font-weight:900;',
+            'box-shadow:0 2px 6px rgba(0,0,0,.5);cursor:pointer;">🌐</div>',
+            '<div style="width:0;height:0;border-left:5px solid transparent;',
+            'border-right:5px solid transparent;border-top:8px solid #003399;margin-top:-1px;"></div>',
+            '<div style="margin-top:2px;font-size:9px;font-weight:900;color:#1e293b;',
+            'text-shadow:0 1px 2px rgba(255,255,255,0.9);text-align:center;white-space:nowrap;',
+            'background:rgba(255,255,255,0.88);padding:1px 5px;border-radius:3px;',
+            'max-width:72px;overflow:hidden;text-overflow:ellipsis;">',
+            label,
+            '</div></div>'
+        ].join('')
     });
 }
 
@@ -2654,52 +2676,57 @@ function _subIcon(label) {
         className: '',
         iconSize: [16, 16],
         iconAnchor: [8, 8],
-        html: '<div title="' + (label||'') + '" style="background:#2563eb;border:2px solid #e0f2fe;' +
-            'border-radius:50%;width:16px;height:16px;box-shadow:0 2px 5px rgba(0,0,0,.3);cursor:pointer;"></div>'
+        html: '<div title="' + (label || '') + '" style="background:#2563eb;border:2px solid #e0f2fe;' +
+            'border-radius:50%;width:16px;height:16px;' +
+            'box-shadow:0 2px 5px rgba(0,0,0,.35);cursor:pointer;"></div>'
     });
 }
 
 function _breakingIcon() {
     return L.divIcon({
         className: '',
-        iconSize: [24, 24],
-        iconAnchor: [12, 12],
-        html: '<div style="background:#dc2626;border:2.5px solid #fecaca;border-radius:50%;' +
-            'width:24px;height:24px;display:flex;align-items:center;justify-content:center;' +
-            'font-size:9px;font-weight:900;color:#fff;cursor:pointer;' +
-            'box-shadow:0 0 0 0 rgba(220,38,38,0.4);' +
-            'animation:tn-pulse 1.8s ease-in-out infinite;">속</div>' +
-            '<style>@keyframes tn-pulse{0%,100%{box-shadow:0 0 0 0 rgba(220,38,38,0.4)}' +
-            '50%{box-shadow:0 0 0 8px rgba(220,38,38,0)}}</style>'
+        iconSize: [26, 26],
+        iconAnchor: [13, 13],
+        html: [
+            '<style>@keyframes tn-break-pulse{',
+            '0%,100%{box-shadow:0 0 0 0 rgba(220,38,38,.5)}',
+            '50%{box-shadow:0 0 0 9px rgba(220,38,38,0)}}</style>',
+            '<div style="background:#dc2626;border:2.5px solid #fecaca;border-radius:50%;',
+            'width:26px;height:26px;display:flex;align-items:center;justify-content:center;',
+            'font-size:9px;font-weight:900;color:#fff;cursor:pointer;',
+            'animation:tn-break-pulse 1.8s ease-in-out infinite;">속</div>'
+        ].join('')
     });
 }
 
-function _crisisIcon(type) {
-    var emoji = type === '전쟁' ? '💣' : type === '재난' ? '⚠️' : '📉';
+function _crisisIcon(cats) {
+    var emoji = cats && cats.includes('전쟁') ? '💣'
+               : cats && cats.includes('재난') ? '⚠️' : '📉';
     return L.divIcon({
         className: '',
-        iconSize: [26, 26],
-        iconAnchor: [13, 13],
+        iconSize: [28, 28],
+        iconAnchor: [14, 14],
         html: '<div style="background:#0a0a0a;border:2px solid #737373;border-radius:50%;' +
-            'width:26px;height:26px;display:flex;align-items:center;justify-content:center;' +
-            'font-size:14px;cursor:pointer;box-shadow:0 2px 5px rgba(0,0,0,.5);">' +
+            'width:28px;height:28px;display:flex;align-items:center;justify-content:center;' +
+            'font-size:15px;cursor:pointer;box-shadow:0 2px 5px rgba(0,0,0,.6);">' +
             emoji + '</div>'
     });
 }
 
-// ── Leaflet 초기화 ──────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────────────────
+// 5. Leaflet 초기화 (한 번만 실행)
+// ─────────────────────────────────────────────────────────────────────────────
 function _initLeafletMap() {
-    if (_map) return;
+    if (_map) return; // 이미 초기화됨
 
     var el = document.getElementById('minimap-leaflet');
-    if (!el) return;
+    if (!el) { console.warn('[minimap] #minimap-leaflet 엘리먼트 없음'); return; }
 
-    // 강제로 크기 확보
-    el.style.height = '240px';
-    el.style.width = '100%';
-    el.style.display = 'block';
-    el.style.visibility = 'visible';
-    el.style.position = 'relative';
+    // 강제 크기 보장
+    el.style.height    = '240px';
+    el.style.minHeight = '240px';
+    el.style.width     = '100%';
+    el.style.display   = 'block';
 
     try {
         _map = L.map(el, {
@@ -2710,7 +2737,7 @@ function _initLeafletMap() {
             zoomControl: true,
             attributionControl: false,
             scrollWheelZoom: true,
-            preferCanvas: true  // ← 모바일 성능 향상
+            preferCanvas: true
         });
 
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -2718,80 +2745,85 @@ function _initLeafletMap() {
             detectRetina: true
         }).addTo(_map);
 
+        _circleLayer  = L.layerGroup().addTo(_map);
         _markersLayer = L.layerGroup().addTo(_map);
-        _circleLayer = L.layerGroup().addTo(_map);
+
         _map.on('click', function() { hideMinimapFlyout(); });
 
-        // 초기화 직후 한 번 더 강제 리사이즈
-        setTimeout(function() {
-            _map.invalidateSize(true);
-        }, 300);
-
+        // 패널이 hidden에서 visible로 전환된 직후 강제 리사이즈
+        setTimeout(function() { _map.invalidateSize(true); }, 250);
     } catch(e) {
-        console.error('Leaflet 초기화 실패:', e);
+        console.error('[minimap] Leaflet 초기화 실패:', e);
+        _map = null;
     }
 }
-// ── 마커 새로고침 ───────────────────────────────────────────────
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 6. 마커 새로고침
+// ─────────────────────────────────────────────────────────────────────────────
 function refreshMinimapMarkers() {
     if (!_map || !_markersLayer) return;
     _markersLayer.clearLayers();
 
-    if (minimapMode === 'subs' && minimapSubLayout.length) {
-        // 세부 지역 핀
+    // ── 세부 지역 모드
+    if (typeof minimapMode !== 'undefined' && minimapMode === 'subs' &&
+        typeof minimapSubLayout !== 'undefined' && minimapSubLayout.length) {
+
         minimapSubLayout.forEach(function(sub) {
             var ll = _ll(sub.cat);
-            var m = L.marker(ll, { icon: _subIcon(sub.label) }).addTo(_markersLayer);
-            m.bindTooltip(sub.label, { permanent: false, direction: 'top', className: 'tn-tooltip' });
-            m.on('click', function(e) {
-                L.DomEvent.stopPropagation(e);
-                openSubLocalFlyout(sub);
-            });
+            var m  = L.marker(ll, { icon: _subIcon(sub.label) }).addTo(_markersLayer);
+            m.bindTooltip(sub.label, { permanent: false, direction: 'top', className: 'tn-tt' });
+            m.on('click', (function(s) {
+                return function(e) { L.DomEvent.stopPropagation(e); openSubLocalFlyout(s); };
+            })(sub));
         });
-    } else {
-        // 권역 핀
-        if (typeof MAP_MACRO_REGIONS !== 'undefined') {
-            MAP_MACRO_REGIONS.forEach(function(m) {
-                var marker = L.marker([m.lat, m.lon], { icon: _macroIcon(m.label) }).addTo(_markersLayer);
-                marker.on('click', (function(id) {
-                    return function(e) { L.DomEvent.stopPropagation(e); openMacroRegionFlyout(id); };
-                })(m.id));
-            });
-        }
+        return;
+    }
 
-        // 속보 핀
-        if (typeof breakingArticles === 'function') {
-            breakingArticles().slice(0, 6).forEach(function(a) {
-                var ll = _articleLatLon(a);
-                var m = L.marker(ll, { icon: _breakingIcon() }).addTo(_markersLayer);
-                m.bindTooltip(a.title.substring(0, 30), { direction: 'top', className: 'tn-tooltip' });
-                m.on('click', (function(article) {
-                    return function(e) { L.DomEvent.stopPropagation(e); openBreakingFlyout(article); };
-                })(a));
-            });
-        }
+    // ── 권역 핀
+    if (typeof MAP_MACRO_REGIONS !== 'undefined') {
+        MAP_MACRO_REGIONS.forEach(function(r) {
+            var marker = L.marker([r.lat, r.lon], { icon: _macroIcon(r.label) }).addTo(_markersLayer);
+            marker.on('click', (function(id) {
+                return function(e) { L.DomEvent.stopPropagation(e); openMacroRegionFlyout(id); };
+            })(r.id));
+        });
+    }
 
-        // 위기 핀
-        if (typeof crisisArticles === 'function') {
-            crisisArticles().slice(0, 5).forEach(function(a) {
-                var ll = _articleLatLon(a);
-                var type = a.cat.includes('전쟁') ? '전쟁' : a.cat.includes('재난') ? '재난' : '경제위기';
-                var m = L.marker(ll, { icon: _crisisIcon(type) }).addTo(_markersLayer);
-                m.bindTooltip(a.title.substring(0, 30), { direction: 'top', className: 'tn-tooltip' });
-                m.on('click', (function(id) {
-                    return function(e) { L.DomEvent.stopPropagation(e); minimapOnCrisis(id); };
-                })(a.id));
-            });
-        }
+    // ── 속보 핀 (최대 6개)
+    if (typeof breakingArticles === 'function') {
+        breakingArticles().slice(0, 6).forEach(function(a) {
+            var ll = _articleLatLon(a);
+            var m  = L.marker(ll, { icon: _breakingIcon() }).addTo(_markersLayer);
+            m.bindTooltip(a.title.substring(0, 28), { direction: 'top', className: 'tn-tt' });
+            m.on('click', (function(art) {
+                return function(e) { L.DomEvent.stopPropagation(e); openBreakingFlyout(art); };
+            })(a));
+        });
+    }
+
+    // ── 위기 핀 (최대 5개)
+    if (typeof crisisArticles === 'function') {
+        crisisArticles().slice(0, 5).forEach(function(a) {
+            var ll = _articleLatLon(a);
+            var m  = L.marker(ll, { icon: _crisisIcon(a.cat) }).addTo(_markersLayer);
+            m.bindTooltip(a.title.substring(0, 28), { direction: 'top', className: 'tn-tt' });
+            m.on('click', (function(id) {
+                return function(e) { L.DomEvent.stopPropagation(e); minimapOnCrisis(id); };
+            })(a.id));
+        });
     }
 }
 
-// ── 영향권 원 ───────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────────────────
+// 7. 영향권 원
+// ─────────────────────────────────────────────────────────────────────────────
 function drawMinimapInfluenceForArticle(article, opts) {
     if (!_map || !_circleLayer) return;
     _circleLayer.clearLayers();
     opts = opts || {};
-    var color = opts.crisis ? '#404040' : '#dc2626';
-    var hits = (typeof macrosMatchingArticleCats === 'function') ? macrosMatchingArticleCats(article) : [];
+    var color     = opts.crisis ? '#404040' : '#dc2626';
+    var hits      = (typeof macrosMatchingArticleCats === 'function') ? macrosMatchingArticleCats(article) : [];
     var positions = hits.length
         ? hits.map(function(h) { return [h.lat, h.lon]; })
         : [_articleLatLon(article)];
@@ -2799,8 +2831,8 @@ function drawMinimapInfluenceForArticle(article, opts) {
     positions.forEach(function(pos) {
         L.circle(pos, { radius: 1000000, color: color, weight: 1.5,
             fillColor: color, fillOpacity: 0.06, dashArray: '6 4' }).addTo(_circleLayer);
-        L.circle(pos, { radius: 300000, color: color, weight: 2,
-            fillColor: color, fillOpacity: 0.12 }).addTo(_circleLayer);
+        L.circle(pos, { radius: 350000, color: color, weight: 2,
+            fillColor: color, fillOpacity: 0.13 }).addTo(_circleLayer);
     });
 }
 
@@ -2808,7 +2840,9 @@ function clearMinimapInfluence() {
     if (_circleLayer) _circleLayer.clearLayers();
 }
 
-// ── 플라이아웃 ──────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────────────────
+// 8. 플라이아웃 헬퍼
+// ─────────────────────────────────────────────────────────────────────────────
 function hideMinimapFlyout() {
     var f = document.getElementById('minimap-flyout');
     if (f) { f.classList.add('hidden'); f.innerHTML = ''; }
@@ -2822,31 +2856,37 @@ function showMinimapFlyout(html) {
     if (typeof lucide !== 'undefined') lucide.createIcons();
 }
 
-function minimapFlyoutFeaturedBlock(article) {
-    var d = (typeof getDict === 'function') ? getDict() : {};
+function _flyoutFeatured(article) {
+    var d   = (typeof getDict === 'function') ? getDict() : {};
+    var esc = (typeof escapeHtml === 'function') ? escapeHtml : function(s) { return s; };
     if (!article) {
         return '<p class="text-xs text-slate-500 font-bold">' +
-            ((d.minimapNoArticle) || '기사 없음') + '</p>';
+            (d.minimapNoArticle || '기사 없음') + '</p>';
     }
-    var thumb = (typeof articleThumb === 'function') ? articleThumb(article.img) : (article.img || '');
-    var title = (typeof escapeHtml === 'function') ? escapeHtml(article.title) : article.title;
+    var thumb = window.articleThumb(article.img);
     return '<div class="rounded-lg border border-slate-200 overflow-hidden">' +
-        '<img src="' + thumb + '" class="w-full h-28 object-cover" alt="">' +
-        '<p class="p-2 text-xs font-bold leading-snug line-clamp-3">' + title + '</p></div>';
+        '<img src="' + thumb + '" class="w-full h-28 object-cover" loading="lazy" alt="">' +
+        '<p class="p-2 text-xs font-bold leading-snug line-clamp-3">' +
+        esc(article.title) + '</p></div>';
 }
 
-// ── 권역 플라이아웃 ─────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────────────────
+// 9. 권역 플라이아웃
+// ─────────────────────────────────────────────────────────────────────────────
 function openMacroRegionFlyout(macroId) {
     clearMinimapInfluence();
-    minimapMacroId = macroId;
-    var m = (typeof MAP_MACRO_REGIONS !== 'undefined') ? MAP_MACRO_REGIONS.find(function(x) { return x.id === macroId; }) : null;
+    if (typeof minimapMacroId !== 'undefined') minimapMacroId = macroId;
+
+    var MAP = (typeof MAP_MACRO_REGIONS !== 'undefined') ? MAP_MACRO_REGIONS : [];
+    var m   = MAP.find(function(x) { return x.id === macroId; });
     if (!m) return;
-    var d = (typeof getDict === 'function') ? getDict() : {};
+
+    var d    = (typeof getDict === 'function') ? getDict() : {};
     var feat = (typeof featuredArticleForCats === 'function') ? featuredArticleForCats(m.cats) : null;
 
-    _map.flyTo([m.lat, m.lon], 4, { duration: 0.8 });
+    if (_map) _map.flyTo([m.lat, m.lon], 4, { duration: 0.7 });
 
-    var subsBtn = m.subs && m.subs.length
+    var subsBtn = (m.subs && m.subs.length)
         ? '<button type="button" class="w-full py-2 rounded-lg bg-white border-2 border-[#003399] text-[#003399] text-xs font-black hover:bg-blue-50" onclick="minimapEnterSubs(\'' + macroId + '\')">' +
           (d.minimapSubNav || '세부 지역') + '</button>'
         : '';
@@ -2854,7 +2894,7 @@ function openMacroRegionFlyout(macroId) {
     showMinimapFlyout(
         '<p class="text-[10px] font-black text-blue-900 uppercase mb-2">' + m.label + '</p>' +
         '<p class="text-[10px] font-bold text-slate-500 mb-1">' + (d.minimapFeatured || '주요 기사') + '</p>' +
-        minimapFlyoutFeaturedBlock(feat) +
+        _flyoutFeatured(feat) +
         '<div class="mt-3 space-y-2">' +
         '<button type="button" class="w-full py-2 rounded-lg bg-[#003399] text-white text-xs font-black hover:bg-blue-800" onclick="renderMacroArticleList(\'' + macroId + '\');closeMinimap();">' +
         (d.minimapMacroAll || '권역 전체 기사') + '</button>' +
@@ -2862,68 +2902,82 @@ function openMacroRegionFlyout(macroId) {
     );
 }
 
-// ── 세부 지역 진입 ──────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────────────────
+// 10. 세부 지역 진입
+// ─────────────────────────────────────────────────────────────────────────────
 function minimapEnterSubs(macroId) {
-    var m = (typeof MAP_MACRO_REGIONS !== 'undefined') ? MAP_MACRO_REGIONS.find(function(x) { return x.id === macroId; }) : null;
+    var MAP = (typeof MAP_MACRO_REGIONS !== 'undefined') ? MAP_MACRO_REGIONS : [];
+    var m   = MAP.find(function(x) { return x.id === macroId; });
     if (!m || !m.subs || !m.subs.length) return;
-    minimapMacroId = macroId;
-    minimapMode = 'subs';
-    minimapSubLayout = m.subs;
+
+    if (typeof minimapMacroId !== 'undefined') minimapMacroId = macroId;
+    if (typeof minimapMode !== 'undefined') minimapMode = 'subs';
+    if (typeof minimapSubLayout !== 'undefined') minimapSubLayout = m.subs;
 
     var back = document.getElementById('minimap-back-btn');
     if (back) back.classList.remove('hidden');
     hideMinimapFlyout();
 
-    var lls = m.subs.map(function(s) { return _ll(s.cat); }).filter(function(ll) { return ll[0] !== 20; });
-    if (lls.length > 1) {
-        _map.flyToBounds(L.latLngBounds(lls), { padding: [30, 30], maxZoom: 6, duration: 0.8 });
-    } else {
-        _map.flyTo(lls[0] || [m.lat, m.lon], 5, { duration: 0.8 });
+    // 해당 권역으로 지도 이동
+    var lls = m.subs.map(function(s) { return _ll(s.cat); })
+                    .filter(function(ll) { return !(ll[0] === 20 && ll[1] === 0); });
+    if (_map) {
+        if (lls.length > 1) {
+            _map.flyToBounds(L.latLngBounds(lls), { padding: [30, 30], maxZoom: 6, duration: 0.7 });
+        } else {
+            _map.flyTo(lls[0] || [m.lat, m.lon], 5, { duration: 0.7 });
+        }
     }
     refreshMinimapMarkers();
 }
 
-// ── 세부 지역 플라이아웃 ────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────────────────
+// 11. 세부 지역 플라이아웃 (날씨 포함)
+// ─────────────────────────────────────────────────────────────────────────────
 async function openSubLocalFlyout(sub) {
     clearMinimapInfluence();
-    var d = (typeof getDict === 'function') ? getDict() : {};
-    var ll = _ll(sub.cat);
-    _map.flyTo(ll, 6, { duration: 0.6 });
+    var d   = (typeof getDict === 'function') ? getDict() : {};
+    var ll  = _ll(sub.cat);
+    var esc = (typeof escapeHtml === 'function') ? escapeHtml : function(s) { return s; };
+
+    if (_map) _map.flyTo(ll, 6, { duration: 0.5 });
 
     var feat = (typeof featuredArticleForCats === 'function') ? featuredArticleForCats([sub.cat]) : null;
 
     showMinimapFlyout(
-        '<p class="text-[10px] font-black text-blue-900 uppercase mb-2">' + sub.label + '</p>' +
+        '<p class="text-[10px] font-black text-blue-900 uppercase mb-2">' + esc(sub.label) + '</p>' +
         '<p class="text-[10px] font-bold text-slate-500 mb-1">' + (d.minimapWeather || '날씨') + '</p>' +
         '<div id="minimap-weather-slot" class="text-xs text-slate-600 mb-2 min-h-[2rem] rounded border border-slate-100 bg-slate-50 p-2">로딩 중…</div>' +
         '<p class="text-[10px] font-bold text-slate-500 mb-1">' + (d.minimapFeatured || '주요 기사') + '</p>' +
-        minimapFlyoutFeaturedBlock(feat) +
+        _flyoutFeatured(feat) +
         '<div class="mt-3"><button type="button" class="w-full py-2 rounded-lg bg-[#003399] text-white text-xs font-black hover:bg-blue-800" onclick="renderCategoryApprovedOnly(' + JSON.stringify(sub.cat) + ');closeMinimap();">' +
         (d.minimapLocalAll || '이 지역 전체 기사') + '</button></div>'
     );
 
-    // 날씨 로드
+    // 날씨 비동기 로드
     try {
-        var res = await fetch('https://api.open-meteo.com/v1/forecast?latitude=' + ll[0] + '&longitude=' + ll[1] + '&current_weather=true');
+        var res  = await fetch('https://api.open-meteo.com/v1/forecast?latitude=' + ll[0] + '&longitude=' + ll[1] + '&current_weather=true');
         var data = await res.json();
-        var w = data.current_weather;
-        var el = document.getElementById('minimap-weather-slot');
+        var w    = data.current_weather;
+        var el   = document.getElementById('minimap-weather-slot');
         if (el && w) el.textContent = Math.round(w.temperature) + '°C  ·  풍속 ' + w.windspeed + ' km/h';
     } catch(e) {
         var el = document.getElementById('minimap-weather-slot');
-        if (el) el.textContent = d.minimapWeatherErr || '날씨 없음';
+        if (el) el.textContent = d.minimapWeatherErr || '날씨 정보 없음';
     }
 }
 
-// ── 속보/위기 플라이아웃 ────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────────────────
+// 12. 속보 / 위기 플라이아웃
+// ─────────────────────────────────────────────────────────────────────────────
 function openBreakingFlyout(article) {
     var d = (typeof getDict === 'function') ? getDict() : {};
     drawMinimapInfluenceForArticle(article, { crisis: false });
-    _map.flyTo(_articleLatLon(article), 5, { duration: 0.6 });
+    if (_map) _map.flyTo(_articleLatLon(article), 5, { duration: 0.5 });
 
     showMinimapFlyout(
         '<p class="text-[10px] font-black text-red-700 uppercase mb-2">🔴 속보</p>' +
-        minimapFlyoutFeaturedBlock(article) +
+        _flyoutFeatured(article) +
         '<button type="button" class="w-full mt-3 py-2 rounded-lg bg-red-600 text-white text-xs font-black hover:bg-red-700" onclick="renderDetail(\'' + article.id + '\');closeMinimap();">' +
         (d.minimapGoArticle || '원기사 보기') + '</button>' +
         '<button type="button" class="w-full mt-2 py-2 rounded-lg border-2 border-red-600 text-red-700 text-xs font-black hover:bg-red-50" onclick="subscribeBreakingAlert(\'' + article.id + '\')">' +
@@ -2932,382 +2986,467 @@ function openBreakingFlyout(article) {
 }
 
 function minimapOnCrisis(id) {
-    var a = allNews.find(function(n) { return n.id === id; });
+    var a = (typeof allNews !== 'undefined') ? allNews.find(function(n) { return n.id === id; }) : null;
     if (!a) return;
     var d = (typeof getDict === 'function') ? getDict() : {};
     drawMinimapInfluenceForArticle(a, { crisis: true });
-    _map.flyTo(_articleLatLon(a), 5, { duration: 0.6 });
+    if (_map) _map.flyTo(_articleLatLon(a), 5, { duration: 0.5 });
 
     showMinimapFlyout(
         '<p class="text-[10px] font-black text-neutral-900 uppercase mb-2">⚫ 위기 보도</p>' +
-        minimapFlyoutFeaturedBlock(a) +
+        _flyoutFeatured(a) +
         '<button type="button" class="w-full mt-3 py-2 rounded-lg bg-neutral-900 text-white text-xs font-black hover:bg-black" onclick="renderDetail(\'' + a.id + '\');closeMinimap();">' +
         (d.minimapGoArticle || '원기사 보기') + '</button>'
     );
 }
 
-// ── 미니맵 열기/닫기 ────────────────────────────────────────────
-function openMinimap() {
-    // ↓ 디버그 코드 추가
-    var dbg = document.createElement('div');
-    dbg.style.cssText = 'position:fixed;top:60px;left:0;right:0;background:yellow;color:black;font-size:12px;z-index:9999;padding:8px;word-break:break-all;';
-    dbg.id = 'map-debug';
-    document.body.appendChild(dbg);
-    dbg.textContent = 'L=' + typeof L + ' | el=' + !!document.getElementById('minimap-leaflet');
-    setTimeout(function(){
-        var d = document.getElementById('map-debug');
-        if(d) d.textContent += ' | _map=' + !!_map + ' | elH=' + (document.getElementById('minimap-leaflet')||{}).offsetHeight;
-    }, 500);
-    // ↑ 디버그 코드 끝
-    minimapMinimized = false;
+// ─────────────────────────────────────────────────────────────────────────────
+// 13. 미니맵 열기 / 닫기 / 뒤로가기 (단일 정의)
+// ─────────────────────────────────────────────────────────────────────────────
+
+// 기존 코드에 openMinimap이 있을 경우를 대비해 window에 직접 할당
+window.openMinimap = function openMinimap() {
+    if (typeof minimapMinimized !== 'undefined') minimapMinimized = false;
+
     var panel = document.getElementById('minimap-panel');
-    var fab = document.getElementById('minimap-fab');
-    if (fab) fab.classList.add('hidden');
+    var fab   = document.getElementById('minimap-fab');
+    if (fab)   fab.classList.add('hidden');
     if (panel) panel.classList.remove('hidden');
 
+    // 미니맵 제목/힌트 업데이트
     var d = (typeof getDict === 'function') ? getDict() : {};
-    var t = document.getElementById('minimap-panel-title');
-    var h = document.getElementById('minimap-panel-hint');
-    if (t) t.textContent = d.minimapTitle || '지역 미니맵';
-    if (h) h.textContent = d.minimapHint || '권역 핀을 클릭하세요';
+    var titleEl = document.getElementById('minimap-panel-title');
+    var hintEl  = document.getElementById('minimap-panel-hint');
+    if (titleEl) titleEl.textContent = d.minimapTitle || '지역 미니맵';
+    if (hintEl)  hintEl.textContent  = d.minimapHint  || '권역 핀을 클릭하세요';
 
-    // 초기화 후 마커 렌더 (display:none → visible 전환 후 invalidateSize 필수)
-    setTimeout(function() {
-        _initLeafletMap();
-        if (_map) {
-            _map.invalidateSize();
-            refreshMinimapMarkers();
+    // Leaflet이 준비됐는지 확인 후 초기화
+    function _tryInit(attempts) {
+        if (typeof L === 'undefined') {
+            if (attempts > 25) { console.warn('[minimap] Leaflet 미로드'); return; }
+            setTimeout(function() { _tryInit(attempts + 1); }, 100);
+            return;
         }
-    }, 150);
+        _initLeafletMap();
+        setTimeout(function() {
+            if (_map) {
+                _map.invalidateSize(true);
+                refreshMinimapMarkers();
+            }
+        }, 200);
+    }
+    _tryInit(0);
 
     if (typeof lucide !== 'undefined') lucide.createIcons();
-}
+};
 
-function closeMinimap() {
+window.closeMinimap = function closeMinimap() {
     var panel = document.getElementById('minimap-panel');
-    var fab = document.getElementById('minimap-fab');
+    var fab   = document.getElementById('minimap-fab');
     if (panel) panel.classList.add('hidden');
-    if (fab) fab.classList.add('hidden');
-    minimapMinimized = false;
+    if (fab)   fab.classList.add('hidden');
+    if (typeof minimapMinimized !== 'undefined') minimapMinimized = false;
     hideMinimapFlyout();
-    minimapBackToRoot();
-}
+    if (typeof minimapBackToRoot === 'function') minimapBackToRoot();
+};
 
-function minimapToggleMin() {
+window.minimapToggleMin = function minimapToggleMin() {
+    if (typeof minimapMinimized === 'undefined') return;
     minimapMinimized = !minimapMinimized;
     var panel = document.getElementById('minimap-panel');
-    var fab = document.getElementById('minimap-fab');
+    var fab   = document.getElementById('minimap-fab');
     if (minimapMinimized) {
         if (panel) panel.classList.add('hidden');
-        if (fab) fab.classList.remove('hidden');
+        if (fab)   fab.classList.remove('hidden');
         hideMinimapFlyout();
     } else {
-        if (fab) fab.classList.add('hidden');
+        if (fab)   fab.classList.add('hidden');
         if (panel) panel.classList.remove('hidden');
-        setTimeout(function() { if (_map) _map.invalidateSize(); }, 60);
+        setTimeout(function() { if (_map) _map.invalidateSize(true); }, 80);
     }
     if (typeof lucide !== 'undefined') lucide.createIcons();
-}
+};
 
-function minimapBackToRoot() {
-    minimapMode = 'root';
-    minimapSubLayout = [];
+window.minimapBackToRoot = function minimapBackToRoot() {
+    if (typeof minimapMode !== 'undefined')      minimapMode = 'root';
+    if (typeof minimapSubLayout !== 'undefined') minimapSubLayout = [];
     var back = document.getElementById('minimap-back-btn');
     if (back) back.classList.add('hidden');
     hideMinimapFlyout();
     clearMinimapInfluence();
     if (_map) {
-        _map.flyTo([25, 15], 2, { duration: 0.8 });
+        _map.flyTo([25, 15], 2, { duration: 0.7 });
         refreshMinimapMarkers();
     }
-}
+};
 
-// 기존 코드 stub (Leaflet으로 대체됨)
-function minimapZoomStep() {}
-function minimapZoomReset() {}
-function minimapApplyZoom() {}
-function minimapFocusZoom() {}
+// 기존 코드가 참조하는 줌 함수들 (Leaflet 방식에서는 no-op)
+window.minimapZoomStep  = function() {};
+window.minimapZoomReset = function() {};
+window.minimapApplyZoom = function() {};
+window.minimapFocusZoom = function() {};
 
-// ── 댓글 기능 복구 ──────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────────────────
+// 14. 댓글 기능
+// ─────────────────────────────────────────────────────────────────────────────
 var _commentsUnsub = null;
 
-function mountComments(articleId) {
+window.mountComments = function mountComments(articleId) {
     var box = document.getElementById('comments-mount');
-    if (!box || !window.db) return;
-    if (_commentsUnsub) _commentsUnsub();
+    if (!box || !window.db || !window.fs) return;
 
-    var d = (typeof getDict === 'function') ? getDict() : {};
+    // 이전 리스너 해제
+    if (_commentsUnsub) { _commentsUnsub(); _commentsUnsub = null; }
+
+    var d   = (typeof getDict === 'function') ? getDict() : {};
+    var esc = (typeof escapeHtml === 'function') ? escapeHtml : function(s) { return s; };
+
     var q = window.fs.query(
         window.fs.collection(window.db, 'articles', articleId, 'comments'),
         window.fs.orderBy('timestamp', 'desc')
     );
 
     _commentsUnsub = window.fs.onSnapshot(q, function(snap) {
-        var rows = snap.docs.map(function(doc) { return Object.assign({ id: doc.id }, doc.data()); });
-        var esc = typeof escapeHtml === 'function' ? escapeHtml : function(s) { return s; };
-        var userHtml = (typeof user !== 'undefined' && user)
-            ? '<div class="flex gap-2 mb-4">' +
-              '<input id="comment-input" type="text" maxlength="500" placeholder="' + (d.commentPlaceholder || '댓글을 입력하세요') + '" class="flex-1 border rounded-lg px-3 py-2 text-sm">' +
-              '<button type="button" onclick="submitComment(\'' + articleId + '\')" class="shrink-0 bg-blue-900 text-white px-4 py-2 rounded-lg text-sm font-bold">' + (d.postComment || '등록') + '</button>' +
-              '</div>'
-            : '<p class="text-sm text-gray-500 mb-4">로그인 후 댓글을 남길 수 있습니다.</p>';
+        var rows = snap.docs.map(function(doc) {
+            return Object.assign({ id: doc.id }, doc.data());
+        });
+
+        // 로그인 여부에 따른 입력창
+        var currentUser = (typeof user !== 'undefined') ? user : null;
+        var inputHtml = currentUser
+            ? '<div class="flex gap-2 mb-5">' +
+              '<input id="comment-input" type="text" maxlength="500" ' +
+              'placeholder="' + (d.commentPlaceholder || '댓글을 입력하세요') + '" ' +
+              'class="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm outline-none focus:border-blue-500" ' +
+              'onkeydown="if(event.key===\'Enter\')submitComment(\'' + articleId + '\')">' +
+              '<button type="button" onclick="submitComment(\'' + articleId + '\')" ' +
+              'class="shrink-0 bg-blue-900 text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-blue-800 transition">' +
+              (d.postComment || '등록') + '</button></div>'
+            : '<p class="text-sm text-gray-400 mb-5 p-3 bg-gray-50 rounded-lg">로그인 후 댓글을 남길 수 있습니다.</p>';
 
         var listHtml = rows.length
-            ? rows.map(function(c) {
-                return '<li class="border-b border-gray-100 pb-3">' +
-                    '<p class="text-xs font-bold text-gray-600">' + esc(c.author || '') + '</p>' +
-                    '<p class="text-sm text-gray-800 mt-1">' + esc(c.text || '') + '</p></li>';
-            }).join('')
-            : '<li class="text-sm text-gray-400">첫 댓글을 남겨보세요.</li>';
+            ? '<ul class="space-y-4">' + rows.map(function(c) {
+                var ts = c.timestamp && c.timestamp.toDate
+                    ? c.timestamp.toDate().toLocaleDateString('ko-KR')
+                    : '';
+                return '<li class="border-b border-gray-100 pb-4">' +
+                    '<div class="flex justify-between items-baseline mb-1">' +
+                    '<span class="text-xs font-bold text-gray-700">' + esc(c.author || '익명') + '</span>' +
+                    '<span class="text-[10px] text-gray-400">' + ts + '</span></div>' +
+                    '<p class="text-sm text-gray-800">' + esc(c.text || '') + '</p></li>';
+            }).join('') + '</ul>'
+            : '<p class="text-sm text-gray-400 py-4 text-center">첫 댓글을 남겨보세요.</p>';
 
         box.innerHTML =
             '<h3 class="text-lg font-black mb-4">' + (d.comments || '댓글') + '</h3>' +
-            userHtml +
-            '<ul class="space-y-3">' + listHtml + '</ul>';
+            inputHtml + listHtml;
+    }, function(err) {
+        console.error('[comments] 로드 실패:', err);
+        box.innerHTML = '<p class="text-sm text-red-500">댓글을 불러오지 못했습니다.</p>';
     });
-}
+};
 
-async function submitComment(articleId) {
+window.submitComment = async function submitComment(articleId) {
+    var currentUser = (typeof user !== 'undefined') ? user : null;
+    if (!currentUser) return alert('로그인이 필요합니다.');
     var input = document.getElementById('comment-input');
-    var text = (input && input.value || '').trim();
-    if (typeof user === 'undefined' || !user) return alert('로그인이 필요합니다.');
+    var text  = (input ? input.value : '').trim();
     if (!text) return;
-    await window.fs.addDoc(
-        window.fs.collection(window.db, 'articles', articleId, 'comments'),
-        { text: text, author: user.name, authorId: user.id, timestamp: window.fs.serverTimestamp() }
-    );
-    if (input) input.value = '';
-}
 
-// ── 번역 기능 복구 ──────────────────────────────────────────────
-// openTranslateModal: 기존 코드에 있지만 모달 HTML이 없는 경우 동적 생성
-function openTranslateModal(articleId) {
-    // 기존 모달 제거
-    var existing = document.getElementById('translate-modal-dynamic');
-    if (existing) existing.remove();
+    try {
+        await window.fs.addDoc(
+            window.fs.collection(window.db, 'articles', articleId, 'comments'),
+            {
+                text:      text,
+                author:    currentUser.name || currentUser.id,
+                authorId:  currentUser.id,
+                timestamp: window.fs.serverTimestamp()
+            }
+        );
+        if (input) input.value = '';
+    } catch(e) {
+        alert('댓글 등록 실패: ' + e.message);
+    }
+};
 
-    var d = (typeof getDict === 'function') ? getDict() : {};
-    var esc = typeof escapeHtml === 'function' ? escapeHtml : function(s) { return s; };
+// ─────────────────────────────────────────────────────────────────────────────
+// 15. 번역 기능 (Claude API) — 단일 정의
+// ─────────────────────────────────────────────────────────────────────────────
+var TRANSLATE_LANGS_LIST = [
+    { code: 'en',    label: '🇺🇸 English' },
+    { code: 'zh-CN', label: '🇨🇳 中文(简体)' },
+    { code: 'ja',    label: '🇯🇵 日本語' },
+    { code: 'es',    label: '🇪🇸 Español' },
+    { code: 'fr',    label: '🇫🇷 Français' },
+    { code: 'de',    label: '🇩🇪 Deutsch' },
+    { code: 'ru',    label: '🇷🇺 Русский' },
+    { code: 'ar',    label: '🇸🇦 العربية' },
+    { code: 'hi',    label: '🇮🇳 हिन्दी' },
+    { code: 'pt',    label: '🇧🇷 Português' }
+];
+
+var LANG_NAMES = {
+    en: 'English', 'zh-CN': 'Simplified Chinese', ja: 'Japanese',
+    es: 'Spanish', fr: 'French', de: 'German', ru: 'Russian',
+    ar: 'Arabic', hi: 'Hindi', pt: 'Portuguese (Brazilian)'
+};
+
+window.openTranslateModal = function openTranslateModal(articleId) {
+    // 기존 모달 정리
+    ['translate-modal', 'translate-modal-dynamic'].forEach(function(id) {
+        var el = document.getElementById(id);
+        if (el) el.remove();
+    });
+
+    var d   = (typeof getDict === 'function') ? getDict() : {};
+    var esc = (typeof escapeHtml === 'function') ? escapeHtml : function(s) { return s; };
 
     var modal = document.createElement('div');
-    modal.id = 'translate-modal-dynamic';
+    modal.id  = 'translate-modal';
     modal.className = 'fixed inset-0 z-[400] bg-black/80 flex items-center justify-center p-4';
     modal.innerHTML =
         '<div class="bg-white w-full max-w-sm rounded-2xl p-8 text-slate-900">' +
         '<h2 class="text-xl font-black mb-2">' + esc(d.translateModalTitle || '번역 요청') + '</h2>' +
+        '<p class="text-xs text-gray-400 mb-5">' + esc(d.translateModalDesc || '언어와 방식을 선택하세요.') + '</p>' +
         '<label class="block text-xs font-bold mb-1">' + esc(d.translateLang || '번역 언어') + '</label>' +
         '<select id="tr-lang-select" class="w-full border p-3 rounded-lg mb-4 text-sm">' +
-        '<option value="en">🇺🇸 English</option>' +
-        '<option value="zh-CN">🇨🇳 中文(简体)</option>' +
-        '<option value="ja">🇯🇵 日本語</option>' +
-        '<option value="es">🇪🇸 Español</option>' +
-        '<option value="fr">🇫🇷 Français</option>' +
-        '<option value="de">🇩🇪 Deutsch</option>' +
-        '<option value="ru">🇷🇺 Русский</option>' +
-        '<option value="ar">🇸🇦 العربية</option>' +
-        '<option value="hi">🇮🇳 हिन्दी</option>' +
-        '<option value="pt">🇧🇷 Português</option>' +
+        TRANSLATE_LANGS_LIST.map(function(l) {
+            return '<option value="' + l.code + '">' + l.label + '</option>';
+        }).join('') +
         '</select>' +
         '<label class="block text-xs font-bold mb-2">방식</label>' +
         '<div class="flex flex-col gap-2 mb-5">' +
-        '<label class="flex items-center gap-2 cursor-pointer"><input type="radio" name="tr-method-dyn" value="auto" checked class="accent-blue-700"> <span class="text-sm font-bold">' + esc(d.translateAuto || 'Claude AI 자동번역') + '</span></label>' +
-        '<label class="flex items-center gap-2 cursor-pointer"><input type="radio" name="tr-method-dyn" value="manual"> <span class="text-sm font-bold">' + esc(d.translateManual || '수동번역 요청') + '</span></label>' +
+        '<label class="flex items-center gap-2 cursor-pointer">' +
+        '<input type="radio" name="tr-method" value="auto" checked class="accent-blue-700"> ' +
+        '<span class="text-sm font-bold">' + esc(d.translateAuto || 'Claude AI 자동번역') + '</span></label>' +
+        '<label class="flex items-center gap-2 cursor-pointer">' +
+        '<input type="radio" name="tr-method" value="manual"> ' +
+        '<span class="text-sm font-bold">' + esc(d.translateManual || '수동번역 요청') + '</span></label>' +
         '</div>' +
-        '<div id="tr-status-dyn" class="hidden text-xs text-blue-700 font-bold mb-3 animate-pulse"></div>' +
+        '<div id="tr-status" class="hidden text-xs text-blue-700 font-bold mb-3 animate-pulse"></div>' +
         '<div class="flex gap-2">' +
-        '<button id="tr-submit-dyn" onclick="_submitTranslation(\'' + articleId + '\')" class="flex-1 bg-[#003399] text-white py-3 rounded-lg font-bold">' + esc(d.translateSubmit || '시작') + '</button>' +
-        '<button onclick="document.getElementById(\'translate-modal-dynamic\').remove()" class="flex-1 border border-gray-300 py-3 rounded-lg font-bold text-gray-600">' + esc(d.translateCancel || '취소') + '</button>' +
+        '<button id="tr-submit-btn" onclick="submitTranslation(\'' + articleId + '\')" ' +
+        'class="flex-1 bg-[#003399] text-white py-3 rounded-lg font-bold">' +
+        esc(d.translateSubmit || '시작') + '</button>' +
+        '<button onclick="document.getElementById(\'translate-modal\').remove()" ' +
+        'class="flex-1 border border-gray-300 py-3 rounded-lg font-bold text-gray-600">' +
+        esc(d.translateCancel || '취소') + '</button>' +
         '</div></div>';
-    document.body.appendChild(modal);
-}
 
-async function _submitTranslation(articleId) {
+    document.body.appendChild(modal);
+};
+
+window.submitTranslation = async function submitTranslation(articleId) {
     _ensureGetDocs();
-    var raw = allNews.find(function(x) { return x.id === articleId; });
+    var raw = (typeof allNews !== 'undefined') ? allNews.find(function(x) { return x.id === articleId; }) : null;
     if (!raw) return;
 
-    var langCode = document.getElementById('tr-lang-select').value;
-    var method = document.querySelector('input[name="tr-method-dyn"]:checked').value;
-    var statusEl = document.getElementById('tr-status-dyn');
-    var btn = document.getElementById('tr-submit-dyn');
-    var d = (typeof getDict === 'function') ? getDict() : {};
+    var langCode  = document.getElementById('tr-lang-select').value;
+    var method    = document.querySelector('input[name="tr-method"]:checked').value;
+    var statusEl  = document.getElementById('tr-status');
+    var submitBtn = document.getElementById('tr-submit-btn');
+    var d         = (typeof getDict === 'function') ? getDict() : {};
 
+    // 수동 번역 요청
     if (method === 'manual') {
         _ensureGetDocs();
+        var currentUser = (typeof user !== 'undefined') ? user : null;
         await window.fs.addDoc(window.fs.collection(window.db, 'translation_requests'), {
-            articleId: articleId,
+            articleId:   articleId,
             originalNum: raw.globalNum,
-            targetLang: langCode,
-            status: 'pending',
-            requestedBy: user.id,
-            timestamp: window.fs.serverTimestamp()
+            targetLang:  langCode,
+            status:      'pending',
+            requestedBy: currentUser ? currentUser.id : 'unknown',
+            timestamp:   window.fs.serverTimestamp()
         });
         alert(d.translateManualDone || '수동번역 요청 등록됨');
-        document.getElementById('translate-modal-dynamic').remove();
+        document.getElementById('translate-modal').remove();
         return;
     }
 
-    // 자동번역
-    if (statusEl) { statusEl.textContent = d.translating || '번역 중…'; statusEl.classList.remove('hidden'); }
-    if (btn) btn.disabled = true;
+    // Claude AI 자동 번역
+    if (statusEl) { statusEl.textContent = d.translating || 'Claude AI가 번역 중입니다...'; statusEl.classList.remove('hidden'); }
+    if (submitBtn) submitBtn.disabled = true;
 
-    var langMap = { en:'English', 'zh-CN':'Simplified Chinese', ja:'Japanese', es:'Spanish',
-        fr:'French', de:'German', ru:'Russian', ar:'Arabic', hi:'Hindi', pt:'Portuguese (Brazilian)' };
+    var targetLangName = LANG_NAMES[langCode] || langCode;
 
     try {
-        var res = await fetch('https://api.anthropic.com/v1/messages', {
+        var response = await fetch('https://api.anthropic.com/v1/messages', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-                model: 'claude-sonnet-4-20250514',
+                model:      'claude-sonnet-4-20250514',
                 max_tokens: 4000,
-                system: 'You are a professional news translator. Translate the Korean news article into ' +
-                    (langMap[langCode] || langCode) +
-                    '. Return ONLY a JSON object with keys "title" and "content". No markdown, no preamble.',
-                messages: [{ role: 'user', content: 'TITLE: ' + raw.title + '\n\nCONTENT:\n' + raw.content }]
+                system: 'You are a professional news translator. Translate the given Korean news article into ' +
+                    targetLangName + '. Preserve all paragraph breaks. ' +
+                    'Return ONLY a valid JSON object with exactly two keys: "title" (string) and "content" (string). ' +
+                    'No markdown fences, no preamble, no explanation.',
+                messages: [{
+                    role:    'user',
+                    content: 'TITLE: ' + raw.title + '\n\nCONTENT:\n' + raw.content
+                }]
             })
         });
 
-        if (!res.ok) throw new Error('API ' + res.status);
-        var data = await res.json();
-        var text = data.content.map(function(b) { return b.text || ''; }).join('');
-        var parsed = JSON.parse(text.replace(/```json|```/g, '').trim());
-        if (!parsed.title || !parsed.content) throw new Error('번역 결과 파싱 실패');
+        if (!response.ok) throw new Error('API HTTP ' + response.status);
+        var data   = await response.json();
+        var rawTxt = data.content.map(function(b) { return b.text || ''; }).join('');
+        // JSON 펜스 제거 후 파싱
+        var clean  = rawTxt.replace(/^```json\s*|^```\s*|```\s*$/gm, '').trim();
+        var parsed;
+        try { parsed = JSON.parse(clean); }
+        catch(e2) {
+            // 마지막 수단: 첫 { 부터 마지막 } 까지 추출
+            var m = clean.match(/\{[\s\S]*\}/);
+            if (!m) throw new Error('JSON 파싱 실패: ' + e2.message);
+            parsed = JSON.parse(m[0]);
+        }
+        if (!parsed.title || !parsed.content) throw new Error('title/content 필드 누락');
 
+        var newNum = ((typeof allNews !== 'undefined') ? allNews.length : 0) + 1;
         await window.fs.addDoc(window.fs.collection(window.db, 'articles'), {
-            title: parsed.title,
-            content: parsed.content,
-            img: raw.img || window.DEFAULT_ARTICLE_THUMB,
-            desc: raw.desc || '',
-            cat: raw.cat || [],
-            author: raw.author,
-            authorId: raw.authorId,
-            email: raw.email || '',
-            date: new Date().toLocaleDateString('ko-KR'),
-            views: 0,
-            contentLang: langCode,
+            title:         parsed.title,
+            content:       parsed.content,
+            img:           raw.img || window.DEFAULT_ARTICLE_THUMB,
+            desc:          raw.desc || '',
+            cat:           raw.cat  || [],
+            author:        raw.author,
+            authorId:      raw.authorId,
+            email:         raw.email || '',
+            date:          new Date().toLocaleDateString('ko-KR'),
+            views:         0,
+            contentLang:   langCode,
             translationOf: raw.globalNum,
-            globalNum: allNews.length + 1,
-            inlineImages: raw.inlineImages || [],
-            radioUrl: raw.radioUrl || '',
-            approved: true,
-            timestamp: window.fs.serverTimestamp()
+            globalNum:     newNum,
+            inlineImages:  raw.inlineImages || [],
+            radioUrl:      raw.radioUrl || '',
+            approved:      true,
+            timestamp:     window.fs.serverTimestamp()
         });
 
         alert(d.translateDone || '번역 완료 — 별도 기사번호로 저장됨');
-        document.getElementById('translate-modal-dynamic').remove();
+        document.getElementById('translate-modal').remove();
+
     } catch(e) {
         if (statusEl) statusEl.textContent = '번역 오류: ' + e.message;
-        if (btn) btn.disabled = false;
+        if (submitBtn) submitBtn.disabled = false;
     }
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 16. SEO — JSON-LD 동적 주입 (개별 기사 페이지용)
+//
+//  SPA 특성상 Googlebot은 JS 렌더링 결과를 수집하지만,
+//  초기 <title>과 og:tags를 각 기사에 맞게 갱신하는 것이 중요합니다.
+//  renderDetail() 내부에서 이미 updateOG()를 호출하므로,
+//  아래는 JSON-LD Article 스키마까지 추가합니다.
+// ─────────────────────────────────────────────────────────────────────────────
+function _injectArticleJsonLd(article) {
+    // 기존 article JSON-LD 제거
+    var old = document.getElementById('json-ld-article');
+    if (old) old.remove();
+
+    if (!article) return;
+
+    var thumb = window.articleThumb(article.img);
+    var desc  = (article.desc || (article.content || '').substring(0, 160))
+                .replace(/\n/g, ' ').trim();
+
+    var schema = {
+        '@context':  'https://schema.org',
+        '@type':     'NewsArticle',
+        'headline':  article.title,
+        'description': desc,
+        'image':     [thumb],
+        'datePublished': article.date || '',
+        'author': {
+            '@type': 'Person',
+            'name':  'T.N. ' + (article.author || '') + ' 기자'
+        },
+        'publisher': {
+            '@type': 'NewsMediaOrganization',
+            'name':  'TNfocnus',
+            'url':   'https://tnfocnus.mannamplace.com'
+        },
+        'mainEntityOfPage': {
+            '@type': '@id',
+            '@id':   window.location.href
+        }
+    };
+
+    var s  = document.createElement('script');
+    s.id   = 'json-ld-article';
+    s.type = 'application/ld+json';
+    s.text = JSON.stringify(schema);
+    document.head.appendChild(s);
 }
 
-// ── 미니맵 완전 복구 및 제어 스크립트 ──────────────────────────────────
-
-// 1. 미니맵 열기 함수 (Tailwind 슬라이드 애니메이션 처리)
-function openMinimap() {
-    var panel = document.getElementById('minimap-panel');
-    if (panel) {
-        panel.classList.remove('hidden');
-        // 아주 미세한 딜레이를 주어 스르륵 열리는 애니메이션 작동
-        setTimeout(function() {
-            panel.classList.remove('translate-x-full');
-            panel.classList.add('translate-x-0');
-        }, 10);
-        
-        // 미니맵 내부가 비어있다면 카테고리 내비게이션을 동적으로 그려줌
-        renderMinimapContent();
+// renderDetail() 실행 이후 JSON-LD를 주입하도록 기존 함수를 래핑
+(function _wrapRenderDetail() {
+    var _origRenderDetail = window.renderDetail;
+    if (typeof _origRenderDetail !== 'function') {
+        // init() 이전에 실행될 경우 — DOMContentLoaded 이후 재시도
+        document.addEventListener('DOMContentLoaded', function() { _wrapRenderDetail(); });
+        return;
     }
-}
+    window.renderDetail = function(id) {
+        _origRenderDetail(id);
+        // renderDetail은 동기이므로 article은 allNews에서 바로 찾기
+        var art = (typeof allNews !== 'undefined')
+            ? allNews.find(function(x) { return x.id === id; })
+            : null;
+        _injectArticleJsonLd(art);
+    };
+})();
 
-// 2. 미니맵 닫기 함수 (오른쪽으로 다시 밀어내고 hidden 처리)
-function closeMinimap() {
-    var panel = document.getElementById('minimap-panel');
-    if (panel) {
-        panel.classList.remove('translate-x-0');
-        panel.classList.add('translate-x-full');
-        // 애니메이션(300ms)이 끝난 후 hidden 추가
-        setTimeout(function() {
-            panel.classList.add('hidden');
-        }, 300);
-    }
-    hideMinimapFlyout();
-}
-
-// 미니맵 플라이아웃 숨기기
-function hideMinimapFlyout() {
-    var fly = document.getElementById('minimap-flyout');
-    if (fly) fly.classList.add('hidden');
-}
-
-// 미니맵이 열렸을 때 보여줄 사이트맵 콘텐츠 생성
-function renderMinimapContent() {
-    var body = document.getElementById('minimap-body') || document.getElementById('minimap-panel');
-    if (!body) return;
-    
-    // 이미 내용이 차 있다면 중복 생성 방지
-    if (body.innerHTML.trim().length > 100) return; 
-
-    var categories = ['정치', '경제', '사회', 'IT/과학', '세계', '오피니언'];
-    var html = '<div class="p-4 space-y-4">';
-    html += '<p class="text-sm text-gray-400 font-semibold uppercase tracking-wider">Quick Navigation</p>';
-    html += '<ul class="space-y-2">';
-    categories.forEach(function(cat) {
-        html += '<li><a href="#" onclick="closeMinimap();" class="block p-2 rounded hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-200 transition font-medium">' + cat + '</a></li>';
-    });
-    html += '</ul></div>';
-    
-    // 적절한 컨테이너에 삽입
-    var target = document.getElementById('minimap-body') || body;
-    target.innerHTML = html;
-}
-
-// 3. 버튼 클릭 이벤트 바인딩
-function initMinimapEvents() {
-    // 열기 버튼 (minimap-btn 또는 토글 버튼 인식)
-    var openBtn = document.getElementById('minimap-btn') || document.getElementById('minimap-toggle');
-    if (openBtn) {
-        openBtn.addEventListener('click', function(e) {
-            e.stopPropagation();
-            openMinimap();
-        });
-    }
-
-    // 닫기 버튼 (X 아이콘 버튼)
-    var closeBtn = document.getElementById('close-minimap-btn') || document.getElementById('close-minimap');
-    if (closeBtn) {
-        closeBtn.addEventListener('click', function(e) {
-            e.stopPropagation();
-            closeMinimap();
-        });
-    }
-}
-
-// DOM 로드 완료 후 실행
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initMinimapEvents);
-} else {
-    initMinimapEvents();
-}
-
-// ── ESC 키 추가 핸들러 ──────────────────────────────────────────
-document.addEventListener('keydown', function(e) {
+// ─────────────────────────────────────────────────────────────────────────────
+// 17. ESC 키 핸들러 (중복 등록 방지)
+// ─────────────────────────────────────────────────────────────────────────────
+document.removeEventListener('keydown', window._tnEscHandler);
+window._tnEscHandler = function(e) {
     if (e.key !== 'Escape') return;
-    var dyn = document.getElementById('translate-modal-dynamic');
-    if (dyn) { dyn.remove(); return; }
-    
+
+    var trModal = document.getElementById('translate-modal');
+    if (trModal) { trModal.remove(); return; }
+
     var fly = document.getElementById('minimap-flyout');
-    if (fly && !fly.classList.contains('hidden')) { 
-        hideMinimapFlyout(); 
-        return; 
-    }
-    
+    if (fly && !fly.classList.contains('hidden')) { hideMinimapFlyout(); return; }
+
     var panel = document.getElementById('minimap-panel');
-    if (panel && (!panel.classList.contains('hidden') || panel.classList.contains('translate-x-0'))) { 
-        closeMinimap(); 
-        return; 
-    }
-});
-</script>
+    if (panel && !panel.classList.contains('hidden')) { window.closeMinimap(); return; }
+};
+document.addEventListener('keydown', window._tnEscHandler);
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 18. Leaflet CSS 보조 스타일 주입 (툴팁 등)
+// ─────────────────────────────────────────────────────────────────────────────
+(function _injectLeafletHelper() {
+    if (document.getElementById('tn-leaflet-helper')) return;
+    var style = document.createElement('style');
+    style.id  = 'tn-leaflet-helper';
+    style.textContent = [
+        '.tn-tt.leaflet-tooltip {',
+        '  background: rgba(15,23,42,0.92);',
+        '  color: #f8fafc;',
+        '  border: none;',
+        '  border-radius: 6px;',
+        '  padding: 3px 8px;',
+        '  font-size: 11px;',
+        '  font-weight: 700;',
+        '  box-shadow: 0 2px 8px rgba(0,0,0,.4);',
+        '}',
+        '.tn-tt.leaflet-tooltip::before { display: none; }',
+        '#minimap-leaflet { height: 240px !important; min-height: 240px !important; }',
+        '.leaflet-control-zoom { border: none !important; }',
+        '.leaflet-control-zoom a {',
+        '  background: #1e293b !important;',
+        '  color: #e2e8f0 !important;',
+        '  border: 1px solid rgba(255,255,255,.15) !important;',
+        '}'
+    ].join('\n');
+    document.head.appendChild(style);
+})();
+
+console.log('[TNfocnus patch] v3 버그픽스 패치 로드 완료');
 </body>
 </html>
