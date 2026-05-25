@@ -13,7 +13,7 @@
     <meta id="og-desc" property="og:description" content="Global News Network - News from Everywhere, for Everyone">
     <meta id="meta-desc" name="description" content="모두를 위한 뉴스, T.N. News">
     <meta id="og-img" property="og:image" content="https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=800">
-    <meta property="og:url" content="">
+    <meta property="og:url" content="https://tnfocnus.mannamplace.com">
 
     <meta name="twitter:card" content="summary_large_image">
     <meta id="tw-title" name="twitter:title" content="T.N. News">
@@ -156,7 +156,7 @@
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
-  "@type": "NewsMediaOrganization",
+  "@type": "WebSite",
   "name": "T.N. News",
   "url": "https://tnfocnus.mannamplace.com",
   "logo": {
@@ -2498,33 +2498,6 @@ window.articleThumb = function(img) {
     var s = (img == null ? '' : String(img)).trim();
     return s ? s : window.DEFAULT_ARTICLE_THUMB;
 };
-
-// ─────────────────────────────────────────────────────────────────────────────
-// 1. Firestore getDocs 폴리필 — Firebase init 전에 미리 등록
-//    (init()보다 먼저 실행되어야 하므로 스크립트 최상단에 위치)
-// ─────────────────────────────────────────────────────────────────────────────
-function _ensureGetDocs() {
-    if (window.fs && !window.fs.getDocs) {
-        window.fs.getDocs = function(q) {
-            return new Promise(function(resolve, reject) {
-                var unsub = window.fs.onSnapshot(q,
-                    function(snap) { unsub(); resolve(snap); },
-                    reject
-                );
-            });
-        };
-    }
-}
-
-// Firebase module 로드가 완료된 직후 폴리필 적용
-// (type="module" 스크립트는 defer와 동일하게 동작하므로 DOMContentLoaded 이후 실행)
-document.addEventListener('DOMContentLoaded', function() {
-    _ensureGetDocs();
-    // init()이 window.onload에 등록되어 있어도, fs가 준비되는 시점에 한 번 더 보장
-    var fsWatchdog = setInterval(function() {
-        if (window.fs) { _ensureGetDocs(); clearInterval(fsWatchdog); }
-    }, 100);
-});
 
 // ─────────────────────────────────────────────────────────────────────────────
 // 2. Leaflet 미니맵 — 전역 상태 (한 번만 선언)
