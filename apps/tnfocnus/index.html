@@ -463,7 +463,7 @@
 
   <div id="minimap-flyout" class="hidden w-[min(100%,20rem)] rounded-xl border border-slate-200 bg-white shadow-2xl p-3 text-slate-900 text-sm"></div>
 
-  <div id="minimap-panel" class="hidden w-[min(100vw-1.5rem,22rem)] sm:w-[26rem] rounded-2xl border border-slate-200 bg-white shadow-2xl overflow-hidden flex flex-col">
+  <div id="minimap-panel" class="hidden w-[min(100vw-1.5rem,22rem)] sm:w-[26rem] rounded-2xl border border-slate-200 bg-white shadow-2xl flex flex-col">
 
     <div class="flex items-center justify-between gap-2 px-3 py-2 bg-slate-900 text-white shrink-0">
       <div class="min-w-0">
@@ -2465,6 +2465,7 @@ if (window.fs && !window.fs.getDocs) {
 }
     </script>
 
+<script>
 /**
  * TNfocnus v3 버그픽스 패치
  * 
@@ -2604,6 +2605,10 @@ function _initLeafletMap() {
     el.style.width     = '100%';
     el.style.display   = 'block';
 
+    // overflow-hidden이 Leaflet 타일을 가리는 문제 방지
+    var panel = document.getElementById('minimap-panel');
+    if (panel) panel.style.overflow = 'visible';
+
     try {
         _map = L.map(el, {
             center: [25, 15],
@@ -2626,8 +2631,10 @@ function _initLeafletMap() {
 
         _map.on('click', function() { hideMinimapFlyout(); });
 
-        // 패널이 hidden에서 visible로 전환된 직후 강제 리사이즈
-        setTimeout(function() { _map.invalidateSize(true); }, 250);
+        // 패널 visible 전환 후 단계별 invalidateSize로 타일 로딩 보장
+        setTimeout(function() { if (_map) _map.invalidateSize(true); }, 100);
+        setTimeout(function() { if (_map) _map.invalidateSize(true); }, 400);
+        setTimeout(function() { if (_map) _map.invalidateSize(true); }, 900);
     } catch(e) {
         console.error('[minimap] Leaflet 초기화 실패:', e);
         _map = null;
@@ -2897,19 +2904,39 @@ window.openMinimap = function openMinimap() {
     if (hintEl)  hintEl.textContent  = d.minimapHint  || '권역 핀을 클릭하세요';
 
     // Leaflet이 준비됐는지 확인 후 초기화
+    // panel이 hidden→visible 된 직후 브라우저 레이아웃이 반영될 때까지
+    // requestAnimationFrame 두 번 대기 후 초기화해야 크기가 0으로 잡히지 않음
     function _tryInit(attempts) {
         if (typeof L === 'undefined') {
             if (attempts > 25) { console.warn('[minimap] Leaflet 미로드'); return; }
             setTimeout(function() { _tryInit(attempts + 1); }, 100);
             return;
         }
-        _initLeafletMap();
-        setTimeout(function() {
-            if (_map) {
-                _map.invalidateSize(true);
-                refreshMinimapMarkers();
-            }
-        }, 200);
+
+        // leaflet 엘리먼트 크기를 명시적으로 강제 지정
+        var el = document.getElementById('minimap-leaflet');
+        if (el) {
+            el.style.height    = '240px';
+            el.style.minHeight = '240px';
+            el.style.width     = '100%';
+            el.style.display   = 'block';
+        }
+
+        // rAF 두 번 → DOM 렌더링 완료 보장 후 Leaflet 초기화
+        requestAnimationFrame(function() {
+            requestAnimationFrame(function() {
+                if (!_map) {
+                    _initLeafletMap();
+                }
+                // 이미 초기화된 경우에도 크기 재계산
+                setTimeout(function() {
+                    if (_map) {
+                        _map.invalidateSize(true);
+                        refreshMinimapMarkers();
+                    }
+                }, 100);
+            });
+        });
     }
     _tryInit(0);
 
@@ -3324,5 +3351,6 @@ document.addEventListener('keydown', window._tnEscHandler);
 })();
 
 console.log('[TNfocnus patch] v3 버그픽스 패치 로드 완료');
+</script>
 </body>
 </html>
