@@ -716,6 +716,7 @@ function renderDetail(id) {
     const d = getDict();
     const container = document.getElementById('main-view');
     container.innerHTML = `
+        if (typeof mountComments === 'function') mountComments(article.id);
         <article class="max-w-3xl mx-auto py-10">
             <header class="mb-10">
                 <div class="flex flex-wrap gap-2 mb-4">
@@ -745,6 +746,7 @@ function renderDetail(id) {
                         `<button onclick="openTranslateModal('${raw.id}')" class="bg-amber-500 text-white px-6 py-2 rounded-full text-sm font-bold hover:bg-amber-600 transition">🌐 번역 요청</button>` : ''}
                     <button onclick="shareLink()" class="bg-blue-50 text-blue-800 px-6 py-2 rounded-full text-sm font-bold hover:bg-blue-100 transition">${escapeHtml(d.share || '공유')}</button>
                 </div>
+                <div id="comments-mount" class="mt-10 border-t pt-8"></div>
             </div>
         </article>`;
 
