@@ -2057,6 +2057,38 @@ function minimapOnCrisis(id) {
         <button type="button" class="w-full mt-3 py-2 rounded-lg bg-neutral-900 text-white text-xs font-black hover:bg-black" onclick="renderDetail('${a.id}'); closeMinimap();">${escapeHtml(d.minimapGoArticle)}</button>`);
 }
 
+function openMinimap() {
+    minimapMinimized = false;
+    var panel = document.getElementById('minimap-panel');
+    var fab   = document.getElementById('minimap-fab');
+    if (fab)   fab.classList.add('hidden');
+    if (panel) panel.classList.remove('hidden');
+
+    var d = (typeof getDict === 'function') ? getDict() : {};
+    var t = document.getElementById('minimap-panel-title');
+    var h = document.getElementById('minimap-panel-hint');
+    if (t) t.textContent = d.minimapTitle || '지역 미니맵';
+    if (h) h.textContent = d.minimapHint  || '권역 핀을 클릭하세요';
+
+    function _tryInit(attempts) {
+        if (typeof L === 'undefined') {
+            if (attempts > 25) return;
+            setTimeout(function() { _tryInit(attempts + 1); }, 100);
+            return;
+        }
+        _initLeafletMap();
+        setTimeout(function() {
+            if (_map) {
+                _map.invalidateSize(true);
+                refreshMinimapMarkers();
+            }
+        }, 200);
+    }
+    _tryInit(0);
+
+    if (typeof lucide !== 'undefined') lucide.createIcons();
+}
+
 function closeMinimap() {
     const panel = document.getElementById('minimap-panel');
     const fab = document.getElementById('minimap-fab');
