@@ -2475,23 +2475,6 @@ if (window.fs && !window.fs.getDocs) {
 }
     </script>
 
-/**
- * TNfocnus v3 버그픽스 패치
- * 
- * [적용 방법]
- * 기존 HTML에서 두 번째 <script> 블록 전체(/**  TNfocnus v3 패치 ... 끝까지)를
- * 이 파일 전체 내용으로 교체하세요.
- * 
- * [수정 내역]
- * 1. 미니맵 핀 정상 렌더링 - openMinimap() 중복 정의 제거, Leaflet 초기화 통합
- * 2. 댓글 기능 복구 - mountComments / submitComment
- * 3. 번역 기능 복구 - getDocs 폴리필 타이밍 수정 + 중복 함수 제거
- * 4. SEO 수정 - JSON-LD 동적 주입 + 크롤러용 메타태그 서버사이드 대체 안내
- */
-
-// ─────────────────────────────────────────────────────────────────────────────
-// 0. 기본 이미지 경로
-// ─────────────────────────────────────────────────────────────────────────────
 window.DEFAULT_ARTICLE_THUMB = 'https://i.ibb.co/mrhDt2F2/tnfocnus-default-thumb.jpg';
 
 window.articleThumb = function(img) {
@@ -2499,19 +2482,10 @@ window.articleThumb = function(img) {
     return s ? s : window.DEFAULT_ARTICLE_THUMB;
 };
 
-// ─────────────────────────────────────────────────────────────────────────────
-// 2. Leaflet 미니맵 — 전역 상태 (한 번만 선언)
-// ─────────────────────────────────────────────────────────────────────────────
 var _map = null;
 var _markersLayer = null;
 var _circleLayer = null;
 
-// 기존 코드의 let 변수들과 충돌 방지를 위해 var 사용 + 덮어쓰기 허용
-// (minimapMinimized, minimapMode 등은 기존 코드에 이미 있으므로 재선언 금지)
-
-// ─────────────────────────────────────────────────────────────────────────────
-// 3. 위경도 헬퍼
-// ─────────────────────────────────────────────────────────────────────────────
 function _ll(cat) {
     if (typeof MINIMAP_WEATHER_LL !== 'undefined' && MINIMAP_WEATHER_LL[cat]) {
         return MINIMAP_WEATHER_LL[cat];
@@ -2531,9 +2505,6 @@ function _articleLatLon(article) {
     ];
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// 4. Leaflet 아이콘 팩토리
-// ─────────────────────────────────────────────────────────────────────────────
 function _macroIcon(label) {
     return L.divIcon({
         className: '',
@@ -2599,9 +2570,6 @@ function _crisisIcon(cats) {
     });
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// 5. Leaflet 초기화 (한 번만 실행)
-// ─────────────────────────────────────────────────────────────────────────────
 function _initLeafletMap() {
     if (_map) return; // 이미 초기화됨
 
@@ -2644,9 +2612,6 @@ function _initLeafletMap() {
     }
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// 6. 마커 새로고침
-// ─────────────────────────────────────────────────────────────────────────────
 function refreshMinimapMarkers() {
     if (!_map || !_markersLayer) return;
     _markersLayer.clearLayers();
@@ -2701,9 +2666,6 @@ function refreshMinimapMarkers() {
     }
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// 7. 영향권 원
-// ─────────────────────────────────────────────────────────────────────────────
 function drawMinimapInfluenceForArticle(article, opts) {
     if (!_map || !_circleLayer) return;
     _circleLayer.clearLayers();
@@ -2726,9 +2688,6 @@ function clearMinimapInfluence() {
     if (_circleLayer) _circleLayer.clearLayers();
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// 8. 플라이아웃 헬퍼
-// ─────────────────────────────────────────────────────────────────────────────
 function hideMinimapFlyout() {
     var f = document.getElementById('minimap-flyout');
     if (f) { f.classList.add('hidden'); f.innerHTML = ''; }
@@ -2756,9 +2715,6 @@ function _flyoutFeatured(article) {
         esc(article.title) + '</p></div>';
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// 9. 권역 플라이아웃
-// ─────────────────────────────────────────────────────────────────────────────
 function openMacroRegionFlyout(macroId) {
     clearMinimapInfluence();
     if (typeof minimapMacroId !== 'undefined') minimapMacroId = macroId;
@@ -2788,9 +2744,6 @@ function openMacroRegionFlyout(macroId) {
     );
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// 10. 세부 지역 진입
-// ─────────────────────────────────────────────────────────────────────────────
 function minimapEnterSubs(macroId) {
     var MAP = (typeof MAP_MACRO_REGIONS !== 'undefined') ? MAP_MACRO_REGIONS : [];
     var m   = MAP.find(function(x) { return x.id === macroId; });
