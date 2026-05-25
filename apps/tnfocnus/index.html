@@ -2054,61 +2054,6 @@ function crisisIconForArticle(a) {
 function crisisArticles() { return approvedNews().filter(n => n.cat && (n.cat.includes('전쟁') || n.cat.includes('재난') || n.cat.includes('경제위기'))); }
 function breakingArticles() { return approvedNews().filter(n => n.cat && n.cat.includes('속보')); }
 
-function refreshMinimapMarkers() {
-    const wrap = document.getElementById('minimap-markers');
-    if (!wrap) return;
-    const frag = document.createDocumentFragment();
-
-    if (minimapMode === 'subs' && minimapSubLayout.length) {
-        minimapSubLayout.forEach(sub => {
-            const b = document.createElement('button');
-            b.type = 'button'; b.className = 'minimap-sub-pin';
-            b.style.left = sub.x + '%'; b.style.top = sub.y + '%';
-            b.title = sub.label; b.setAttribute('aria-label', sub.label);
-            b.addEventListener('click', () => openSubLocalFlyout(sub));
-            frag.appendChild(b);
-        });
-    } else {
-        MAP_MACRO_REGIONS.forEach(m => {
-            const pin = document.createElement('button');
-            pin.type = 'button'; pin.className = 'minimap-macro-pin';
-            pin.style.left = m.x + '%'; pin.style.top = m.y + '%';
-            pin.title = m.label;
-            pin.addEventListener('click', () => openMacroRegionFlyout(m.id));
-            const head = document.createElement('div'); head.className = 'minimap-pin-head';
-            const ic = document.createElement('i'); ic.setAttribute('data-lucide', 'map-pin'); ic.className = 'w-3 h-3';
-            head.appendChild(ic);
-            const stem = document.createElement('div'); stem.className = 'minimap-pin-stem';
-            const lab = document.createElement('div'); lab.className = 'minimap-pin-label'; lab.textContent = m.label;
-            pin.appendChild(head); pin.appendChild(stem); pin.appendChild(lab);
-            frag.appendChild(pin);
-        });
-        breakingArticles().slice(0, 5).forEach((a, i) => {
-            const pos = minimapMapCoordsForArticle(a, i);
-            const pin = document.createElement('button');
-            pin.type = 'button'; pin.className = 'minimap-breaking-pin';
-            pin.style.left = pos.x + '%'; pin.style.top = pos.y + '%'; pin.title = a.title;
-            pin.addEventListener('click', () => openBreakingFlyout(a));
-            const head = document.createElement('div'); head.className = 'minimap-pin-head'; head.textContent = '속';
-            const stem = document.createElement('div'); stem.className = 'minimap-pin-stem';
-            pin.appendChild(head); pin.appendChild(stem); frag.appendChild(pin);
-        });
-        crisisArticles().slice(0, 5).forEach((a, i) => {
-            const pos = minimapMapCoordsForArticle(a, i);
-            const pin = document.createElement('button');
-            pin.type = 'button'; pin.className = 'minimap-crisis-pin';
-            pin.style.left = pos.x + '%'; pin.style.top = pos.y + '%'; pin.title = a.title;
-            pin.addEventListener('click', () => minimapOnCrisis(a.id));
-            const head = document.createElement('div'); head.className = 'minimap-pin-head';
-            const ic = document.createElement('i'); ic.setAttribute('data-lucide', crisisIconForArticle(a)); ic.className = 'w-4 h-4';
-            head.appendChild(ic);
-            const stem = document.createElement('div'); stem.className = 'minimap-pin-stem';
-            pin.appendChild(head); pin.appendChild(stem); frag.appendChild(pin);
-        });
-    }
-    wrap.innerHTML = ''; wrap.appendChild(frag); lucide.createIcons();
-}
-
 function minimapOnCrisis(id) {
     const a = allNews.find(n => n.id === id);
     if (!a) return;
@@ -2118,40 +2063,6 @@ function minimapOnCrisis(id) {
         <p class="text-[10px] font-black text-neutral-900 uppercase mb-2">위기 보도</p>
         ${minimapFlyoutFeaturedBlock(a)}
         <button type="button" class="w-full mt-3 py-2 rounded-lg bg-neutral-900 text-white text-xs font-black hover:bg-black" onclick="renderDetail('${a.id}'); closeMinimap();">${escapeHtml(d.minimapGoArticle)}</button>`);
-}
-
-function openMinimap() {
-    minimapMinimized = false;
-    var panel = document.getElementById('minimap-panel');
-    var fab = document.getElementById('minimap-fab');
-    if (fab) fab.classList.add('hidden');
-    if (panel) panel.classList.remove('hidden');
-
-    var d = (typeof getDict === 'function') ? getDict() : {};
-    var t = document.getElementById('minimap-panel-title');
-    var h = document.getElementById('minimap-panel-hint');
-    if (t) t.textContent = d.minimapTitle || '지역 미니맵';
-    if (h) h.textContent = d.minimapHint || '권역 핀을 클릭하세요';
-
-    // L(Leaflet) 로드 확인 후 초기화
-    function tryInit(attempts) {
-        if (typeof L === 'undefined') {
-            if (attempts > 20) return; // 2초 후 포기
-            setTimeout(function() { tryInit(attempts + 1); }, 100);
-            return;
-        }
-        _initLeafletMap();
-        setTimeout(function() {
-            if (_map) {
-                _map.invalidateSize();
-                _map.eachLayer(function(layer) { if (layer.redraw) layer.redraw(); });
-                refreshMinimapMarkers();
-            }
-        }, 150);
-    }
-    tryInit(0);
-
-    if (typeof lucide !== 'undefined') lucide.createIcons();
 }
 
 function closeMinimap() {
