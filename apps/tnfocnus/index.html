@@ -14,6 +14,7 @@
     <meta id="meta-desc" name="description" content="모두를 위한 뉴스, T.N. News">
     <meta id="og-img" property="og:image" content="https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=800">
     <meta property="og:url" content="https://tnfocnus.mannamplace.com">
+    <link rel="canonical" id="canonical-link" href="https://tnfocnus.mannamplace.com">
 
     <meta name="twitter:card" content="summary_large_image">
     <meta id="tw-title" name="twitter:title" content="T.N. News">
@@ -153,15 +154,16 @@
         }
     </style>
 </head>
-<script type="application/ld+json">
+<script type="application/ld+json" id="json-ld-website">
 {
   "@context": "https://schema.org",
   "@type": "WebSite",
-  "name": "T.N. News",
+  "name": "TNfocnus",
   "url": "https://tnfocnus.mannamplace.com",
-  "logo": {
-    "@type": "ImageObject",
-    "url": "https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=800"
+  "potentialAction": {
+    "@type": "SearchAction",
+    "target": "https://tnfocnus.mannamplace.com/?q={search_term_string}",
+    "query-input": "required name=search_term_string"
   }
 }
 </script>
@@ -952,7 +954,7 @@ const I18N = {
         regionBtnSimple: '지역: 간단',
         regionBtnFull: '지역: 전체',
         login: '로그인', register: '회원가입', logout: '로그아웃',
-        comments: '댓글', commentPlaceholder: '댓글을 입력하세요',
+        comments: '댓글', commentPlaceholder: '댓글을 입력하세요', commentEdit: '수정', commentDelete: '삭제', commentSave: '저장', commentCancel: '취소', commentDeleteConfirm: '댓글을 삭제하시겠습니까?',
         postComment: '등록', notifTitle: '알림 · 속보 뉴스레터',
         notifEmpty: '알림이 없습니다.', breakingSubscribe: '이 속보 알림 받기',
         backHome: '목록으로', share: '공유', articleNo: '기사번호',
@@ -968,7 +970,9 @@ const I18N = {
         translateDone: '번역이 완료되어 별도 기사번호로 저장되었습니다.',
         translateManualDone: '수동번역 요청이 등록되었습니다.',
         topics: { '정치':'정치','경제':'경제','사회':'사회','외교통일':'외교','국방':'국방','문화':'문화','사설/칼럼':'사설/칼럼','속보':'속보','단독':'단독','기획보도':'기획보도' },
-        regions: { '한국':'🇰🇷 한국','미국':'🇺🇸 미국','일본':'🇯🇵 일본','중국':'🇨🇳 중국','인도':'🇮🇳 인도','유럽':'🇪🇺 유럽','중동':'🌍 중동','아프리카':'🌍 아프리카','남미':'🌎 남미','캐나다':'🇨🇦 캐나다','오세아니아':'🌏 오세아니아','러시아':'🇷🇺 러시아','동남아':'🌏 동남아','라틴아메리카':'🌎 라틴아메리카','중앙아시아':'🌍 중앙아시아','이스라엘':'🇮🇱 이스라엘','파키스탄':'🇵🇰 파키스탄','동유럽':'🇪🇺 동유럽','서유럽':'🇪🇺 서유럽','남유럽':'🇪🇺 남유럽','북유럽':'🇪🇺 북유럽','영국':'🇬🇧 영국','프랑스':'🇫🇷 프랑스','독일':'🇩🇪 독일','이탈리아':'🇮🇹 이탈리아' }
+        regions: { '한국':'🇰🇷 한국','미국':'🇺🇸 미국','일본':'🇯🇵 일본','중국':'🇨🇳 중국','인도':'🇮🇳 인도','유럽':'🇪🇺 유럽','중동':'🌍 중동','아프리카':'🌍 아프리카','남미':'🌎 남미','캐나다':'🇨🇦 캐나다','오세아니아':'🌏 오세아니아','러시아':'🇷🇺 러시아','동남아':'🌏 동남아','라틴아메리카':'🌎 라틴아메리카','중앙아시아':'🌍 중앙아시아','이스라엘':'🇮🇱 이스라엘','파키스탄':'🇵🇰 파키스탄','동유럽':'🇪🇺 동유럽','서유럽':'🇪🇺 서유럽','남유럽':'🇪🇺 남유럽','북유럽':'🇪🇺 북유럽','영국':'🇬🇧 영국','프랑스':'🇫🇷 프랑스','독일':'🇩🇪 독일','이탈리아':'🇮🇹 이탈리아' },
+        macroRegions: { 'neb':'동북아','sea':'동남아','sa':'남아시아','swa':'서아·중동','ca':'중앙아시아','eu':'유럽','ru':'러시아','na':'미국','nc':'북중미','lat':'라틴아메리카','af':'아프리카','oce':'오세아니아' },
+        subRegionLabels: {}
     },
     en: {
         siteTitle: 'TNfocnus - Global News Network',
@@ -991,7 +995,7 @@ const I18N = {
         regionBtnSimple: 'Regions: Simple',
         regionBtnFull: 'Regions: Full',
         login: 'Log in', register: 'Register', logout: 'Logout',
-        comments: 'Comments', commentPlaceholder: 'Write a comment…',
+        comments: 'Comments', commentPlaceholder: 'Write a comment…', commentEdit: 'Edit', commentDelete: 'Delete', commentSave: 'Save', commentCancel: 'Cancel', commentDeleteConfirm: 'Delete this comment?',
         postComment: 'Post', notifTitle: 'Alerts · Breaking digest',
         notifEmpty: 'No alerts yet.', breakingSubscribe: 'Alert me for this story',
         backHome: 'Back', share: 'Share', articleNo: 'Article',
@@ -1007,7 +1011,9 @@ const I18N = {
         translateDone: 'Translation saved with a new article number.',
         translateManualDone: 'Manual translation request registered.',
         topics: { '정치':'Politics','경제':'Economy','사회':'Society','외교통일':'Diplomacy','국방':'Defense','문화':'Culture','사설/칼럼':'Opinion','속보':'Breaking','단독':'Exclusive','기획보도':'Special' },
-        regions: { '한국':'Korea','미국':'USA','일본':'Japan','중국':'China','인도':'India','유럽':'Europe','중동':'Middle East','아프리카':'Africa','남미':'S. America','캐나다':'Canada','오세아니아':'Oceania','러시아':'Russia','동남아':'SE Asia','라틴아메리카':'Latin Am.','중앙아시아':'C. Asia','이스라엘':'Israel','파키스탄':'Pakistan','동유럽':'E. Europe','서유럽':'W. Europe','남유럽':'S. Europe','북유럽':'N. Europe','영국':'UK','프랑스':'France','독일':'Germany','이탈리아':'Italy' }
+        regions: { '한국':'Korea','미국':'USA','일본':'Japan','중국':'China','인도':'India','유럽':'Europe','중동':'Middle East','아프리카':'Africa','남미':'S. America','캐나다':'Canada','오세아니아':'Oceania','러시아':'Russia','동남아':'SE Asia','라틴아메리카':'Latin Am.','중앙아시아':'C. Asia','이스라엘':'Israel','파키스탄':'Pakistan','동유럽':'E. Europe','서유럽':'W. Europe','남유럽':'S. Europe','북유럽':'N. Europe','영국':'UK','프랑스':'France','독일':'Germany','이탈리아':'Italy' },
+        macroRegions: { 'neb':'NE Asia','sea':'SE Asia','sa':'S. Asia','swa':'W. Asia·ME','ca':'C. Asia','eu':'Europe','ru':'Russia','na':'USA','nc':'N. America','lat':'Latin Am.','af':'Africa','oce':'Oceania' },
+        subRegionLabels: { '대한민국':'S. Korea','북한':'N. Korea','일본':'Japan','중국':'China','대만':'Taiwan','몽골':'Mongolia','미국':'USA','캐나다':'Canada','멕시코':'Mexico','그린란드':'Greenland','러시아':'Russia','독일':'Germany','프랑스':'France','영국':'UK','이탈리아':'Italy','스페인':'Spain','포르투갈':'Portugal','네덜란드':'Netherlands','벨기에':'Belgium','스위스':'Switzerland','오스트리아':'Austria','폴란드':'Poland','우크라이나':'Ukraine','체코':'Czech Rep.','헝가리':'Hungary','루마니아':'Romania','스웨덴':'Sweden','노르웨이':'Norway','핀란드':'Finland','덴마크':'Denmark','아이슬란드':'Iceland','인도':'India','파키스탄':'Pakistan','방글라데시':'Bangladesh','베트남':'Vietnam','태국':'Thailand','인도네시아':'Indonesia','말레이시아':'Malaysia','싱가포르':'Singapore','필리핀':'Philippines','이스라엘':'Israel','사우디아라비아':'Saudi Arabia','이란':'Iran','이라크':'Iraq','튀르키예':'Turkey','카자흐스탄':'Kazakhstan','브라질':'Brazil','아르헨티나':'Argentina','칠레':'Chile','이집트':'Egypt','나이지리아':'Nigeria','케냐':'Kenya','남아프리카공화국':'S. Africa','호주':'Australia','뉴질랜드':'New Zealand' }
     },
     'zh-CN': {
         siteTitle: 'TNfocnus - 全球新闻网络',
@@ -1030,7 +1036,7 @@ const I18N = {
         regionBtnSimple: '地区：简略',
         regionBtnFull: '地区：全部',
         login: '登录', register: '注册', logout: '退出',
-        comments: '评论', commentPlaceholder: '写评论…',
+        comments: '评论', commentPlaceholder: '写评论…', commentEdit: '编辑', commentDelete: '删除', commentSave: '保存', commentCancel: '取消', commentDeleteConfirm: '确定删除评论？',
         postComment: '发布', notifTitle: '通知 · 快讯简报',
         notifEmpty: '暂无通知。', breakingSubscribe: '接收本快讯提醒',
         backHome: '返回', share: '分享', articleNo: '文章编号',
@@ -1046,7 +1052,9 @@ const I18N = {
         translateDone: '翻译已完成并以新文章编号保存。',
         translateManualDone: '人工翻译请求已登记。',
         topics: { '정치':'政治','경제':'经济','사회':'社会','외교통일':'外交','국방':'国防','문화':'文化','사설/칼럼':'社论','속보':'快讯','단독':'独家','기획보도':'专题' },
-        regions: { '한국':'韩国','미국':'美国','일본':'日本','중국':'中国','인도':'印度','유럽':'欧洲','중동':'中东','아프리카':'非洲','남미':'南美','캐나다':'加拿大','오세아니아':'大洋洲','러시아':'俄罗斯','동남아':'东南亚','라틴아메리카':'拉丁美洲','중앙아시아':'中亚','이스라엘':'以色列','파키스탄':'巴基斯坦','동유럽':'东欧','서유럽':'西欧','남유럽':'南欧','북유럽':'北欧','영국':'英国','프랑스':'法国','독일':'德国','이탈리아':'意大利' }
+        regions: { '한국':'韩国','미국':'美国','일본':'日本','중국':'中国','인도':'印度','유럽':'欧洲','중동':'中东','아프리카':'非洲','남미':'南美','캐나다':'加拿大','오세아니아':'大洋洲','러시아':'俄罗斯','동남아':'东南亚','라틴아메리카':'拉丁美洲','중앙아시아':'中亚','이스라엘':'以色列','파키스탄':'巴基斯坦','동유럽':'东欧','서유럽':'西欧','남유럽':'南欧','북유럽':'北欧','영국':'英国','프랑스':'法国','독일':'德国','이탈리아':'意大利' },
+        macroRegions: { 'neb':'东北亚','sea':'东南亚','sa':'南亚','swa':'西亚·中东','ca':'中亚','eu':'欧洲','ru':'俄罗斯','na':'美国','nc':'北美','lat':'拉丁美洲','af':'非洲','oce':'大洋洲' },
+        subRegionLabels: { '대한민국':'韩国','북한':'朝鲜','일본':'日本','중국':'中国','대만':'台湾','몽골':'蒙古','미국':'美国','캐나다':'加拿大','멕시코':'墨西哥','그린란드':'格陵兰','러시아':'俄罗斯','독일':'德国','프랑스':'法国','영국':'英国','이탈리아':'意大利','스페인':'西班牙','포르투갈':'葡萄牙','네덜란드':'荷兰','벨기에':'比利时','스위스':'瑞士','오스트리아':'奥地利','폴란드':'波兰','우크라이나':'乌克兰','체코':'捷克','헝가리':'匈牙利','루마니아':'罗马尼亚','스웨덴':'瑞典','노르웨이':'挪威','핀란드':'芬兰','덴마크':'丹麦','아이슬란드':'冰岛','인도':'印度','파키스탄':'巴基斯坦','방글라데시':'孟加拉国','베트남':'越南','태국':'泰国','인도네시아':'印度尼西亚','말레이시아':'马来西亚','싱가포르':'新加坡','필리핀':'菲律宾','이스라엘':'以色列','사우디아라비아':'沙特阿拉伯','이란':'伊朗','이라크':'伊拉克','튀르키예':'土耳其','카자흐스탄':'哈萨克斯坦','브라질':'巴西','아르헨티나':'阿根廷','칠레':'智利','이집트':'埃及','나이지리아':'尼日利亚','케냐':'肯尼亚','남아프리카공화국':'南非','호주':'澳大利亚','뉴질랜드':'新西兰' }
     },
     ja: {
         siteTitle: 'TNfocnus - グローバルニュース',
@@ -1069,7 +1077,7 @@ const I18N = {
         regionBtnSimple: '地域：簡易',
         regionBtnFull: '地域：全体',
         login: 'ログイン', register: '登録', logout: 'ログアウト',
-        comments: 'コメント', commentPlaceholder: 'コメントを入力…',
+        comments: 'コメント', commentPlaceholder: 'コメントを入力…', commentEdit: '編集', commentDelete: '削除', commentSave: '保存', commentCancel: 'キャンセル', commentDeleteConfirm: 'コメントを削除しますか？',
         postComment: '投稿', notifTitle: '通知 · 速報',
         notifEmpty: '通知はありません。', breakingSubscribe: 'この速報の通知を受け取る',
         backHome: '戻る', share: '共有', articleNo: '記事番号',
@@ -1085,7 +1093,9 @@ const I18N = {
         translateDone: '翻訳が完了し、新しい記事番号で保存されました。',
         translateManualDone: '手動翻訳リクエストが登録されました。',
         topics: { '정치':'政治','경제':'経済','사회':'社会','외교통일':'外交','국방':'国防','문화':'文化','사설/칼럼':'社説','속보':'速報','단독':'独占','기획보도':'特集' },
-        regions: { '한국':'韓国','미국':'米国','일본':'日本','중국':'中国','인도':'インド','유럽':'欧州','중동':'中東','아프리카':'アフリカ','남미':'南米','캐나다':'カナダ','오세아니아':'オセアニア','러시아':'ロシア','동남아':'東南アジア','라틴아메리카':'ラテンアメリカ','중앙아시아':'中央アジア','이스라엘':'イスラエル','파키스탄':'パキスタン','동유럽':'東欧','서유럽':'西欧','남유럽':'南欧','북유럽':'北欧','영국':'英国','프랑스':'フランス','독일':'ドイツ','이탈리아':'イタリア' }
+        regions: { '한국':'韓国','미국':'米国','일본':'日本','중국':'中国','인도':'インド','유럽':'欧州','중동':'中東','아프리카':'アフリカ','남미':'南米','캐나다':'カナダ','오세아니아':'オセアニア','러시아':'ロシア','동남아':'東南アジア','라틴아메리카':'ラテンアメリカ','중앙아시아':'中央アジア','이스라엘':'イスラエル','파키스탄':'パキスタン','동유럽':'東欧','서유럽':'西欧','남유럽':'南欧','북유럽':'北欧','영국':'英国','프랑스':'フランス','독일':'ドイツ','이탈리아':'イタリア' },
+        macroRegions: { 'neb':'東北アジア','sea':'東南アジア','sa':'南アジア','swa':'西アジア·中東','ca':'中央アジア','eu':'ヨーロッパ','ru':'ロシア','na':'米国','nc':'北米','lat':'中南米','af':'アフリカ','oce':'オセアニア' },
+        subRegionLabels: { '대한민국':'韓国','북한':'北朝鮮','일본':'日本','중국':'中国','대만':'台湾','몽골':'モンゴル','미국':'米国','캐나다':'カナダ','멕시코':'メキシコ','그린란드':'グリーンランド','러시아':'ロシア','독일':'ドイツ','프랑스':'フランス','영국':'英国','이탈리아':'イタリア','스페인':'スペイン','포르투갈':'ポルトガル','네덜란드':'オランダ','벨기에':'ベルギー','스위스':'スイス','오스트리아':'オーストリア','폴란드':'ポーランド','우크라이나':'ウクライナ','체코':'チェコ','헝가리':'ハンガリー','루마니아':'ルーマニア','스웨덴':'スウェーデン','노르웨이':'ノルウェー','핀란드':'フィンランド','덴마크':'デンマーク','아이슬란드':'アイスランド','인도':'インド','파키스탄':'パキスタン','방글라데시':'バングラデシュ','베트남':'ベトナム','태국':'タイ','인도네시아':'インドネシア','말레이시아':'マレーシア','싱가포르':'シンガポール','필리핀':'フィリピン','이스라엘':'イスラエル','사우디아라비아':'サウジアラビア','이란':'イラン','이라크':'イラク','튀르키예':'トルコ','카자흐스탄':'カザフスタン','브라질':'ブラジル','아르헨티나':'アルゼンチン','칠레':'チリ','이집트':'エジプト','나이지리아':'ナイジェリア','케냐':'ケニア','남아프리카공화국':'南アフリカ','호주':'オーストラリア','뉴질랜드':'ニュージーランド' }
     },
     es: {
         siteTitle: 'TNfocnus - Red de Noticias Global',
@@ -1108,7 +1118,7 @@ const I18N = {
         regionBtnSimple: 'Regiones: Simple',
         regionBtnFull: 'Regiones: Completo',
         login: 'Iniciar sesión', register: 'Registrarse', logout: 'Cerrar sesión',
-        comments: 'Comentarios', commentPlaceholder: 'Escribe un comentario…',
+        comments: 'Comentarios', commentPlaceholder: 'Escribe un comentario…', commentEdit: 'Editar', commentDelete: 'Eliminar', commentSave: 'Guardar', commentCancel: 'Cancelar', commentDeleteConfirm: '¿Eliminar este comentario?',
         postComment: 'Publicar', notifTitle: 'Alertas · Boletín urgente',
         notifEmpty: 'Sin alertas.', breakingSubscribe: 'Recibir alerta de esta noticia',
         backHome: 'Volver', share: 'Compartir', articleNo: 'Artículo',
@@ -1124,7 +1134,9 @@ const I18N = {
         translateDone: 'Traducción guardada con nuevo número de artículo.',
         translateManualDone: 'Solicitud de traducción manual registrada.',
         topics: { '정치':'Política','경제':'Economía','사회':'Sociedad','외교통일':'Diplomacia','국방':'Defensa','문화':'Cultura','사설/칼럼':'Opinión','속보':'Urgente','단독':'Exclusiva','기획보도':'Especial' },
-        regions: { '한국':'Corea','미국':'EE.UU.','일본':'Japón','중국':'China','인도':'India','유럽':'Europa','중동':'Oriente Medio','아프리카':'África','남미':'S. América','캐나다':'Canadá','오세아니아':'Oceanía','러시아':'Rusia','동남아':'SE Asia','라틴아메리카':'Lat. América','중앙아시아':'Asia Central','이스라엘':'Israel','파키스탄':'Pakistán','동유럽':'E. Europa','서유럽':'O. Europa','남유럽':'S. Europa','북유럽':'N. Europa','영국':'R. Unido','프랑스':'Francia','독일':'Alemania','이탈리아':'Italia' }
+        regions: { '한국':'Corea','미국':'EE.UU.','일본':'Japón','중국':'China','인도':'India','유럽':'Europa','중동':'Oriente Medio','아프리카':'África','남미':'S. América','캐나다':'Canadá','오세아니아':'Oceanía','러시아':'Rusia','동남아':'SE Asia','라틴아메리카':'Lat. América','중앙아시아':'Asia Central','이스라엘':'Israel','파키스탄':'Pakistán','동유럽':'E. Europa','서유럽':'O. Europa','남유럽':'S. Europa','북유럽':'N. Europa','영국':'R. Unido','프랑스':'Francia','독일':'Alemania','이탈리아':'Italia' },
+        macroRegions: { 'neb':'NE Asia','sea':'SE Asia','sa':'S. Asia','swa':'O. Medio','ca':'Asia Central','eu':'Europa','ru':'Rusia','na':'EE.UU.','nc':'N. América','lat':'Latinoamérica','af':'África','oce':'Oceanía' },
+        subRegionLabels: { '대한민국':'Corea del Sur','북한':'Corea del Norte','일본':'Japón','중국':'China','대만':'Taiwán','몽골':'Mongolia','미국':'EE.UU.','캐나다':'Canadá','멕시코':'México','그린란드':'Groenlandia','러시아':'Rusia','독일':'Alemania','프랑스':'Francia','영국':'Reino Unido','이탈리아':'Italia','스페인':'España','포르투갈':'Portugal','네덜란드':'Países Bajos','벨기에':'Bélgica','스위스':'Suiza','오스트리아':'Austria','폴란드':'Polonia','우크라이나':'Ucrania','체코':'Rep. Checa','헝가리':'Hungría','루마니아':'Rumanía','스웨덴':'Suecia','노르웨이':'Noruega','핀란드':'Finlandia','덴마크':'Dinamarca','아이슬란드':'Islandia','인도':'India','파키스탄':'Pakistán','방글라데시':'Bangladesh','베트남':'Vietnam','태국':'Tailandia','인도네시아':'Indonesia','말레이시아':'Malasia','싱가포르':'Singapur','필리핀':'Filipinas','이스라엘':'Israel','사우디아라비아':'Arabia Saudí','이란':'Irán','이라크':'Irak','튀르키예':'Turquía','카자흐스탄':'Kazajistán','브라질':'Brasil','아르헨티나':'Argentina','칠레':'Chile','이집트':'Egipto','나이지리아':'Nigeria','케냐':'Kenia','남아프리카공화국':'Sudáfrica','호주':'Australia','뉴질랜드':'Nueva Zelanda' }
     },
     fr: {
         siteTitle: 'TNfocnus - Réseau Mondial d\'Information',
@@ -1147,7 +1159,7 @@ const I18N = {
         regionBtnSimple: 'Régions: Simple',
         regionBtnFull: 'Régions: Complet',
         login: 'Connexion', register: 'S\'inscrire', logout: 'Déconnexion',
-        comments: 'Commentaires', commentPlaceholder: 'Écrire un commentaire…',
+        comments: 'Commentaires', commentPlaceholder: 'Écrire un commentaire…', commentEdit: 'Modifier', commentDelete: 'Supprimer', commentSave: 'Sauvegarder', commentCancel: 'Annuler', commentDeleteConfirm: 'Supprimer ce commentaire ?',
         postComment: 'Publier', notifTitle: 'Alertes · Flash info',
         notifEmpty: 'Aucune alerte.', breakingSubscribe: 'M\'alerter pour cette info',
         backHome: 'Retour', share: 'Partager', articleNo: 'Article',
@@ -1163,7 +1175,9 @@ const I18N = {
         translateDone: 'Traduction enregistrée avec un nouveau numéro.',
         translateManualDone: 'Demande de traduction manuelle enregistrée.',
         topics: { '정치':'Politique','경제':'Économie','사회':'Société','외교통일':'Diplomatie','국방':'Défense','문화':'Culture','사설/칼럼':'Opinion','속보':'Flash','단독':'Exclusif','기획보도':'Spécial' },
-        regions: { '한국':'Corée','미국':'É.-U.','일본':'Japon','중국':'Chine','인도':'Inde','유럽':'Europe','중동':'Moyen-Orient','아프리카':'Afrique','남미':'Amér. du Sud','캐나다':'Canada','오세아니아':'Océanie','러시아':'Russie','동남아':'Asie du SE','라틴아메리카':'Amér. Latine','중앙아시아':'Asie Centrale','이스라엘':'Israël','파키스탄':'Pakistan','동유럽':'Europe de l\'Est','서유럽':'Europe de l\'Ouest','남유럽':'Europe du Sud','북유럽':'Europe du Nord','영국':'R.-U.','프랑스':'France','독일':'Allemagne','이탈리아':'Italie' }
+        regions: { '한국':'Corée','미국':'É.-U.','일본':'Japon','중국':'Chine','인도':'Inde','유럽':'Europe','중동':'Moyen-Orient','아프리카':'Afrique','남미':'Amér. du Sud','캐나다':'Canada','오세아니아':'Océanie','러시아':'Russie','동남아':'Asie du SE','라틴아메리카':'Amér. Latine','중앙아시아':'Asie Centrale','이스라엘':'Israël','파키스탄':'Pakistan','동유럽':'Europe de l\'Est','서유럽':'Europe de l\'Ouest','남유럽':'Europe du Sud','북유럽':'Europe du Nord','영국':'R.-U.','프랑스':'France','독일':'Allemagne','이탈리아':'Italie' },
+        macroRegions: { 'neb':'NE Asie','sea':'SE Asie','sa':'S. Asie','swa':'M.-Orient','ca':'Asie centrale','eu':'Europe','ru':'Russie','na':'É.-U.','nc':'Am. du Nord','lat':'Am. latine','af':'Afrique','oce':'Océanie' },
+        subRegionLabels: { '대한민국':'Corée du Sud','북한':'Corée du Nord','일본':'Japon','중국':'Chine','대만':'Taïwan','몽골':'Mongolie','미국':'États-Unis','캐나다':'Canada','멕시코':'Mexique','그린란드':'Groenland','러시아':'Russie','독일':'Allemagne','프랑스':'France','영국':'Royaume-Uni','이탈리아':'Italie','스페인':'Espagne','포르투갈':'Portugal','네덜란드':'Pays-Bas','벨기에':'Belgique','스위스':'Suisse','오스트리아':'Autriche','폴란드':'Pologne','우크라이나':'Ukraine','체코':'Tchéquie','헝가리':'Hongrie','루마니아':'Roumanie','스웨덴':'Suède','노르웨이':'Norvège','핀란드':'Finlande','덴마크':'Danemark','아이슬란드':'Islande','인도':'Inde','파키스탄':'Pakistan','방글라데시':'Bangladesh','베트남':'Vietnam','태국':'Thaïlande','인도네시아':'Indonésie','말레이시아':'Malaisie','싱가포르':'Singapour','필리핀':'Philippines','이스라엘':'Israël','사우디아라비아':'Arabie Saoudite','이란':'Iran','이라크':'Irak','튀르키예':'Turquie','카자흐스탄':'Kazakhstan','브라질':'Brésil','아르헨티나':'Argentine','칠레':'Chili','이집트':'Égypte','나이지리아':'Nigeria','케냐':'Kenya','남아프리카공화국':'Afrique du Sud','호주':'Australie','뉴질랜드':'Nouvelle-Zélande' }
     },
     de: {
         siteTitle: 'TNfocnus - Globales Nachrichtennetzwerk',
@@ -1186,7 +1200,7 @@ const I18N = {
         regionBtnSimple: 'Regionen: Einfach',
         regionBtnFull: 'Regionen: Vollständig',
         login: 'Anmelden', register: 'Registrieren', logout: 'Abmelden',
-        comments: 'Kommentare', commentPlaceholder: 'Kommentar schreiben…',
+        comments: 'Kommentare', commentPlaceholder: 'Kommentar schreiben…', commentEdit: 'Bearbeiten', commentDelete: 'Löschen', commentSave: 'Speichern', commentCancel: 'Abbrechen', commentDeleteConfirm: 'Kommentar löschen?',
         postComment: 'Senden', notifTitle: 'Benachrichtigungen · Eilmeldungen',
         notifEmpty: 'Keine Benachrichtigungen.', breakingSubscribe: 'Benachrichtigung erhalten',
         backHome: 'Zurück', share: 'Teilen', articleNo: 'Artikel',
@@ -1202,7 +1216,9 @@ const I18N = {
         translateDone: 'Übersetzung mit neuer Artikelnummer gespeichert.',
         translateManualDone: 'Manuelle Übersetzungsanfrage registriert.',
         topics: { '정치':'Politik','경제':'Wirtschaft','사회':'Gesellschaft','외교통일':'Diplomatie','국방':'Verteidigung','문화':'Kultur','사설/칼럼':'Meinung','속보':'Eilmeldung','단독':'Exklusiv','기획보도':'Spezial' },
-        regions: { '한국':'Korea','미국':'USA','일본':'Japan','중국':'China','인도':'Indien','유럽':'Europa','중동':'Naher Osten','아프리카':'Afrika','남미':'Südamerika','캐나다':'Kanada','오세아니아':'Ozeanien','러시아':'Russland','동남아':'Südostasien','라틴아메리카':'Lateinamerika','중앙아시아':'Zentralasien','이스라엘':'Israel','파키스탄':'Pakistan','동유럽':'Osteuropa','서유럽':'Westeuropa','남유럽':'Südeuropa','북유럽':'Nordeuropa','영국':'UK','프랑스':'Frankreich','독일':'Deutschland','이탈리아':'Italien' }
+        regions: { '한국':'Korea','미국':'USA','일본':'Japan','중국':'China','인도':'Indien','유럽':'Europa','중동':'Naher Osten','아프리카':'Afrika','남미':'Südamerika','캐나다':'Kanada','오세아니아':'Ozeanien','러시아':'Russland','동남아':'Südostasien','라틴아메리카':'Lateinamerika','중앙아시아':'Zentralasien','이스라엘':'Israel','파키스탄':'Pakistan','동유럽':'Osteuropa','서유럽':'Westeuropa','남유럽':'Südeuropa','북유럽':'Nordeuropa','영국':'UK','프랑스':'Frankreich','독일':'Deutschland','이탈리아':'Italien' },
+        macroRegions: { 'neb':'NO Asien','sea':'SO Asien','sa':'S. Asien','swa':'Naher Osten','ca':'Zentralasien','eu':'Europa','ru':'Russland','na':'USA','nc':'Nordamerika','lat':'Lateinamerika','af':'Afrika','oce':'Ozeanien' },
+        subRegionLabels: { '대한민국':'Südkorea','북한':'Nordkorea','일본':'Japan','중국':'China','대만':'Taiwan','몽골':'Mongolei','미국':'USA','캐나다':'Kanada','멕시코':'Mexiko','그린란드':'Grönland','러시아':'Russland','독일':'Deutschland','프랑스':'Frankreich','영국':'Großbritannien','이탈리아':'Italien','스페인':'Spanien','포르투갈':'Portugal','네덜란드':'Niederlande','벨기에':'Belgien','스위스':'Schweiz','오스트리아':'Österreich','폴란드':'Polen','우크라이나':'Ukraine','체코':'Tschechien','헝가리':'Ungarn','루마니아':'Rumänien','스웨덴':'Schweden','노르웨이':'Norwegen','핀란드':'Finnland','덴마크':'Dänemark','아이슬란드':'Island','인도':'Indien','파키스탄':'Pakistan','방글라데시':'Bangladesch','베트남':'Vietnam','태국':'Thailand','인도네시아':'Indonesien','말레이시아':'Malaysia','싱가포르':'Singapur','필리핀':'Philippinen','이스라엘':'Israel','사우디아라비아':'Saudi-Arabien','이란':'Iran','이라크':'Irak','튀르키예':'Türkei','카자흐스탄':'Kasachstan','브라질':'Brasilien','아르헨티나':'Argentinien','칠레':'Chile','이집트':'Ägypten','나이지리아':'Nigeria','케냐':'Kenia','남아프리카공화국':'Südafrika','호주':'Australien','뉴질랜드':'Neuseeland' }
     },
     ru: {
         siteTitle: 'TNfocnus - Глобальная сеть новостей',
@@ -1241,7 +1257,9 @@ const I18N = {
         translateDone: 'Перевод сохранён с новым номером статьи.',
         translateManualDone: 'Запрос ручного перевода зарегистрирован.',
         topics: { '정치':'Политика','경제':'Экономика','사회':'Общество','외교통일':'Дипломатия','국방':'Оборона','문화':'Культура','사설/칼럼':'Мнение','속보':'Экстренно','단독':'Эксклюзив','기획보도':'Спецрепортаж' },
-        regions: { '한국':'Корея','미국':'США','일본':'Япония','중국':'Китай','인도':'Индия','유럽':'Европа','중동':'Ближний Восток','아프리카':'Африка','남미':'Ю. Америка','캐나다':'Канада','오세아니아':'Океания','러시아':'Россия','동남아':'ЮВ Азия','라틴아메리카':'Лат. Америка','중앙아시아':'Ц. Азия','이스라엘':'Израиль','파키스탄':'Пакистан','동유럽':'Вост. Европа','서유럽':'Зап. Европа','남유럽':'Юж. Европа','북유럽':'Сев. Европа','영국':'Великобритания','프랑스':'Франция','독일':'Германия','이탈리아':'Италия' }
+'일본':'Япония','중국':'Китай','인도':'Индия','유럽':'Европа','중동':'Ближний Восток','아프리카':'Африка','남미':'Ю. Америка','캐나다':'Канада','오세아니아':'Океания','러시아':'Россия','동남아':'ЮВ Азия','라틴아메리카':'Лат. Америка','중앙아시아':'Ц. Азия','이스라엘':'Израиль','파키스탄':'Пакистан','동유럽':'Вост. Европа','서유럽':'Зап. Европа','남유럽':'Юж. Европа','북유럽':'Сев. Европа','영국':'Великобритания','프랑스':'Франция','독일':'Германия','이탈리아':'Италия' },
+        macroRegions: { 'neb':'СВ Азия','sea':'ЮВ Азия','sa':'Юж. Азия','swa':'З. Азия·БВ','ca':'Ц. Азия','eu':'Европа','ru':'Россия','na':'США','nc':'С. Америка','lat':'Лат. Америка','af':'Африка','oce':'Океания' },
+        subRegionLabels: { '대한민국':'Ю. Корея','북한':'С. Корея','일본':'Япония','중국':'Китай','대만':'Тайвань','몽골':'Монголия','미국':'США','캐나다':'Канада','멕시코':'Мексика','그린란드':'Гренландия','러시아':'Россия','독일':'Германия','프랑스':'Франция','영국':'Великобритания','이탈리아':'Италия','스페인':'Испания','포르투갈':'Португалия','네덜란드':'Нидерланды','벨기에':'Бельгия','스위스':'Швейцария','오스트리아':'Австрия','폴란드':'Польша','우크라이나':'Украина','체코':'Чехия','헝가리':'Венгрия','루마니아':'Румыния','스웨덴':'Швеция','노르웨이':'Норвегия','핀란드':'Финляндия','덴마크':'Дания','아이슬란드':'Исландия','인도':'Индия','파키스탄':'Пакистан','방글라데시':'Бангладеш','베트남':'Вьетнам','태국':'Таиланд','인도네시아':'Индонезия','말레이시아':'Малайзия','싱가포르':'Сингапур','필리핀':'Филиппины','이스라엘':'Израиль','사우디아라비아':'Саудовская Аравия','이란':'Иран','이라크':'Ирак','튀르키예':'Турция','카자흐스탄':'Казахстан','브라질':'Бразилия','아르헨티나':'Аргентина','칠레':'Чили','이집트':'Египет','나이지리아':'Нигерия','케냐':'Кения','남아프리카공화국':'ЮАР','호주':'Австралия','뉴질랜드':'Новая Зеландия' }
     },
     pt: {
         siteTitle: 'TNfocnus - Rede Global de Notícias',
@@ -1264,7 +1282,7 @@ const I18N = {
         regionBtnSimple: 'Regiões: Simples',
         regionBtnFull: 'Regiões: Completo',
         login: 'Entrar', register: 'Cadastrar', logout: 'Sair',
-        comments: 'Comentários', commentPlaceholder: 'Escrever comentário…',
+        comments: 'Comentários', commentPlaceholder: 'Escrever comentário…', commentEdit: 'Editar', commentDelete: 'Excluir', commentSave: 'Salvar', commentCancel: 'Cancelar', commentDeleteConfirm: 'Excluir este comentário?',
         postComment: 'Publicar', notifTitle: 'Alertas · Urgente',
         notifEmpty: 'Sem alertas.', breakingSubscribe: 'Receber alerta',
         backHome: 'Voltar', share: 'Compartilhar', articleNo: 'Artigo',
@@ -1280,7 +1298,9 @@ const I18N = {
         translateDone: 'Tradução salva com novo número.',
         translateManualDone: 'Solicitação de tradução manual registrada.',
         topics: { '정치':'Política','경제':'Economia','사회':'Sociedade','외교통일':'Diplomacia','국방':'Defesa','문화':'Cultura','사설/칼럼':'Opinião','속보':'Urgente','단독':'Exclusivo','기획보도':'Especial' },
-        regions: { '한국':'Coreia','미국':'EUA','일본':'Japão','중국':'China','인도':'Índia','유럽':'Europa','중동':'Oriente Médio','아프리카':'África','남미':'Am. do Sul','캐나다':'Canadá','오세아니아':'Oceania','러시아':'Rússia','동남아':'AS Oriental','라틴아메리카':'Am. Latina','중앙아시아':'Ásia Central','이스라엘':'Israel','파키스탄':'Paquistão','동유럽':'Europa Oriental','서유럽':'Europa Ocidental','남유럽':'Europa do Sul','북유럽':'Europa do Norte','영국':'Reino Unido','프랑스':'França','독일':'Alemanha','이탈리아':'Itália' }
+        regions: { '한국':'Coreia','미국':'EUA','일본':'Japão','중국':'China','인도':'Índia','유럽':'Europa','중동':'Oriente Médio','아프리카':'África','남미':'Am. do Sul','캐나다':'Canadá','오세아니아':'Oceania','러시아':'Rússia','동남아':'AS Oriental','라틴아메리카':'Am. Latina','중앙아시아':'Ásia Central','이스라엘':'Israel','파키스탄':'Paquistão','동유럽':'Europa Oriental','서유럽':'Europa Ocidental','남유럽':'Europa do Sul','북유럽':'Europa do Norte','영국':'Reino Unido','프랑스':'França','독일':'Alemanha','이탈리아':'Itália' },
+        macroRegions: { 'neb':'NE Ásia','sea':'SE Ásia','sa':'Sul Asiático','swa':'Oriente Médio','ca':'Ásia Central','eu':'Europa','ru':'Rússia','na':'EUA','nc':'Am. do Norte','lat':'Am. Latina','af':'África','oce':'Oceania' },
+        subRegionLabels: { '대한민국':'Coreia do Sul','북한':'Coreia do Norte','일본':'Japão','중국':'China','대만':'Taiwan','몽골':'Mongólia','미국':'EUA','캐나다':'Canadá','멕시코':'México','그린란드':'Groenlândia','러시아':'Rússia','독일':'Alemanha','프랑스':'França','영국':'Reino Unido','이탈리아':'Itália','스페인':'Espanha','포르투갈':'Portugal','네덜란드':'Países Baixos','벨기에':'Bélgica','스위스':'Suíça','오스트리아':'Áustria','폴란드':'Polônia','우크라이나':'Ucrânia','체코':'Tchéquia','헝가리':'Hungria','루마니아':'Romênia','스웨덴':'Suécia','노르웨이':'Noruega','핀란드':'Finlândia','덴마크':'Dinamarca','아이슬란드':'Islândia','인도':'Índia','파키스탄':'Paquistão','방글라데시':'Bangladesh','베트남':'Vietnã','태국':'Tailândia','인도네시아':'Indonésia','말레이시아':'Malásia','싱가포르':'Cingapura','필리핀':'Filipinas','이스라엘':'Israel','사우디아라비아':'Arábia Saudita','이란':'Irã','이라크':'Iraque','튀르키예':'Turquia','카자흐스탄':'Cazaquistão','브라질':'Brasil','아르헨티나':'Argentina','칠레':'Chile','이집트':'Egito','나이지리아':'Nigéria','케냐':'Quênia','남아프리카공화국':'África do Sul','호주':'Austrália','뉴질랜드':'Nova Zelândia' }
     },
     ar: {
         siteTitle: 'TNfocnus - شبكة الأخبار العالمية',
@@ -1303,7 +1323,7 @@ const I18N = {
         regionBtnSimple: 'المناطق: بسيط',
         regionBtnFull: 'المناطق: كامل',
         login: 'تسجيل الدخول', register: 'التسجيل', logout: 'تسجيل الخروج',
-        comments: 'تعليقات', commentPlaceholder: 'اكتب تعليقاً…',
+        comments: 'تعليقات', commentPlaceholder: 'اكتب تعليقاً…', commentEdit: 'تعديل', commentDelete: 'حذف', commentSave: 'حفظ', commentCancel: 'إلغاء', commentDeleteConfirm: 'حذف هذا التعليق؟',
         postComment: 'نشر', notifTitle: 'تنبيهات · أخبار عاجلة',
         notifEmpty: 'لا تنبيهات.', breakingSubscribe: 'تلقي تنبيه لهذا الخبر',
         backHome: 'رجوع', share: 'مشاركة', articleNo: 'مقال',
@@ -1319,7 +1339,9 @@ const I18N = {
         translateDone: 'تم حفظ الترجمة برقم مقال جديد.',
         translateManualDone: 'تم تسجيل طلب الترجمة اليدوية.',
         topics: { '정치':'سياسة','경제':'اقتصاد','사회':'مجتمع','외교통일':'دبلوماسية','국방':'دفاع','문화':'ثقافة','사설/칼럼':'رأي','속보':'عاجل','단독':'حصري','기획보도':'خاص' },
-        regions: { '한국':'كوريا','미국':'الولايات المتحدة','일본':'اليابان','중국':'الصين','인도':'الهند','유럽':'أوروبا','중동':'الشرق الأوسط','아프리카':'أفريقيا','남미':'أمريكا الجنوبية','캐나다':'كندا','오세아니아':'أوقيانوسيا','러시아':'روسيا','동남아':'جنوب شرق آسيا','라틴아메리카':'أمريكا اللاتينية','중앙아시아':'آسيا الوسطى','이스라엘':'إسرائيل','파키스탄':'باكستان','동유럽':'أوروبا الشرقية','서유럽':'أوروبا الغربية','남유럽':'أوروبا الجنوبية','북유럽':'أوروبا الشمالية','영국':'المملكة المتحدة','프랑스':'فرنسا','독일':'ألمانيا','이탈리아':'إيطاليا' }
+        regions: { '한국':'كوريا','미국':'الولايات المتحدة','일본':'اليابان','중국':'الصين','인도':'الهند','유럽':'أوروبا','중동':'الشرق الأوسط','아프리카':'أفريقيا','남미':'أمريكا الجنوبية','캐나다':'كندا','오세아니아':'أوقيانوسيا','러시아':'روسيا','동남아':'جنوب شرق آسيا','라틴아메리카':'أمريكا اللاتينية','중앙아시아':'آسيا الوسطى','이스라엘':'إسرائيل','파키스탄':'باكستان','동유럽':'أوروبا الشرقية','서유럽':'أوروبا الغربية','남유럽':'أوروبا الجنوبية','북유럽':'أوروبا الشمالية','영국':'المملكة المتحدة','프랑스':'فرنسا','독일':'ألمانيا','이탈리아':'إيطاليا' },
+        macroRegions: { 'neb':'شمال شرق آسيا','sea':'جنوب شرق آسيا','sa':'جنوب آسيا','swa':'الشرق الأوسط','ca':'آسيا الوسطى','eu':'أوروبا','ru':'روسيا','na':'الولايات المتحدة','nc':'أمريكا الشمالية','lat':'أمريكا اللاتينية','af':'أفريقيا','oce':'أوقيانوسيا' },
+        subRegionLabels: { '대한민국':'كوريا الجنوبية','북한':'كوريا الشمالية','일본':'اليابان','중국':'الصين','대만':'تايوان','몽골':'منغوليا','미국':'الولايات المتحدة','캐나다':'كندا','멕시코':'المكسيك','그린란드':'غرينلاند','러시아':'روسيا','독일':'ألمانيا','프랑스':'فرنسا','영국':'المملكة المتحدة','이탈리아':'إيطاليا','스페인':'إسبانيا','포르투갈':'البرتغال','네덜란드':'هولندا','벨기에':'بلجيكا','스위스':'سويسرا','오스트리아':'النمسا','폴란드':'بولندا','우크라이나':'أوكرانيا','체코':'التشيك','헝가리':'المجر','루마니아':'رومانيا','스웨덴':'السويد','노르웨이':'النرويج','핀란드':'فنلندا','덴마크':'الدنمارك','아이슬란드':'آيسلندا','인도':'الهند','파키스탄':'باكستان','방글라데시':'بنغلاديش','베트남':'فيتنام','태국':'تايلاند','인도네시아':'إندونيسيا','말레이시아':'ماليزيا','싱가포르':'سنغافورة','필리핀':'الفلبين','이스라엘':'إسرائيل','사우디아라비아':'السعودية','이란':'إيران','이라크':'العراق','튀르키예':'تركيا','카자흐스탄':'كازاخستان','브라질':'البرازيل','아르헨티나':'الأرجنتين','칠레':'تشيلي','이집트':'مصر','나이지리아':'نيجيريا','케냐':'كينيا','남아프리카공화국':'جنوب أفريقيا','호주':'أستراليا','뉴질랜드':'نيوزيلندا' }
     },
     hi: {
         siteTitle: 'TNfocnus - वैश्विक समाचार नेटवर्क',
@@ -1342,7 +1364,7 @@ const I18N = {
         regionBtnSimple: 'क्षेत्र: सरल',
         regionBtnFull: 'क्षेत्र: पूर्ण',
         login: 'लॉगिन', register: 'पंजीकरण', logout: 'लॉगआउट',
-        comments: 'टिप्पणियाँ', commentPlaceholder: 'टिप्पणी लिखें…',
+        comments: 'टिप्पणियाँ', commentPlaceholder: 'टिप्पणी लिखें…', commentEdit: 'संपादित करें', commentDelete: 'हटाएं', commentSave: 'सहेजें', commentCancel: 'रद्द करें', commentDeleteConfirm: 'टिप्पणी हटाएं?',
         postComment: 'पोस्ट', notifTitle: 'सूचनाएं · ब्रेकिंग',
         notifEmpty: 'कोई सूचना नहीं।', breakingSubscribe: 'इस खबर की सूचना पाएं',
         backHome: 'वापस', share: 'शेयर', articleNo: 'लेख',
@@ -1358,7 +1380,9 @@ const I18N = {
         translateDone: 'अनुवाद नए लेख संख्या के साथ सहेजा गया।',
         translateManualDone: 'मैनुअल अनुवाद अनुरोध दर्ज।',
         topics: { '정치':'राजनीति','경제':'अर्थव्यवस्था','사회':'समाज','외교통일':'कूटनीति','국방':'रक्षा','문화':'संस्कृति','사설/칼럼':'मत','속보':'ब्रेकिंग','단독':'एक्सक्लूसिव','기획보도':'विशेष' },
-        regions: { '한국':'कोरिया','미국':'अमेरिका','일본':'जापान','중국':'चीन','인도':'भारत','유럽':'यूरोप','중동':'मध्य पूर्व','아프리카':'अफ्रीका','남미':'दक्षिण अमेरिका','캐나다':'कनाडा','오세아니아':'ओशिनिया','러시아':'रूस','동남아':'दक्षिण-पूर्व एशिया','라틴아메리카':'लैटिन अमेरिका','중앙아시아':'मध्य एशिया','이스라엘':'इज़राइल','파키스탄':'पाकिस्तान','동유럽':'पूर्वी यूरोप','서유럽':'पश्चिमी यूरोप','남유럽':'दक्षिणी यूरोप','북유럽':'उत्तरी यूरोप','영국':'यूके','프랑스':'फ्रांस','독일':'जर्मनी','이탈리아':'इटली' }
+        regions: { '한국':'कोरिया','미국':'अमेरिका','일본':'जापान','중국':'चीन','인도':'भारत','유럽':'यूरोप','중동':'मध्य पूर्व','아프리카':'अफ्रीका','남미':'दक्षिण अमेरिका','캐나다':'कनाडा','오세아니아':'ओशिनिया','러시아':'रूस','동남아':'दक्षिण-पूर्व एशिया','라틴아메리카':'लैटिन अमेरिका','중앙아시아':'मध्य एशिया','이스라엘':'इज़राइल','파키스탄':'पाकिस्तान','동유럽':'पूर्वी यूरोप','서유럽':'पश्चिमी यूरोप','남유럽':'दक्षिणी यूरोप','북유럽':'उत्तरी यूरोप','영국':'यूके','프랑스':'फ्रांस','독일':'जर्मनी','이탈리아':'इटली' },
+        macroRegions: { 'neb':'पूर्वोत्तर एशिया','sea':'दक्षिण-पूर्व एशिया','sa':'दक्षिण एशिया','swa':'मध्य पूर्व','ca':'मध्य एशिया','eu':'यूरोप','ru':'रूस','na':'अमेरिका','nc':'उत्तर अमेरिका','lat':'लैटिन अमेरिका','af':'अफ्रीका','oce':'ओशिनिया' },
+        subRegionLabels: { '대한민국':'दक्षिण कोरिया','북한':'उत्तर कोरिया','일본':'जापान','중국':'चीन','대만':'ताइवान','몽골':'मंगोलिया','미국':'अमेरिका','캐나다':'कनाडा','멕시코':'मेक्सिको','그린란드':'ग्रीनलैंड','러시아':'रूस','독일':'जर्मनी','프랑스':'फ्रांस','영국':'यूके','이탈리아':'इटली','스페인':'स्पेन','포르투갈':'पुर्तगाल','네덜란드':'नीदरलैंड','벨기에':'बेल्जियम','스위스':'स्विट्जरलैंड','오스트리아':'ऑस्ट्रिया','폴란드':'पोलैंड','우크라이나':'यूक्रेन','체코':'चेक गणराज्य','헝가리':'हंगरी','루마니아':'रोमानिया','스웨덴':'स्वीडन','노르웨이':'नॉर्वे','핀란드':'फिनलैंड','덴마크':'डेनमार्क','아이슬란드':'आइसलैंड','인도':'भारत','파키스탄':'पाकिस्तान','방글라데시':'बांग्लादेश','베트남':'वियतनाम','태국':'थाईलैंड','인도네시아':'इंडोनेशिया','말레이시아':'मलेशिया','싱가포르':'सिंगापुर','필리핀':'फिलीपींस','이스라엘':'इज़राइल','사우디아라비아':'सऊदी अरब','이란':'ईरान','이라크':'इराक','튀르키예':'तुर्की','카자흐스탄':'कजाकिस्तान','브라질':'ब्राजील','아르헨티나':'अर्जेंटीना','칠레':'चिली','이집트':'मिस्र','나이지리아':'नाइजीरिया','케냐':'केन्या','남아프리카공화국':'दक्षिण अफ्रीका','호주':'ऑस्ट्रेलिया','뉴질랜드':'न्यूज़ीलैंड' }
     }
 };
 
@@ -1449,7 +1473,7 @@ async function submitTranslation(articleId) {
     try {
         const response = await fetch('https://api.anthropic.com/v1/messages', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 'Content-Type': 'application/json', 'anthropic-dangerous-direct-browser-access': 'true' },
             body: JSON.stringify({
                 model: 'claude-sonnet-4-20250514',
                 max_tokens: 4000,
@@ -2095,6 +2119,16 @@ const REGION_KEYS_SIMPLE = ['한국','미국','유럽','중국','일본','인도
 const REGION_KEYS_FULL = ['한국','미국','일본','중국','인도','캐나다','오세아니아','러시아','유럽','동유럽','서유럽','남유럽','북유럽','영국','프랑스','독일','이탈리아','중앙아시아','중동','이스라엘','파키스탄','동남아','라틴아메리카','아프리카','남미'];
 
 function getDict() { return I18N[uiLang] || I18N[uiLang && uiLang.split('-')[0]] || I18N.en; }
+
+// 미니맵 권역/세부지역 이름 언어별 변환 헬퍼
+function getMinimapMacroLabel(macroId, fallback) {
+    var d = getDict();
+    return (d.macroRegions && d.macroRegions[macroId]) || fallback || macroId;
+}
+function getMinimapSubLabel(korLabel, fallback) {
+    var d = getDict();
+    return (d.subRegionLabels && d.subRegionLabels[korLabel]) || fallback || korLabel;
+}
 function showToast(msg) { alert(msg); }
 
 function resolveArticleForUiLang(article) {
@@ -2152,12 +2186,17 @@ function changeLang(code) {
     uiLang = code;
     localStorage.setItem('tn_ui_lang', uiLang);
     renderNav();
-    // 미니맵 힌트 업데이트
+    // 미니맵 힌트/제목 업데이트
     const d = getDict();
     const t = document.getElementById('minimap-panel-title');
     const h = document.getElementById('minimap-panel-hint');
     if (t) t.textContent = d.minimapTitle;
     if (h) h.textContent = d.minimapHint;
+    // 미니맵 마커 이름 언어 반영
+    if (typeof refreshMinimapMarkers === 'function') {
+        const panel = document.getElementById('minimap-panel');
+        if (panel && !panel.classList.contains('hidden')) refreshMinimapMarkers();
+    }
 }
 
 function toggleRegionDensity() {
@@ -2250,7 +2289,7 @@ function toggleAdmin() {
     admin.classList.toggle('hidden');
     if (!admin.classList.contains('hidden')) { buildAdminCategoryCheckboxes(); switchAdminTab('write'); }
 }
-function goHome() { window.history.pushState({}, '', '/'); renderHome(); }
+function goHome() { window.history.pushState({}, '', '/'); renderHome(); updateOG(null); _injectArticleJsonLd(null); }
 function execCmd(cmd, arg) { document.execCommand(cmd, false, arg); }
 function googleTranslateElementInit() { new google.translate.TranslateElement({ pageLanguage: 'ko' }, 'google_translate_element'); }
 
@@ -2454,12 +2493,41 @@ function buildAdminCategoryCheckboxes() {
 }
 
 function updateOG(article) {
-    if (!article) return;
-    document.title = article.title + " - T.N. News";
-    [['og:title', article.title], ['og:description', (article.desc || article.content.substring(0, 100)).replace(/\n/g, ' ')], ['og:image', articleThumb(article.img)], ['og:url', window.location.href]].forEach(([prop, content]) => {
-        const el = document.querySelector(`meta[property="${prop}"]`);
-        if (el) el.setAttribute('content', content);
+    if (!article) {
+        // ホームに戻ったとき
+        document.title = (getDict().siteTitle) || 'TNfocnus - Global News Network';
+        const canon = document.getElementById('canonical-link');
+        if (canon) canon.setAttribute('href', 'https://tnfocnus.mannamplace.com');
+        const ogUrl = document.querySelector('meta[property="og:url"]');
+        if (ogUrl) ogUrl.setAttribute('content', 'https://tnfocnus.mannamplace.com');
+        return;
+    }
+    const category = (article.cat && article.cat[0]) || 'news';
+    const articleUrl = 'https://tnfocnus.mannamplace.com/' + encodeURIComponent(category) + '/' + article.globalNum;
+    document.title = article.title + ' - T.N. News';
+    const desc = (article.desc || article.content || '').replace(/\n/g, ' ').substring(0, 160);
+    [
+        ['og:title',       article.title],
+        ['og:description', desc],
+        ['og:image',       articleThumb(article.img)],
+        ['og:url',         articleUrl]
+    ].forEach(([prop, val]) => {
+        const el = document.querySelector('meta[property="' + prop + '"]');
+        if (el) el.setAttribute('content', val);
     });
+    // Twitter card
+    const twTitle = document.getElementById('tw-title');
+    const twDesc  = document.getElementById('tw-desc');
+    const twImg   = document.getElementById('tw-img');
+    if (twTitle) twTitle.setAttribute('content', article.title);
+    if (twDesc)  twDesc.setAttribute('content', desc);
+    if (twImg)   twImg.setAttribute('content', articleThumb(article.img));
+    // Canonical link
+    const canon = document.getElementById('canonical-link');
+    if (canon) canon.setAttribute('href', articleUrl);
+    // meta description
+    const metaDesc = document.getElementById('meta-desc');
+    if (metaDesc) metaDesc.setAttribute('content', desc);
 }
 
 // 마운트 시 UI 적용
@@ -2671,8 +2739,8 @@ function refreshMinimapMarkers() {
 
         minimapSubLayout.forEach(function(sub) {
             var ll = _ll(sub.cat);
-            var m  = L.marker(ll, { icon: _subIcon(sub.label) }).addTo(_markersLayer);
-            m.bindTooltip(sub.label, { permanent: false, direction: 'top', className: 'tn-tt' });
+            var m  = L.marker(ll, { icon: _subIcon(getMinimapSubLabel(sub.label, sub.label)) }).addTo(_markersLayer);
+            m.bindTooltip(getMinimapSubLabel(sub.label, sub.label), { permanent: false, direction: 'top', className: 'tn-tt' });
             m.on('click', (function(s) {
                 return function(e) { L.DomEvent.stopPropagation(e); openSubLocalFlyout(s); };
             })(sub));
@@ -2683,7 +2751,7 @@ function refreshMinimapMarkers() {
     // ── 권역 핀
     if (typeof MAP_MACRO_REGIONS !== 'undefined') {
         MAP_MACRO_REGIONS.forEach(function(r) {
-            var marker = L.marker([r.lat, r.lon], { icon: _macroIcon(r.label) }).addTo(_markersLayer);
+            var marker = L.marker([r.lat, r.lon], { icon: _macroIcon(getMinimapMacroLabel(r.id, r.label)) }).addTo(_markersLayer);
             marker.on('click', (function(id) {
                 return function(e) { L.DomEvent.stopPropagation(e); openMacroRegionFlyout(id); };
             })(r.id));
@@ -2792,7 +2860,7 @@ function openMacroRegionFlyout(macroId) {
         : '';
 
     showMinimapFlyout(
-        '<p class="text-[10px] font-black text-blue-900 uppercase mb-2">' + m.label + '</p>' +
+        '<p class="text-[10px] font-black text-blue-900 uppercase mb-2">' + getMinimapMacroLabel(macroId, m.label) + '</p>' +
         '<p class="text-[10px] font-bold text-slate-500 mb-1">' + (d.minimapFeatured || '주요 기사') + '</p>' +
         _flyoutFeatured(feat) +
         '<div class="mt-3 space-y-2">' +
@@ -2845,7 +2913,7 @@ async function openSubLocalFlyout(sub) {
     var feat = (typeof featuredArticleForCats === 'function') ? featuredArticleForCats([sub.cat]) : null;
 
     showMinimapFlyout(
-        '<p class="text-[10px] font-black text-blue-900 uppercase mb-2">' + esc(sub.label) + '</p>' +
+        '<p class="text-[10px] font-black text-blue-900 uppercase mb-2">' + esc(getMinimapSubLabel(sub.label, sub.label)) + '</p>' +
         '<p class="text-[10px] font-bold text-slate-500 mb-1">' + (d.minimapWeather || '날씨') + '</p>' +
         '<div id="minimap-weather-slot" class="text-xs text-slate-600 mb-2 min-h-[2rem] rounded border border-slate-100 bg-slate-50 p-2">로딩 중…</div>' +
         '<p class="text-[10px] font-bold text-slate-500 mb-1">' + (d.minimapFeatured || '주요 기사') + '</p>' +
@@ -3049,11 +3117,17 @@ window.mountComments = function mountComments(articleId) {
                 var ts = c.timestamp && c.timestamp.toDate
                     ? c.timestamp.toDate().toLocaleDateString('ko-KR')
                     : '';
-                return '<li class="border-b border-gray-100 pb-4">' +
+                var isOwner = currentUser && (currentUser.id === c.authorId);
+                var isAdmin = currentUser && (typeof RANK_POWER !== 'undefined') && (RANK_POWER[currentUser.rank] >= 4);
+                var canEdit  = isOwner;
+                var canDel   = isOwner || isAdmin;
+                var editBtn  = canEdit  ? '<button type="button" onclick="editComment(\''+articleId+'\',\''+c.id+'\',this)" class="text-[10px] text-blue-600 hover:underline ml-2">' + (d.commentEdit||'수정') + '</button>' : '';
+                var delBtn   = canDel   ? '<button type="button" onclick="deleteComment(\''+articleId+'\',\''+c.id+'\')" class="text-[10px] text-red-500 hover:underline ml-1">' + (d.commentDelete||'삭제') + '</button>' : '';
+                return '<li id="comment-item-'+c.id+'" class="border-b border-gray-100 pb-4">' +
                     '<div class="flex justify-between items-baseline mb-1">' +
                     '<span class="text-xs font-bold text-gray-700">' + esc(c.author || '익명') + '</span>' +
-                    '<span class="text-[10px] text-gray-400">' + ts + '</span></div>' +
-                    '<p class="text-sm text-gray-800">' + esc(c.text || '') + '</p></li>';
+                    '<span class="text-[10px] text-gray-400">' + ts + editBtn + delBtn + '</span></div>' +
+                    '<p id="comment-text-'+c.id+'" class="text-sm text-gray-800">' + esc(c.text || '') + '</p></li>';
             }).join('') + '</ul>'
             : '<p class="text-sm text-gray-400 py-4 text-center">첫 댓글을 남겨보세요.</p>';
 
@@ -3087,6 +3161,55 @@ window.submitComment = async function submitComment(articleId) {
     } catch(e) {
         alert('댓글 등록 실패: ' + e.message);
     }
+};
+
+// 댓글 수정
+window.editComment = function(articleId, commentId, btn) {
+    var textEl = document.getElementById('comment-text-' + commentId);
+    if (!textEl) return;
+
+    // 이미 편집 모드이면 취소
+    if (textEl.querySelector('textarea')) return;
+
+    var currentText = textEl.textContent;
+    var d = (typeof getDict === 'function') ? getDict() : {};
+    textEl.innerHTML =
+        '<div class="flex gap-2 mt-1">' +
+        '<textarea id="edit-input-' + commentId + '" class="flex-1 border border-blue-300 rounded px-2 py-1 text-sm outline-none focus:border-blue-500 resize-none" rows="2">' +
+        (typeof escapeHtml === 'function' ? escapeHtml(currentText) : currentText) +
+        '</textarea>' +
+        '<div class="flex flex-col gap-1">' +
+        '<button type="button" onclick="saveEditComment('' + articleId + '','' + commentId + '')" class="shrink-0 bg-blue-700 text-white px-2 py-1 rounded text-xs font-bold">' + (d.commentSave||'저장') + '</button>' +
+        '<button type="button" onclick="cancelEditComment('' + commentId + '','' + (typeof escapeHtml === 'function' ? escapeHtml(currentText) : currentText).replace(/'/g, "\'") + '')" class="shrink-0 bg-gray-200 text-gray-700 px-2 py-1 rounded text-xs font-bold">' + (d.commentCancel||'취소') + '</button>' +
+        '</div></div>';
+};
+
+window.saveEditComment = async function(articleId, commentId) {
+    var input = document.getElementById('edit-input-' + commentId);
+    if (!input) return;
+    var text = input.value.trim();
+    if (!text) return alert('댓글 내용을 입력하세요.');
+    try {
+        await window.fs.updateDoc(
+            window.fs.doc(window.db, 'articles', articleId, 'comments', commentId),
+            { text: text, editedAt: window.fs.serverTimestamp() }
+        );
+    } catch(e) { alert('수정 실패: ' + e.message); }
+};
+
+window.cancelEditComment = function(commentId, originalText) {
+    var textEl = document.getElementById('comment-text-' + commentId);
+    if (textEl) textEl.innerHTML = (typeof escapeHtml === 'function' ? escapeHtml(originalText) : originalText);
+};
+
+window.deleteComment = async function(articleId, commentId) {
+    var d = (typeof getDict === 'function') ? getDict() : {};
+    if (!confirm(d.commentDeleteConfirm || '댓글을 삭제하시겠습니까?')) return;
+    try {
+        await window.fs.deleteDoc(
+            window.fs.doc(window.db, 'articles', articleId, 'comments', commentId)
+        );
+    } catch(e) { alert('삭제 실패: ' + e.message); }
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -3156,6 +3279,17 @@ window.openTranslateModal = function openTranslateModal(articleId) {
     document.body.appendChild(modal);
 };
 
+// getDocs 폴리필 보장
+function _ensureGetDocs() {
+    if (window.fs && !window.fs.getDocs) {
+        window.fs.getDocs = async function(q) {
+            return new Promise(function(resolve, reject) {
+                var unsub = window.fs.onSnapshot(q, function(snap) { unsub(); resolve(snap); }, reject);
+            });
+        };
+    }
+}
+
 window.submitTranslation = async function submitTranslation(articleId) {
     _ensureGetDocs();
     var raw = (typeof allNews !== 'undefined') ? allNews.find(function(x) { return x.id === articleId; }) : null;
@@ -3193,7 +3327,7 @@ window.submitTranslation = async function submitTranslation(articleId) {
     try {
         var response = await fetch('https://api.anthropic.com/v1/messages', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 'Content-Type': 'application/json', 'anthropic-dangerous-direct-browser-access': 'true' },
             body: JSON.stringify({
                 model:      'claude-sonnet-4-20250514',
                 max_tokens: 4000,
@@ -3248,8 +3382,13 @@ window.submitTranslation = async function submitTranslation(articleId) {
         document.getElementById('translate-modal').remove();
 
     } catch(e) {
-        if (statusEl) statusEl.textContent = '번역 오류: ' + e.message;
+        var errMsg = e.message || String(e);
+        if (statusEl) {
+            statusEl.textContent = '번역 오류: ' + errMsg;
+            statusEl.classList.remove('hidden');
+        }
         if (submitBtn) submitBtn.disabled = false;
+        console.error('[Translation] Error:', e);
     }
 };
 
@@ -3289,8 +3428,8 @@ function _injectArticleJsonLd(article) {
             'url':   'https://tnfocnus.mannamplace.com'
         },
         'mainEntityOfPage': {
-            '@type': '@id',
-            '@id':   window.location.href
+            '@type': 'WebPage',
+            '@id':   'https://tnfocnus.mannamplace.com/' + encodeURIComponent((article.cat && article.cat[0]) || 'news') + '/' + (article.globalNum || '')
         }
     };
 
@@ -3305,18 +3444,21 @@ function _injectArticleJsonLd(article) {
 (function _wrapRenderDetail() {
     var _origRenderDetail = window.renderDetail;
     if (typeof _origRenderDetail !== 'function') {
-        // init() 이전에 실행될 경우 — DOMContentLoaded 이후 재시도
-        document.addEventListener('DOMContentLoaded', function() { _wrapRenderDetail(); });
+        // 아직 정의 전이면 잠시 후 재시도
+        setTimeout(function() { _wrapRenderDetail(); }, 200);
         return;
     }
-    window.renderDetail = function(id) {
+    // 이미 래핑됐으면 스킵
+    if (_origRenderDetail._seoWrapped) return;
+    var _wrapped = function(id) {
         _origRenderDetail(id);
-        // renderDetail은 동기이므로 article은 allNews에서 바로 찾기
         var art = (typeof allNews !== 'undefined')
             ? allNews.find(function(x) { return x.id === id; })
             : null;
         _injectArticleJsonLd(art);
     };
+    _wrapped._seoWrapped = true;
+    window.renderDetail = _wrapped;
 })();
 
 // ─────────────────────────────────────────────────────────────────────────────
