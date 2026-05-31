@@ -277,6 +277,7 @@
                 <button onclick="switchAdminTab('users')" id="btn-tab-users" class="w-full text-left p-3 hover:bg-white/5 rounded font-medium">회원 승급/관리</button>
                 <button onclick="switchAdminTab('settings')" id="btn-tab-settings" class="w-full text-left p-3 hover:bg-white/5 rounded font-medium">사이트 환경 설정</button>
                 <button onclick="switchAdminTab('manage')" id="btn-tab-manage" class="w-full text-left p-3 hover:bg-white/5 rounded font-medium">기사 관리 (삭제)</button>
+                <button onclick="switchAdminTab('translations')" id="btn-tab-translations" class="w-full text-left p-3 hover:bg-white/5 rounded font-medium">수동번역 요청</button>
             </div>
             <div class="flex-1 p-10 overflow-y-auto">
                 <!-- Write Tab -->
@@ -356,6 +357,12 @@
                 <div id="admin-tab-manage" class="admin-tab hidden space-y-5">
                     <h3 class="text-2xl font-bold">기사 목록 관리 (삭제)</h3>
                     <div id="news-manage-list" class="space-y-3"></div>
+                </div>
+
+                <div id="admin-tab-translations" class="admin-tab hidden space-y-5">
+                    <h3 class="text-2xl font-bold">수동번역 요청 목록</h3>
+                    <button onclick="loadTranslationRequests()" class="bg-blue-700 px-4 py-2 rounded text-sm font-bold hover:bg-blue-600">새로고침</button>
+                    <div id="translation-requests-list" class="space-y-3 mt-4"></div>
                 </div>
 
                 <!-- User Management Tab -->
@@ -2368,6 +2375,7 @@ function switchAdminTab(id) {
     if (id === 'users') loadUsers();
     if (id === 'settings') loadSettings();
     if (id === 'manage') loadNewsList();
+    if (id === 'translations') loadTranslationRequests();
 }
 
 function updateAdminLists() {
@@ -2403,6 +2411,44 @@ function loadNewsList() {
             </div>
             <button onclick="deleteArticle('${n.id}')" class="bg-red-600 hover:bg-red-700 px-3 py-1 rounded text-xs font-bold">삭제</button>
         </div>`).join('') || '<p class="text-gray-500">기사가 없습니다.</p>';
+}
+
+async function loadTranslationRequests() {
+    const container = document.getElementById('translation-requests-list');
+    if (!container) return;
+    container.innerHTML = '<p class="text-gray-400 text-sm">불러오는 중…</p>';
+    try {
+        const snap = await window.fs.getDocs(window.fs.collection(window.db, 'translation_requests'));
+        const items = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+        if (!items.length) { container.innerHTML = '<p class="text-gray-500">요청이 없습니다.</p>'; return; }
+        const langMap = { en:'🇺🇸 English', 'zh-CN':'🇨🇳 中文', ja:'🇯🇵 日本語', es:'🇪🇸 Español', fr:'🇫🇷 Français', de:'🇩🇪 Deutsch', ru:'🇷🇺 Русский', ar:'🇸🇦 العربية', hi:'🇮🇳 हिन्दी', pt:'🇧🇷 Português' };
+        container.innerHTML = items.map(r => {
+            const art = allNews.find(n => n.id === r.articleId);
+            const ts = r.timestamp && r.timestamp.toDate ? r.timestamp.toDate().toLocaleDateString('ko-KR') : '';
+            return `<div class="flex justify-between items-center bg-white/5 p-4 rounded border border-white/10 mb-2">
+                <div>
+                    <p class="font-bold text-white">${art ? art.title : '(기사 없음) id:' + r.articleId}</p>
+                    <p class="text-[10px] text-gray-400">원문 #${r.originalNum} → ${langMap[r.targetLang] || r.targetLang} | 요청자: ${r.requestedBy} | ${ts}</p>
+                    <span class="text-[10px] px-2 py-0.5 rounded ${r.status === 'done' ? 'bg-green-700' : 'bg-yellow-600'} font-bold">${r.status === 'done' ? '완료' : '대기중'}</span>
+                </div>
+                <div class="flex gap-2 shrink-0">
+                    ${r.status !== 'done' ? `<button onclick="markTranslationDone('${r.id}')" class="bg-green-600 hover:bg-green-700 px-3 py-1 rounded text-xs font-bold">완료 처리</button>` : ''}
+                    <button onclick="deleteTranslationRequest('${r.id}')" class="bg-red-600 hover:bg-red-700 px-3 py-1 rounded text-xs font-bold">삭제</button>
+                </div>
+            </div>`;
+        }).join('');
+    } catch(e) { container.innerHTML = '<p class="text-red-400 text-sm">불러오기 실패: ' + e.message + '</p>'; }
+}
+
+async function markTranslationDone(reqId) {
+    await window.fs.updateDoc(window.fs.doc(window.db, 'translation_requests', reqId), { status: 'done' });
+    loadTranslationRequests();
+}
+
+async function deleteTranslationRequest(reqId) {
+    if (!confirm('요청을 삭제하시겠습니까?')) return;
+    await window.fs.deleteDoc(window.fs.doc(window.db, 'translation_requests', reqId));
+    loadTranslationRequests();
 }
 
 async function deleteArticle(id) {
