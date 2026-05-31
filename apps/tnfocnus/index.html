@@ -152,16 +152,26 @@
             width: 100% !important;
         }
     </style>
+<link id="tn-canonical" rel="canonical" href="https://tnfocnus.mannamplace.com">
 </head>
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
   "@type": "WebSite",
-  "name": "T.N. News",
+  "name": "TNfocnus - Global News Network",
   "url": "https://tnfocnus.mannamplace.com",
+  "description": "Global News Network - News from Everywhere, for Everyone",
   "logo": {
     "@type": "ImageObject",
-    "url": "https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=800"
+    "url": "https://i.ibb.co/mrhDt2F2/tnfocnus-default-thumb.jpg"
+  },
+  "potentialAction": {
+    "@type": "SearchAction",
+    "target": {
+      "@type": "EntryPoint",
+      "urlTemplate": "https://tnfocnus.mannamplace.com/?q={search_term_string}"
+    },
+    "query-input": "required name=search_term_string"
   }
 }
 </script>
@@ -952,7 +962,7 @@ const I18N = {
         regionBtnSimple: '지역: 간단',
         regionBtnFull: '지역: 전체',
         login: '로그인', register: '회원가입', logout: '로그아웃',
-        comments: '댓글', commentPlaceholder: '댓글을 입력하세요',
+        comments: '댓글', commentPlaceholder: '댓글을 입력하세요', edit: '수정', del: '삭제', editCommentPlaceholder: '댓글 수정', confirmDelete: '댓글을 삭제하시겠습니까?',
         postComment: '등록', notifTitle: '알림 · 속보 뉴스레터',
         notifEmpty: '알림이 없습니다.', breakingSubscribe: '이 속보 알림 받기',
         backHome: '목록으로', share: '공유', articleNo: '기사번호',
@@ -991,7 +1001,7 @@ const I18N = {
         regionBtnSimple: 'Regions: Simple',
         regionBtnFull: 'Regions: Full',
         login: 'Log in', register: 'Register', logout: 'Logout',
-        comments: 'Comments', commentPlaceholder: 'Write a comment…',
+        comments: 'Comments', commentPlaceholder: 'Write a comment…', edit: 'Edit', del: 'Delete', editCommentPlaceholder: 'Edit comment', confirmDelete: 'Delete this comment?',
         postComment: 'Post', notifTitle: 'Alerts · Breaking digest',
         notifEmpty: 'No alerts yet.', breakingSubscribe: 'Alert me for this story',
         backHome: 'Back', share: 'Share', articleNo: 'Article',
@@ -1030,7 +1040,7 @@ const I18N = {
         regionBtnSimple: '地区：简略',
         regionBtnFull: '地区：全部',
         login: '登录', register: '注册', logout: '退出',
-        comments: '评论', commentPlaceholder: '写评论…',
+        comments: '评论', commentPlaceholder: '写评论…', edit: '修改', del: '删除', editCommentPlaceholder: '修改评论', confirmDelete: '删除此评论？',
         postComment: '发布', notifTitle: '通知 · 快讯简报',
         notifEmpty: '暂无通知。', breakingSubscribe: '接收本快讯提醒',
         backHome: '返回', share: '分享', articleNo: '文章编号',
@@ -1069,7 +1079,7 @@ const I18N = {
         regionBtnSimple: '地域：簡易',
         regionBtnFull: '地域：全体',
         login: 'ログイン', register: '登録', logout: 'ログアウト',
-        comments: 'コメント', commentPlaceholder: 'コメントを入力…',
+        comments: 'コメント', commentPlaceholder: 'コメントを入力…', edit: '編集', del: '削除', editCommentPlaceholder: 'コメントを編集', confirmDelete: 'このコメントを削除しますか？',
         postComment: '投稿', notifTitle: '通知 · 速報',
         notifEmpty: '通知はありません。', breakingSubscribe: 'この速報の通知を受け取る',
         backHome: '戻る', share: '共有', articleNo: '記事番号',
@@ -1108,7 +1118,7 @@ const I18N = {
         regionBtnSimple: 'Regiones: Simple',
         regionBtnFull: 'Regiones: Completo',
         login: 'Iniciar sesión', register: 'Registrarse', logout: 'Cerrar sesión',
-        comments: 'Comentarios', commentPlaceholder: 'Escribe un comentario…',
+        comments: 'Comentarios', commentPlaceholder: 'Escribe un comentario…', edit: 'Editar', del: 'Eliminar', editCommentPlaceholder: 'Editar comentario', confirmDelete: '¿Eliminar este comentario?',
         postComment: 'Publicar', notifTitle: 'Alertas · Boletín urgente',
         notifEmpty: 'Sin alertas.', breakingSubscribe: 'Recibir alerta de esta noticia',
         backHome: 'Volver', share: 'Compartir', articleNo: 'Artículo',
@@ -1147,7 +1157,7 @@ const I18N = {
         regionBtnSimple: 'Régions: Simple',
         regionBtnFull: 'Régions: Complet',
         login: 'Connexion', register: 'S\'inscrire', logout: 'Déconnexion',
-        comments: 'Commentaires', commentPlaceholder: 'Écrire un commentaire…',
+        comments: 'Commentaires', commentPlaceholder: 'Écrire un commentaire…', edit: 'Modifier', del: 'Supprimer', editCommentPlaceholder: 'Modifier le commentaire', confirmDelete: 'Supprimer ce commentaire ?',
         postComment: 'Publier', notifTitle: 'Alertes · Flash info',
         notifEmpty: 'Aucune alerte.', breakingSubscribe: 'M\'alerter pour cette info',
         backHome: 'Retour', share: 'Partager', articleNo: 'Article',
@@ -1186,7 +1196,7 @@ const I18N = {
         regionBtnSimple: 'Regionen: Einfach',
         regionBtnFull: 'Regionen: Vollständig',
         login: 'Anmelden', register: 'Registrieren', logout: 'Abmelden',
-        comments: 'Kommentare', commentPlaceholder: 'Kommentar schreiben…',
+        comments: 'Kommentare', commentPlaceholder: 'Kommentar schreiben…', edit: 'Bearbeiten', del: 'Löschen', editCommentPlaceholder: 'Kommentar bearbeiten', confirmDelete: 'Diesen Kommentar löschen?',
         postComment: 'Senden', notifTitle: 'Benachrichtigungen · Eilmeldungen',
         notifEmpty: 'Keine Benachrichtigungen.', breakingSubscribe: 'Benachrichtigung erhalten',
         backHome: 'Zurück', share: 'Teilen', articleNo: 'Artikel',
@@ -1225,7 +1235,7 @@ const I18N = {
         regionBtnSimple: 'Регионы: Кратко',
         regionBtnFull: 'Регионы: Полно',
         login: 'Войти', register: 'Зарегистрироваться', logout: 'Выйти',
-        comments: 'Комментарии', commentPlaceholder: 'Написать комментарий…',
+        comments: 'Комментарии', commentPlaceholder: 'Написать комментарий…', edit: 'Изменить', del: 'Удалить', editCommentPlaceholder: 'Редактировать', confirmDelete: 'Удалить комментарий?',
         postComment: 'Отправить', notifTitle: 'Уведомления · Экстренные новости',
         notifEmpty: 'Нет уведомлений.', breakingSubscribe: 'Получить уведомление',
         backHome: 'Назад', share: 'Поделиться', articleNo: 'Статья',
@@ -1264,7 +1274,7 @@ const I18N = {
         regionBtnSimple: 'Regiões: Simples',
         regionBtnFull: 'Regiões: Completo',
         login: 'Entrar', register: 'Cadastrar', logout: 'Sair',
-        comments: 'Comentários', commentPlaceholder: 'Escrever comentário…',
+        comments: 'Comentários', commentPlaceholder: 'Escrever comentário…', edit: 'Editar', del: 'Excluir', editCommentPlaceholder: 'Editar comentário', confirmDelete: 'Excluir este comentário?',
         postComment: 'Publicar', notifTitle: 'Alertas · Urgente',
         notifEmpty: 'Sem alertas.', breakingSubscribe: 'Receber alerta',
         backHome: 'Voltar', share: 'Compartilhar', articleNo: 'Artigo',
@@ -1303,7 +1313,7 @@ const I18N = {
         regionBtnSimple: 'المناطق: بسيط',
         regionBtnFull: 'المناطق: كامل',
         login: 'تسجيل الدخول', register: 'التسجيل', logout: 'تسجيل الخروج',
-        comments: 'تعليقات', commentPlaceholder: 'اكتب تعليقاً…',
+        comments: 'تعليقات', commentPlaceholder: 'اكتب تعليقاً…', edit: 'تعديل', del: 'حذف', editCommentPlaceholder: 'تعديل التعليق', confirmDelete: 'حذف هذا التعليق؟',
         postComment: 'نشر', notifTitle: 'تنبيهات · أخبار عاجلة',
         notifEmpty: 'لا تنبيهات.', breakingSubscribe: 'تلقي تنبيه لهذا الخبر',
         backHome: 'رجوع', share: 'مشاركة', articleNo: 'مقال',
@@ -1342,7 +1352,7 @@ const I18N = {
         regionBtnSimple: 'क्षेत्र: सरल',
         regionBtnFull: 'क्षेत्र: पूर्ण',
         login: 'लॉगिन', register: 'पंजीकरण', logout: 'लॉगआउट',
-        comments: 'टिप्पणियाँ', commentPlaceholder: 'टिप्पणी लिखें…',
+        comments: 'टिप्पणियाँ', commentPlaceholder: 'टिप्पणी लिखें…', edit: 'संपादित', del: 'हटाएं', editCommentPlaceholder: 'टिप्पणी संपादित करें', confirmDelete: 'इस टिप्पणी को हटाएं?',
         postComment: 'पोस्ट', notifTitle: 'सूचनाएं · ब्रेकिंग',
         notifEmpty: 'कोई सूचना नहीं।', breakingSubscribe: 'इस खबर की सूचना पाएं',
         backHome: 'वापस', share: 'शेयर', articleNo: 'लेख',
@@ -1449,7 +1459,7 @@ async function submitTranslation(articleId) {
     try {
         const response = await fetch('https://api.anthropic.com/v1/messages', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 'Content-Type': 'application/json', 'anthropic-dangerous-direct-browser-access': 'true' },
             body: JSON.stringify({
                 model: 'claude-sonnet-4-20250514',
                 max_tokens: 4000,
@@ -2250,7 +2260,7 @@ function toggleAdmin() {
     admin.classList.toggle('hidden');
     if (!admin.classList.contains('hidden')) { buildAdminCategoryCheckboxes(); switchAdminTab('write'); }
 }
-function goHome() { window.history.pushState({}, '', '/'); renderHome(); }
+function goHome() { window.history.pushState({}, '', '/'); renderHome(); var c=document.getElementById('tn-canonical'); if(c) c.href='https://tnfocnus.mannamplace.com'; document.title='TNfocnus - Global News Network'; var md=document.querySelector('meta[name="description"]'); if(md) md.setAttribute('content','Global News Network - News from Everywhere, for Everyone'); }
 function execCmd(cmd, arg) { document.execCommand(cmd, false, arg); }
 function googleTranslateElementInit() { new google.translate.TranslateElement({ pageLanguage: 'ko' }, 'google_translate_element'); }
 
@@ -2310,7 +2320,7 @@ async function submitTranslationForArticle(raw, langCode) {
     try {
         const response = await fetch('https://api.anthropic.com/v1/messages', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 'Content-Type': 'application/json', 'anthropic-dangerous-direct-browser-access': 'true' },
             body: JSON.stringify({
                 model: 'claude-sonnet-4-20250514', max_tokens: 4000,
                 system: `You are a professional news translator. Translate the given Korean news article into ${targetLangName}. Return ONLY a JSON object with keys: "title" and "content". No markdown, no preamble.`,
@@ -2455,12 +2465,57 @@ function buildAdminCategoryCheckboxes() {
 
 function updateOG(article) {
     if (!article) return;
+    var descText = (article.desc || (article.content || '').substring(0, 160)).replace(/\n/g, ' ').trim();
+    var imgUrl   = articleThumb(article.img);
+    var pageUrl  = window.location.href;
+
     document.title = article.title + " - T.N. News";
-    [['og:title', article.title], ['og:description', (article.desc || article.content.substring(0, 100)).replace(/\n/g, ' ')], ['og:image', articleThumb(article.img)], ['og:url', window.location.href]].forEach(([prop, content]) => {
-        const el = document.querySelector(`meta[property="${prop}"]`);
-        if (el) el.setAttribute('content', content);
+
+    // Open Graph
+    [
+        ['og:title',       article.title],
+        ['og:description', descText],
+        ['og:image',       imgUrl],
+        ['og:url',         pageUrl],
+        ['og:type',        'article']
+    ].forEach(function(pair) {
+        var el = document.querySelector('meta[property="' + pair[0] + '"]');
+        if (el) el.setAttribute('content', pair[1]);
     });
+
+    // meta description
+    var md = document.querySelector('meta[name="description"]');
+    if (md) md.setAttribute('content', descText);
+
+    // Twitter
+    var twTitle = document.getElementById('tw-title');
+    var twDesc  = document.getElementById('tw-desc');
+    var twImg   = document.getElementById('tw-img');
+    if (twTitle) twTitle.setAttribute('content', article.title);
+    if (twDesc)  twDesc.setAttribute('content', descText);
+    if (twImg)   twImg.setAttribute('content', imgUrl);
+
+    // Canonical link
+    var canonical = document.getElementById('tn-canonical');
+    if (!canonical) {
+        canonical = document.createElement('link');
+        canonical.id  = 'tn-canonical';
+        canonical.rel = 'canonical';
+        document.head.appendChild(canonical);
+    }
+    canonical.href = pageUrl;
 }
+
+// popstate: 뒤로가기/앞으로가기 시 올바른 기사/홈 복원
+window.addEventListener('popstate', function(e) {
+    if (e.state && e.state.id) {
+        if (typeof renderDetail === 'function') renderDetail(e.state.id);
+    } else if (e.state && e.state.reporter) {
+        if (typeof renderReporterArchive === 'function') renderReporterArchive(e.state.reporter);
+    } else {
+        if (typeof renderHome === 'function') renderHome();
+    }
+});
 
 // 마운트 시 UI 적용
 (function bootstrapUi() {
@@ -2542,7 +2597,17 @@ function _articleLatLon(article) {
 // ─────────────────────────────────────────────────────────────────────────────
 // 4. Leaflet 아이콘 팩토리
 // ─────────────────────────────────────────────────────────────────────────────
+// 미니맵 레이블 다국어 변환 헬퍼 (ko 키 → 현재 언어 번역)
+function _translateMapLabel(label) {
+    try {
+        var d = (typeof getDict === 'function') ? getDict() : {};
+        var regions = d.regions || {};
+        return regions[label] || label;
+    } catch(e) { return label; }
+}
+
 function _macroIcon(label) {
+    var displayLabel = _translateMapLabel(label);
     return L.divIcon({
         className: '',
         iconSize: [68, 48],
@@ -2559,18 +2624,19 @@ function _macroIcon(label) {
             'text-shadow:0 1px 2px rgba(255,255,255,0.9);text-align:center;white-space:nowrap;',
             'background:rgba(255,255,255,0.88);padding:1px 5px;border-radius:3px;',
             'max-width:72px;overflow:hidden;text-overflow:ellipsis;">',
-            label,
+            displayLabel,
             '</div></div>'
         ].join('')
     });
 }
 
 function _subIcon(label) {
+    var displayLabel = _translateMapLabel(label);
     return L.divIcon({
         className: '',
         iconSize: [16, 16],
         iconAnchor: [8, 8],
-        html: '<div title="' + (label || '') + '" style="background:#2563eb;border:2px solid #e0f2fe;' +
+        html: '<div title="' + (displayLabel || '') + '" style="background:#2563eb;border:2px solid #e0f2fe;' +
             'border-radius:50%;width:16px;height:16px;' +
             'box-shadow:0 2px 5px rgba(0,0,0,.35);cursor:pointer;"></div>'
     });
@@ -2792,7 +2858,7 @@ function openMacroRegionFlyout(macroId) {
         : '';
 
     showMinimapFlyout(
-        '<p class="text-[10px] font-black text-blue-900 uppercase mb-2">' + m.label + '</p>' +
+        '<p class="text-[10px] font-black text-blue-900 uppercase mb-2">' + _translateMapLabel(m.label) + '</p>' +
         '<p class="text-[10px] font-bold text-slate-500 mb-1">' + (d.minimapFeatured || '주요 기사') + '</p>' +
         _flyoutFeatured(feat) +
         '<div class="mt-3 space-y-2">' +
@@ -3049,11 +3115,21 @@ window.mountComments = function mountComments(articleId) {
                 var ts = c.timestamp && c.timestamp.toDate
                     ? c.timestamp.toDate().toLocaleDateString('ko-KR')
                     : '';
-                return '<li class="border-b border-gray-100 pb-4">' +
+                var canEdit = currentUser && (currentUser.id === c.authorId || (typeof RANK_POWER !== 'undefined' && RANK_POWER[currentUser.rank] >= 4));
+                var actionBtns = canEdit
+                    ? '<div class="flex gap-2 mt-1">' +
+                      '<button type="button" onclick="editComment(\''+articleId+'\',\''+c.id+'\')" ' +
+                      'class="text-[10px] text-blue-600 hover:underline font-bold">' + (d.edit || '수정') + '</button>' +
+                      '<button type="button" onclick="deleteComment(\''+articleId+'\',\''+c.id+'\')" ' +
+                      'class="text-[10px] text-red-500 hover:underline font-bold">' + (d.del || '삭제') + '</button>' +
+                      '</div>'
+                    : '';
+                return '<li id="comment-item-' + c.id + '" class="border-b border-gray-100 pb-4">' +
                     '<div class="flex justify-between items-baseline mb-1">' +
                     '<span class="text-xs font-bold text-gray-700">' + esc(c.author || '익명') + '</span>' +
                     '<span class="text-[10px] text-gray-400">' + ts + '</span></div>' +
-                    '<p class="text-sm text-gray-800">' + esc(c.text || '') + '</p></li>';
+                    '<p id="comment-text-' + c.id + '" class="text-sm text-gray-800">' + esc(c.text || '') + '</p>' +
+                    actionBtns + '</li>';
             }).join('') + '</ul>'
             : '<p class="text-sm text-gray-400 py-4 text-center">첫 댓글을 남겨보세요.</p>';
 
@@ -3087,6 +3163,58 @@ window.submitComment = async function submitComment(articleId) {
     } catch(e) {
         alert('댓글 등록 실패: ' + e.message);
     }
+};
+
+window.deleteComment = async function deleteComment(articleId, commentId) {
+    var d = (typeof getDict === 'function') ? getDict() : {};
+    if (!confirm(d.confirmDelete || '댓글을 삭제하시겠습니까?')) return;
+    try {
+        await window.fs.deleteDoc(
+            window.fs.doc(window.db, 'articles', articleId, 'comments', commentId)
+        );
+    } catch(e) { alert('댓글 삭제 실패: ' + e.message); }
+};
+
+window.editComment = function editComment(articleId, commentId) {
+    var d = (typeof getDict === 'function') ? getDict() : {};
+    var textEl = document.getElementById('comment-text-' + commentId);
+    if (!textEl) return;
+    var original = textEl.textContent;
+    if (document.getElementById('comment-edit-' + commentId)) return;
+    textEl.style.display = 'none';
+    var editWrap = document.createElement('div');
+    editWrap.id = 'comment-edit-' + commentId;
+    editWrap.className = 'flex gap-2 mt-1';
+    editWrap.innerHTML =
+        '<input type="text" id="comment-edit-input-' + commentId + '" ' +
+        'value="' + original.replace(/"/g, '&quot;') + '" maxlength="500" ' +
+        'class="flex-1 border border-blue-400 rounded-lg px-3 py-1 text-sm outline-none focus:border-blue-600">' +
+        '<button type="button" onclick="confirmEditComment(\'' + articleId + '\',\'' + commentId + '\')" ' +
+        'class="shrink-0 bg-blue-900 text-white px-3 py-1 rounded-lg text-xs font-bold hover:bg-blue-800">' + (d.edit || '수정') + '</button>' +
+        '<button type="button" onclick="cancelEditComment(\'' + commentId + '\')" ' +
+        'class="shrink-0 border border-gray-300 px-3 py-1 rounded-lg text-xs font-bold text-gray-600 hover:bg-gray-50">✕</button>';
+    textEl.parentNode.insertBefore(editWrap, textEl.nextSibling);
+    var inp = document.getElementById('comment-edit-input-' + commentId);
+    if (inp) { inp.focus(); inp.selectionStart = inp.value.length; }
+};
+
+window.cancelEditComment = function cancelEditComment(commentId) {
+    var editWrap = document.getElementById('comment-edit-' + commentId);
+    var textEl   = document.getElementById('comment-text-' + commentId);
+    if (editWrap) editWrap.remove();
+    if (textEl)   textEl.style.display = '';
+};
+
+window.confirmEditComment = async function confirmEditComment(articleId, commentId) {
+    var inp  = document.getElementById('comment-edit-input-' + commentId);
+    var text = (inp ? inp.value : '').trim();
+    if (!text) return;
+    try {
+        await window.fs.updateDoc(
+            window.fs.doc(window.db, 'articles', articleId, 'comments', commentId),
+            { text: text, editedAt: window.fs.serverTimestamp() }
+        );
+    } catch(e) { alert('댓글 수정 실패: ' + e.message); }
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -3193,7 +3321,7 @@ window.submitTranslation = async function submitTranslation(articleId) {
     try {
         var response = await fetch('https://api.anthropic.com/v1/messages', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 'Content-Type': 'application/json', 'anthropic-dangerous-direct-browser-access': 'true' },
             body: JSON.stringify({
                 model:      'claude-sonnet-4-20250514',
                 max_tokens: 4000,
@@ -3273,12 +3401,14 @@ function _injectArticleJsonLd(article) {
                 .replace(/\n/g, ' ').trim();
 
     var schema = {
-        '@context':  'https://schema.org',
-        '@type':     'NewsArticle',
-        'headline':  article.title,
-        'description': desc,
-        'image':     [thumb],
+        '@context':      'https://schema.org',
+        '@type':         'NewsArticle',
+        'headline':      article.title,
+        'description':   desc,
+        'image':         [thumb],
         'datePublished': article.date || '',
+        'dateModified':  article.editedAt || article.date || '',
+        'url':           window.location.href,
         'author': {
             '@type': 'Person',
             'name':  'T.N. ' + (article.author || '') + ' 기자'
@@ -3286,12 +3416,18 @@ function _injectArticleJsonLd(article) {
         'publisher': {
             '@type': 'NewsMediaOrganization',
             'name':  'TNfocnus',
-            'url':   'https://tnfocnus.mannamplace.com'
+            'url':   'https://tnfocnus.mannamplace.com',
+            'logo': {
+                '@type': 'ImageObject',
+                'url': 'https://i.ibb.co/mrhDt2F2/tnfocnus-default-thumb.jpg'
+            }
         },
         'mainEntityOfPage': {
-            '@type': '@id',
+            '@type': 'WebPage',
             '@id':   window.location.href
-        }
+        },
+        'articleSection': (article.cat && article.cat[0]) || 'News',
+        'inLanguage': article.contentLang || 'ko'
     };
 
     var s  = document.createElement('script');
