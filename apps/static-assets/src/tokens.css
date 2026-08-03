@@ -1,0 +1,82 @@
+/* ══════════════════════════════════════
+   Mannamplace Design Tokens
+   tokens.css
+   ══════════════════════════════════════ */
+
+:root {
+  /* ── 브랜드 컬러 ── */
+  --mp-org:        #B84A00;
+  --mp-org2:       #D45500;
+  --mp-org3:       #FF6B1A;
+  --mp-org-dark:   #8C3700;
+  --mp-org-deeper: #5C2400;
+  --mp-org-bg:     #3D1A00;
+
+  /* ── 배경 ── */
+  --mp-bg:         #1A0A00;
+  --mp-bg2:        #241008;
+  --mp-bg3:        #2E1509;
+  --mp-bg4:        #180800;
+  --mp-card:       #1E0D03;
+
+  /* ── 보더 ── */
+  --mp-border:     #3D1F08;
+  --mp-border2:    #5C3010;
+
+  /* ── 텍스트 ── */
+  --mp-text:       #F5E6D8;
+  --mp-text2:      #C4956A;
+  --mp-text3:      #7A4A28;
+  --mp-white:      #FFF8F2;
+
+  /* ── 시맨틱 컬러 ── */
+  --mp-blue:       #3B9EFF;
+  --mp-green:      #2ECC71;
+  --mp-red:        #FF4444;
+  --mp-purple:     #BB86FC;
+  --mp-yellow:     #FFD166;
+
+  /* ── 타이포그래피 ── */
+  --mp-font-main:  'Noto Sans KR', sans-serif;
+  --mp-font-brand: 'Black Han Sans', sans-serif;
+  --mp-font-mono:  'JetBrains Mono', monospace;
+
+  /* ── 폰트 크기 ── */
+  --mp-text-xs:    10px;
+  --mp-text-sm:    12px;
+  --mp-text-md:    14px;
+  --mp-text-lg:    16px;
+  --mp-text-xl:    20px;
+  --mp-text-2xl:   24px;
+
+  /* ── 간격 ── */
+  --mp-space-1:    4px;
+  --mp-space-2:    8px;
+  --mp-space-3:    12px;
+  --mp-space-4:    16px;
+  --mp-space-5:    20px;
+  --mp-space-6:    24px;
+
+  /* ── 보더 반경 ── */
+  --mp-radius-sm:  4px;
+  --mp-radius-md:  6px;
+  --mp-radius-lg:  10px;
+  --mp-radius-xl:  16px;
+  --mp-radius-full:9999px;
+
+  /* ── 전환 ── */
+  --mp-transition: .15s ease;
+
+  /* ── 그림자 ── */
+  --mp-shadow:     0 4px 20px rgba(0,0,0,0.4);
+  --mp-shadow-lg:  0 8px 32px rgba(0,0,0,0.6);
+
+  /* ── Z-index ── */
+  --mp-z-topbar:   200;
+  --mp-z-dropdown: 300;
+  --mp-z-modal:    500;
+  --mp-z-loading:  900;
+
+  /* ── 토파바 높이 ── */
+  --mp-topbar-h:   52px;
+}

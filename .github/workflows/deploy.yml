@@ -5,13 +5,28 @@ on:
     branches: [main]
 
 jobs:
-  deploy-mp:
+  deploy-static-assets:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: apps/mp
     steps:
       - uses: actions/checkout@v4
+      - name: Sync package/ into static-assets/src (package/ stays the source of truth)
+        run: |
+          cp package/navbar.js package/footer.js package/i18n.js package/cookie-consent.js \
+             package/navbar.css package/footer.css package/global.css package/tokens.css \
+             package/compat-tokens.css package/cookie-consent.css \
+             apps/static-assets/src/
+      - uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          workingDirectory: apps/static-assets
+
+  deploy-mp:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Sync cookie-consent assets from package/ (package/ stays the source of truth)
+        run: cp package/cookie-consent.js package/cookie-consent.css apps/mp/assets/
       - uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
@@ -53,3 +68,37 @@ jobs:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           workingDirectory: apps/tnfocnus
+          secrets: |
+            FIREBASE_API_KEY
+        env:
+          FIREBASE_API_KEY: ${{ secrets.FIREBASE_API_KEY }}
+
+  deploy-market:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          workingDirectory: apps/market
+
+  deploy-pay:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          workingDirectory: apps/pay
+
+  deploy-video:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          workingDirectory: apps/video

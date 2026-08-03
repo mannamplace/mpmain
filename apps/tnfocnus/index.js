@@ -1,12 +1,16 @@
 import rawHtml from "./index.html";
 
 const FIREBASE_PROJECT_ID = "tnnews-502d4";
-const FIREBASE_API_KEY = "AIzaSyAzi4dSgnidJPVado54jTDH94Fyw1CVmx4";
 const SITE_URL = "https://tnfocnus.mannamplace.com";
 const DEFAULT_ARTICLE_THUMB = "https://i.ibb.co/mrhDt2F2/tnfocnus-default-thumb.jpg";
 
 export default {
   async fetch(request, env, ctx) {
+    // Note: Firebase web API keys identify a project rather than authenticate requests —
+    // Firestore's actual access boundary is its Security Rules, not this key. Still, keeping
+    // it in `env` (set via `wrangler secret put FIREBASE_API_KEY`) instead of hardcoded source
+    // makes per-environment (staging/prod) config and rotation straightforward.
+    const FIREBASE_API_KEY = env.FIREBASE_API_KEY;
     const url = new URL(request.url);
 
     // workers.dev 리다이렉트

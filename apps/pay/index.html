@@ -4,9 +4,12 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Mannamplace Pay — 간편결제</title>
-  <link rel="stylesheet" href="../../shared/css/global.css">
-  <link rel="stylesheet" href="../../shared/css/navbar.css">
-  <link rel="stylesheet" href="../../shared/css/footer.css">
+  <link rel="stylesheet" href="https://static.mannamplace.com/css/tokens.css">
+  <link rel="stylesheet" href="https://static.mannamplace.com/css/compat-tokens.css">
+  <link rel="stylesheet" href="https://static.mannamplace.com/css/global.css">
+  <link rel="stylesheet" href="https://static.mannamplace.com/css/navbar.css">
+  <link rel="stylesheet" href="https://static.mannamplace.com/css/footer.css">
+  <link rel="stylesheet" href="https://static.mannamplace.com/css/cookie-consent.css">
   <style>
     .pay-hero {
       padding-top: 100px;
@@ -144,7 +147,7 @@
 </head>
 <body>
 
-  <div data-mnp-nav></div>
+  <div id="mp-navbar"></div>
 
   <section class="pay-hero">
     <div class="container">
@@ -255,8 +258,12 @@
     </div>
   </section>
 
-  <div data-mnp-footer></div>
-  <script src="../../shared/js/navbar.js"></script>
-  <script src="../../shared/js/footer.js"></script>
+  <div id="mp-footer"></div>
+  <script type="module">
+    import { initNavbar } from 'https://static.mannamplace.com/js/navbar.js';
+    import { initFooter } from 'https://static.mannamplace.com/js/footer.js';
+    initNavbar({ variant: 'default' });
+    initFooter();
+  </script>
 </body>
 </html>

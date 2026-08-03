@@ -1,0 +1,204 @@
+/* ══════════════════════════════════════
+   Mannamplace Cookie Consent
+   cookie-consent.css
+   (tokens.css 이후에 로드)
+   ══════════════════════════════════════ */
+
+.mp-cookie-banner {
+  position: fixed;
+  left: 0; right: 0; bottom: 0;
+  z-index: var(--mp-z-modal, 500);
+  background: var(--mp-card);
+  border-top: 1px solid var(--mp-border2);
+  box-shadow: var(--mp-shadow-lg);
+  padding: var(--mp-space-5) var(--mp-space-4);
+  animation: mp-cookie-slide-up 0.25s ease;
+}
+
+@keyframes mp-cookie-slide-up {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+
+.mp-cookie-banner__inner {
+  max-width: 1100px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--mp-space-5);
+  flex-wrap: wrap;
+}
+
+.mp-cookie-banner__text {
+  flex: 1;
+  min-width: 240px;
+  color: var(--mp-text);
+  font-size: var(--mp-text-md);
+}
+
+.mp-cookie-banner__text strong {
+  display: block;
+  margin-bottom: var(--mp-space-1);
+  color: var(--mp-white);
+}
+
+.mp-cookie-banner__text p {
+  color: var(--mp-text2);
+  font-size: var(--mp-text-sm);
+  line-height: 1.5;
+}
+
+.mp-cookie-banner__link {
+  color: var(--mp-org3);
+  text-decoration: underline;
+}
+
+.mp-cookie-banner__actions {
+  display: flex;
+  gap: var(--mp-space-2);
+  flex-wrap: wrap;
+}
+
+.mp-cookie-btn {
+  border: none;
+  border-radius: var(--mp-radius-md);
+  padding: var(--mp-space-2) var(--mp-space-4);
+  font-size: var(--mp-text-sm);
+  font-weight: 700;
+  cursor: pointer;
+  transition: background var(--mp-transition), border-color var(--mp-transition);
+  font-family: var(--mp-font-main);
+  white-space: nowrap;
+}
+
+.mp-cookie-btn--primary {
+  background: var(--mp-org);
+  color: var(--mp-white);
+}
+.mp-cookie-btn--primary:hover { background: var(--mp-org2); }
+
+.mp-cookie-btn--ghost {
+  background: transparent;
+  border: 1px solid var(--mp-border2);
+  color: var(--mp-text2);
+}
+.mp-cookie-btn--ghost:hover {
+  border-color: var(--mp-org);
+  color: var(--mp-org3);
+}
+
+/* ── 설정 패널 ── */
+.mp-cookie-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: var(--mp-z-modal, 500);
+  background: rgba(0,0,0,0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--mp-space-4);
+}
+
+.mp-cookie-panel {
+  background: var(--mp-card);
+  border: 1px solid var(--mp-border2);
+  border-radius: var(--mp-radius-xl);
+  max-width: 480px;
+  width: 100%;
+  max-height: 85vh;
+  overflow-y: auto;
+  padding: var(--mp-space-6);
+  box-shadow: var(--mp-shadow-lg);
+}
+
+.mp-cookie-panel__header strong {
+  font-size: var(--mp-text-xl);
+  color: var(--mp-white);
+}
+
+.mp-cookie-panel__list {
+  margin-top: var(--mp-space-5);
+  display: flex;
+  flex-direction: column;
+  gap: var(--mp-space-4);
+}
+
+.mp-cookie-row {
+  border-bottom: 1px solid var(--mp-border);
+  padding-bottom: var(--mp-space-4);
+}
+
+.mp-cookie-row__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  color: var(--mp-white);
+  font-weight: 700;
+  font-size: var(--mp-text-md);
+}
+
+.mp-cookie-row__desc {
+  margin-top: var(--mp-space-1);
+  color: var(--mp-text2);
+  font-size: var(--mp-text-sm);
+  line-height: 1.5;
+}
+
+.mp-cookie-panel__actions {
+  margin-top: var(--mp-space-6);
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--mp-space-2);
+}
+
+/* ── 토글 스위치 ── */
+.mp-cookie-toggle {
+  position: relative;
+  display: inline-block;
+  width: 40px;
+  height: 22px;
+  flex-shrink: 0;
+}
+
+.mp-cookie-toggle input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.mp-cookie-toggle__slider {
+  position: absolute;
+  cursor: pointer;
+  inset: 0;
+  background: var(--mp-border2);
+  border-radius: var(--mp-radius-full);
+  transition: background var(--mp-transition);
+}
+
+.mp-cookie-toggle__slider::before {
+  content: '';
+  position: absolute;
+  height: 16px; width: 16px;
+  left: 3px; bottom: 3px;
+  background: var(--mp-white);
+  border-radius: 50%;
+  transition: transform var(--mp-transition);
+}
+
+.mp-cookie-toggle input:checked + .mp-cookie-toggle__slider {
+  background: var(--mp-org);
+}
+.mp-cookie-toggle input:checked + .mp-cookie-toggle__slider::before {
+  transform: translateX(18px);
+}
+.mp-cookie-toggle input:disabled + .mp-cookie-toggle__slider {
+  background: var(--mp-org-dark);
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+@media (max-width: 640px) {
+  .mp-cookie-banner__actions { width: 100%; }
+  .mp-cookie-btn { flex: 1; }
+}

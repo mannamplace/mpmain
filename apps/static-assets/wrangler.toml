@@ -1,0 +1,11 @@
+name = "static-assets"
+main = "index.js"
+compatibility_date = "2024-03-09"
+
+# routes[] should point this at static.mannamplace.com in the Cloudflare
+# dashboard (or add a `routes` entry here once the zone is confirmed).
+
+[[rules]]
+type = "Text"
+globs = ["src/*.js", "src/*.css"]
+fallthrough = true

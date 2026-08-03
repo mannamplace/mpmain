@@ -1,0 +1,71 @@
+/* ══════════════════════════════════════
+   Mannamplace Compat Token Bridge
+   compat-tokens.css
+
+   market/pay/video's markup was written against a --color-*/--text-*/
+   --space-* variable vocabulary that was never actually defined anywhere
+   in tokens.css or global.css (confirmed: grep across the repo turns up
+   zero definitions). Without this file those pages render with every
+   color/spacing/radius falling back to the browser default — effectively
+   unstyled.
+
+   This is a STOPGAP, not a design decision: the mappings below are my
+   best guess at intent (e.g. --color-market → an accent color, --color-
+   finance → a blue "money" accent for Pay) so the pages render coherently
+   again. A real design pass should confirm these choices rather than
+   assume this file is final.
+
+   Load order: tokens.css → compat-tokens.css → global.css → (app-specific
+   styles) → navbar.css / footer.css / cookie-consent.css
+   ══════════════════════════════════════ */
+
+:root {
+  /* ── 서비스별 강조색 (추정 매핑) ── */
+  --color-market:  var(--mp-org3);   /* Market 강조색 */
+  --color-finance: var(--mp-blue);   /* Pay/금융 강조색 */
+  --color-new:     var(--mp-red);    /* "NEW"/세일 배지 */
+
+  /* ── 그레이스케일 (다크 테마 기준 근사 매핑) ── */
+  --color-white:       var(--mp-white);
+  --color-text:        var(--mp-text);
+  --color-text-muted:  var(--mp-text2);
+  --color-border:      var(--mp-border2);
+  --color-gray-1:      var(--mp-bg3);
+  --color-gray-8:      var(--mp-text2);
+  --color-gray-9:      var(--mp-text);
+
+  /* ── 폰트 ── */
+  --font-display: var(--mp-font-brand);
+  --font-mono:    var(--mp-font-mono);
+
+  /* ── 반경 ── */
+  --radius-sm:   var(--mp-radius-sm);
+  --radius-md:   var(--mp-radius-md);
+  --radius-lg:   var(--mp-radius-lg);
+  --radius-xl:   var(--mp-radius-xl);
+  --radius-full: var(--mp-radius-full);
+
+  /* ── 그림자 ── */
+  --shadow-lg: var(--mp-shadow-lg);
+
+  /* ── 텍스트 크기 (tokens.css는 2xl까지만 정의되어 있어 4xl까지 확장) ── */
+  --text-xs:   var(--mp-text-xs);
+  --text-sm:   var(--mp-text-sm);
+  --text-base: var(--mp-text-md);
+  --text-md:   var(--mp-text-md);
+  --text-lg:   var(--mp-text-lg);
+  --text-xl:   var(--mp-text-xl);
+  --text-2xl:  var(--mp-text-2xl);
+  --text-4xl:  36px;
+
+  /* ── 간격 (tokens.css는 space-6=24px까지만 정의되어 있어 8~16 확장) ── */
+  --space-2:  var(--mp-space-2);
+  --space-3:  var(--mp-space-3);
+  --space-4:  var(--mp-space-4);
+  --space-5:  var(--mp-space-5);
+  --space-6:  var(--mp-space-6);
+  --space-8:  32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-16: 64px;
+}
